@@ -4,478 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Parich Dealer Dashboard</title>
-  <style>
-    :root {
-      --bg-primary: #0d1117;
-      --bg-secondary: #161b22;
-      --bg-card: #1c2128;
-      --bg-hover: #21262d;
-      --border: #30363d;
-      --text-primary: #e6edf3;
-      --text-secondary: #8b949e;
-      --accent-green: #3fb950;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Thai', sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* ── Header ── */
-    .header {
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-      z-index: 10;
-    }
-    .logo { font-size: 18px; font-weight: 800; color: var(--accent-green); letter-spacing: -0.5px; }
-    .breadcrumb { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; margin-left: 20px; }
-    .breadcrumb span { color: var(--text-primary); }
-    .header-left { display: flex; align-items: center; }
-    .header-actions { display: flex; gap: 10px; }
-    .btn {
-      padding: 7px 14px;
-      border-radius: 7px;
-      border: none;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.85; }
-    .btn-primary { background: var(--accent-green); color: #000; }
-    .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
-
-    /* ── Layout ── */
-    .main { display: flex; flex: 1; overflow: hidden; }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      width: 252px;
-      background: var(--bg-secondary);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-    .sidebar-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-    .sidebar-title {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
-    }
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .stat-card {
-      background: var(--bg-card);
-      border-radius: 8px;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-    }
-    .stat-value { font-size: 20px; font-weight: 800; }
-    .stat-label { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
-    .search-input {
-      width: 100%;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: var(--text-primary);
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .search-input:focus { border-color: #388bfd; }
-    .search-input::placeholder { color: var(--text-secondary); }
-    .all-zones-btn {
-      width: 100%;
-      padding: 8px 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      color: var(--text-primary);
-      font-size: 12px;
-      cursor: pointer;
-      margin-bottom: 8px;
-      text-align: left;
-      transition: border-color 0.15s;
-    }
-    .all-zones-btn:hover { border-color: #555; }
-    .zone-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-    .zone-chip {
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--bg-card);
-      transition: border-color 0.15s;
-    }
-    .zone-chip:hover { border-color: currentColor; }
-    .zone-chip.active { border-color: currentColor; background: color-mix(in srgb, currentColor 12%, transparent); }
-    .zone-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-
-    /* Mini zone map */
-    .mini-map {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 4px;
-    }
-    .mini-cell {
-      aspect-ratio: 1;
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.9);
-      cursor: pointer;
-      position: relative;
-      transition: filter 0.15s, transform 0.15s;
-    }
-    .mini-cell:hover { filter: brightness(1.25); transform: scale(1.06); }
-    .mini-cell .badge {
-      position: absolute;
-      top: -5px; right: -5px;
-      background: #e6edf3;
-      color: #0d1117;
-      border-radius: 50%;
-      width: 15px; height: 15px;
-      font-size: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-    }
-
-    /* ── Content ── */
-    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .content-header {
-      padding: 14px 22px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .view-tabs {
-      display: flex;
-      gap: 3px;
-      background: var(--bg-card);
-      padding: 3px;
-      border-radius: 7px;
-    }
-    .view-tab {
-      padding: 5px 13px;
-      border-radius: 5px;
-      font-size: 12px;
-      cursor: pointer;
-      color: var(--text-secondary);
-      border: none;
-      background: transparent;
-      transition: all 0.15s;
-    }
-    .view-tab.active { background: var(--bg-secondary); color: var(--text-primary); font-weight: 600; }
-    .content-body { flex: 1; overflow-y: auto; padding: 18px 22px; }
-
-    /* Zone Cards */
-    .zone-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-    .zone-card {
-      background: var(--bg-card);
-      border-radius: 11px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      cursor: pointer;
-      transition: border-color 0.15s, transform 0.15s;
-    }
-    .zone-card:hover { border-color: #444; transform: translateY(-2px); }
-    .zone-card.selected { border-color: currentColor; }
-    .zone-card-header {
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-    }
-    .zone-badge-lg {
-      width: 36px; height: 36px;
-      border-radius: 9px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 900;
-      color: #fff;
-      margin-right: 10px;
-    }
-    .zone-card-name { font-size: 14px; font-weight: 700; display: flex; align-items: center; }
-    .zone-card-count { text-align: right; }
-    .zone-card-count-num { font-size: 22px; font-weight: 800; }
-    .zone-card-count-label { font-size: 10px; color: var(--text-secondary); }
-    .zone-card-body { padding: 14px 16px; }
-    .zone-provinces { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
-    .province-tag {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2px 7px;
-      font-size: 10px;
-      color: var(--text-secondary);
-    }
-    .crop-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .crop-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px; }
-    .crop-name { min-width: 110px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .crop-bar-bg { flex: 1; height: 4px; background: var(--bg-secondary); border-radius: 2px; overflow: hidden; }
-    .crop-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
-    .crop-pct { min-width: 32px; text-align: right; font-weight: 700; font-size: 11px; }
-
-    /* Dealer Table */
-    .dealer-table-wrap { background: var(--bg-card); border-radius: 11px; border: 1px solid var(--border); overflow: hidden; }
-    .dealer-table { width: 100%; border-collapse: collapse; }
-    .dealer-table th {
-      background: var(--bg-secondary);
-      padding: 10px 16px;
-      text-align: left;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border);
-    }
-    .dealer-table td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
-    .dealer-table tr:last-child td { border-bottom: none; }
-    .dealer-table tbody tr { cursor: pointer; transition: background 0.12s; }
-    .dealer-table tbody tr:hover td { background: var(--bg-hover); }
-    .dealer-table tbody tr.selected td { background: rgba(56,139,253,0.08); }
-    .d-avatar {
-      width: 30px; height: 30px;
-      border-radius: 7px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 800;
-      color: #fff;
-      margin-right: 8px;
-      flex-shrink: 0;
-    }
-    .d-name-cell { display: flex; align-items: center; }
-    .zone-pill {
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 800;
-    }
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-
-    /* ── Detail Panel ── */
-    .detail-panel {
-      width: 300px;
-      background: var(--bg-secondary);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-    .dp-header { padding: 16px; border-bottom: 1px solid var(--border); }
-    .dp-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 12px; }
-    .dp-dealer-card {
-      background: var(--bg-card);
-      border-radius: 9px;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-      border: 1px solid var(--border);
-    }
-    .dp-avatar {
-      width: 42px; height: 42px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 800;
-      color: #fff;
-      flex-shrink: 0;
-    }
-    .dp-dealer-name { font-size: 14px; font-weight: 700; }
-    .dp-dealer-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-    .dp-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-    .dp-info {
-      background: var(--bg-card);
-      border-radius: 7px;
-      padding: 9px 10px;
-      border: 1px solid var(--border);
-    }
-    .dp-info-label { font-size: 10px; color: var(--text-secondary); margin-bottom: 3px; }
-    .dp-info-val { font-size: 13px; font-weight: 700; }
-    .map-btn {
-      width: 100%;
-      padding: 9px;
-      border: none;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 9px;
-      background: var(--accent-green);
-      color: #000;
-      transition: opacity 0.15s;
-    }
-    .map-btn:hover { opacity: 0.85; }
-    .ghost-btn {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 8px;
-      background: transparent;
-      color: var(--text-secondary);
-      transition: border-color 0.15s;
-    }
-    .ghost-btn:hover { border-color: #555; color: var(--text-primary); }
-    .dp-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-    .dp-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary); margin-bottom: 10px; }
-    .sku-list { display: flex; flex-direction: column; gap: 7px; }
-    .sku-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      background: var(--bg-card);
-      border-radius: 7px;
-      border: 1px solid var(--border);
-    }
-    .sku-badge {
-      padding: 3px 7px;
-      border-radius: 5px;
-      font-size: 10px;
-      font-weight: 800;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .sku-desc { font-size: 11px; color: var(--text-secondary); flex: 1; line-height: 1.4; }
-    .opportunity-item {
-      border-color: rgba(63,185,80,0.25);
-      background: rgba(63,185,80,0.04);
-    }
-    .dp-crop-row { margin-bottom: 10px; }
-    .dp-crop-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-bottom: 4px;
-    }
-    .dp-crop-bar-bg { height: 5px; background: var(--bg-card); border-radius: 3px; overflow: hidden; }
-    .dp-crop-bar { height: 100%; border-radius: 3px; }
-    .ci { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-    /* ── Modal ── */
-    .modal-backdrop {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-backdrop.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      width: 480px;
-      max-width: calc(100vw - 32px);
-      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
-      transform: translateY(12px);
-      transition: transform 0.2s;
-    }
-    .modal-backdrop.open .modal { transform: translateY(0); }
-    .modal-header {
-      padding: 18px 20px 14px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .modal-title { font-size: 15px; font-weight: 700; }
-    .modal-close {
-      background: none; border: none; color: var(--text-secondary);
-      font-size: 18px; cursor: pointer; line-height: 1;
-      padding: 2px 6px; border-radius: 5px;
-      transition: color 0.15s, background 0.15s;
-    }
-    .modal-close:hover { color: var(--text-primary); background: var(--bg-hover); }
-    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
-    .form-input, .form-select {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 9px 12px;
-      color: var(--text-primary);
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-      width: 100%;
-    }
-    .form-input:focus, .form-select:focus { border-color: #388bfd; }
-    .form-input::placeholder { color: var(--text-secondary); }
-    .form-select option { background: var(--bg-card); }
-    .form-select { cursor: pointer; }
-    .status-toggle { display: flex; gap: 8px; }
-    .status-opt {
-      flex: 1; padding: 8px; border-radius: 7px; border: 1px solid var(--border);
-      background: var(--bg-card); color: var(--text-secondary);
-      font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
-      transition: all 0.15s;
-    }
-    .status-opt.active-opt { border-color: #3fb950; background: rgba(63,185,80,0.1); color: #3fb950; }
-    .status-opt.inactive-opt { border-color: #f85149; background: rgba(248,81,73,0.1); color: #f85149; }
-    .modal-footer {
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      display: flex; gap: 8px; justify-content: flex-end;
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
 
 <!-- ── Header ── -->
 <div class="header">
   <div class="header-left">
-    <div class="logo">🌾 PARICH</div>
+    <img src="Parich.png" alt="PARICH" class="logo-img">
     <div class="breadcrumb">
       <span style="color:var(--text-secondary)">แผนที่ดีลเลอร์</span>
       <span style="color:var(--text-secondary)">/</span>
@@ -483,6 +23,7 @@
     </div>
   </div>
   <div class="header-actions">
+    <button class="btn btn-secondary" id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
     <button class="btn btn-secondary">📊 Excel</button>
     <button class="btn btn-secondary">📄 PDF</button>
     <button class="btn btn-primary" onclick="openModal()">+ เพิ่มดีลเลอร์</button>
@@ -518,7 +59,8 @@
 
     <div class="sidebar-section">
       <div class="sidebar-title">ค้นหา</div>
-      <input class="search-input" type="text" placeholder="ชื่อดีลเลอร์..." id="searchInput" oninput="onSearch()">
+      <input class="search-input" type="text" placeholder="ชื่อดีลเลอร์..."
+             id="searchInput" oninput="onSearch()">
     </div>
 
     <div class="sidebar-section">
@@ -538,14 +80,17 @@
     <div class="content-header">
       <div>
         <div style="font-size:15px;font-weight:700" id="contentTitle">ดีลเลอร์ทั้งหมด</div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px" id="contentSub">102 ราย ใน 11 เขตพื้นที่</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px" id="contentSub">
+          102 ราย ใน 11 เขตพื้นที่
+        </div>
       </div>
       <div class="view-tabs">
         <button class="view-tab active" onclick="switchView('grid')">▦ Zone Cards</button>
         <button class="view-tab" onclick="switchView('table')">≡ ตาราง</button>
+        <button class="view-tab" onclick="switchView('map')">🗺 แผนที่</button>
       </div>
     </div>
-    <div class="content-body">
+    <div class="content-body" id="contentBody">
       <div id="grid-view">
         <div class="zone-cards-grid" id="zoneCardsGrid"></div>
       </div>
@@ -565,6 +110,9 @@
             <tbody id="dealerTbody"></tbody>
           </table>
         </div>
+      </div>
+      <div id="map-view" style="display:none">
+        <div id="thailand-map"></div>
       </div>
     </div>
   </div>
@@ -595,7 +143,7 @@
         </div>
         <div class="dp-info">
           <div class="dp-info-label">โอกาสใหม่</div>
-          <div class="dp-info-val" id="dpOpp" style="color:#3fb950">3 รายการ</div>
+          <div class="dp-info-val" id="dpOpp" style="color:#f97316">3 รายการ</div>
         </div>
       </div>
       <button class="map-btn">🗺️ ดูใน Google Maps</button>
@@ -611,19 +159,19 @@
       <div class="dp-section-title">SKU ที่ควรนำเสนอ</div>
       <div class="sku-list" id="dpSkuList">
         <div class="sku-item">
-          <div class="sku-badge" style="background:#0d2137;color:#58c0e8">14-7-35</div>
+          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">14-7-35</div>
           <div class="sku-desc">ปาล์มน้ำมัน, มันสำปะหลังโรงงาน</div>
         </div>
         <div class="sku-item">
-          <div class="sku-badge" style="background:#0d2137;color:#58c0e8">15-5-20</div>
+          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">15-5-20</div>
           <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ข้าวโพดเลี้ยงสัตว์</div>
         </div>
         <div class="sku-item">
-          <div class="sku-badge" style="background:#0d2137;color:#58c0e8">16-8-8</div>
+          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">16-8-8</div>
           <div class="sku-desc">ข้าวนาปรัง, ข้าวโพด, มันสำปะหลัง</div>
         </div>
         <div class="sku-item">
-          <div class="sku-badge" style="background:#0d2137;color:#58c0e8">28-3-3</div>
+          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">28-3-3</div>
           <div class="sku-desc">ข้าวนาปรัง, ยางพารา, อ้อยโรงงาน</div>
         </div>
       </div>
@@ -633,15 +181,15 @@
       <div class="dp-section-title">โอกาสใหม่</div>
       <div class="sku-list">
         <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:rgba(63,185,80,0.15);color:#3fb950">25-7-7</div>
+          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">25-7-7</div>
           <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ยางพารา</div>
         </div>
         <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:rgba(63,185,80,0.15);color:#3fb950">18-6-6</div>
+          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">18-6-6</div>
           <div class="sku-desc">ข้าวนาปรัง, ยางพารา</div>
         </div>
         <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:rgba(63,185,80,0.15);color:#3fb950">16-4-16</div>
+          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">16-4-16</div>
           <div class="sku-desc">มันสำปะหลัง, ปาล์มน้ำมัน</div>
         </div>
       </div>
@@ -709,311 +257,7 @@
   </div>
 </div>
 
-<script>
-const ZONES = [
-  { id:'N1',  name:'เหนือ 1',  color:'#1a6fa5', dealers:8,  provinces:['เชียงใหม่','เชียงราย','แม่ฮ่องสอน','ลำปาง'],
-    crops:[['ข้าวโพดเลี้ยงสัตว์','#f39c12',75],['ข้าวนาปี','#3498db',48],['ลำไย','#8e44ad',28]] },
-  { id:'N2',  name:'เหนือ 2',  color:'#1e8bc3', dealers:11, provinces:['พิษณุโลก','เพชรบูรณ์','สุโขทัย','อุตรดิตถ์'],
-    crops:[['ข้าวนาปี','#3498db',82],['ข้าวโพดเลี้ยงสัตว์','#f39c12',54],['มันสำปะหลัง','#e74c3c',22]] },
-  { id:'N3',  name:'เหนือ 3',  color:'#4db8e8', dealers:9,  provinces:['ตาก','กำแพงเพชร','นครสวรรค์','พิจิตร'],
-    crops:[['ข้าวโพดเลี้ยงสัตว์','#f39c12',68],['ข้าวนาปี','#3498db',52],['อ้อยโรงงาน','#1abc9c',33]] },
-  { id:'NE1', name:'อีสาน 1',  color:'#e6a817', dealers:14, provinces:['ขอนแก่น','มหาสารคาม','กาฬสินธุ์','ร้อยเอ็ด'],
-    crops:[['ข้าวนาปี','#3498db',88],['อ้อยโรงงาน','#1abc9c',38],['มันสำปะหลัง','#e74c3c',18]] },
-  { id:'NE2', name:'อีสาน 2',  color:'#c0392b', dealers:12, provinces:['นครราชสีมา','บุรีรัมย์','สุรินทร์','ชัยภูมิ'],
-    crops:[['ข้าวนาปี','#3498db',89],['ยางพารา','#27ae60',30],['มันสำปะหลัง','#e74c3c',21]] },
-  { id:'NE3', name:'อีสาน 3',  color:'#e74c3c', dealers:10, provinces:['อุดรธานี','หนองคาย','เลย','สกลนคร'],
-    crops:[['ข้าวนาปี','#3498db',83],['ยางพารา','#27ae60',27],['อ้อยโรงงาน','#1abc9c',17]] },
-  { id:'C1',  name:'กลาง 1',   color:'#16a085', dealers:9,  provinces:['อยุธยา','อ่างทอง','สิงห์บุรี','ชัยนาท'],
-    crops:[['ข้าวนาปรัง','#2980b9',90],['ข้าวนาปี','#27ae60',68],['อ้อยโรงงาน','#f39c12',24]] },
-  { id:'C2',  name:'กลาง 2',   color:'#8e44ad', dealers:11, provinces:['ลพบุรี','สระบุรี','นครนายก','ปราจีนบุรี'],
-    crops:[['ข้าวนาปรัง','#2980b9',76],['ข้าวโพดเลี้ยงสัตว์','#f39c12',44],['มันสำปะหลัง','#e74c3c',29]] },
-  { id:'C3',  name:'กลาง 3',   color:'#27ae60', dealers:8,  provinces:['ราชบุรี','กาญจนบุรี','สุพรรณบุรี','นครปฐม'],
-    crops:[['ข้าวนาปรัง','#2980b9',79],['อ้อยโรงงาน','#f39c12',54],['ข้าวโพดเลี้ยงสัตว์','#e67e22',19]] },
-  { id:'S1',  name:'ใต้ 1',    color:'#c0392b', dealers:6,  provinces:['ชุมพร','สุราษฎร์ธานี','นครศรีธรรมราช','พัทลุง'],
-    crops:[['ปาล์มน้ำมัน','#f39c12',84],['ยางพารา','#27ae60',72],['ข้าวนาปี','#3498db',14]] },
-  { id:'S2',  name:'ใต้ 2',    color:'#e74c3c', dealers:4,  provinces:['กระบี่','พังงา','ภูเก็ต','ตรัง'],
-    crops:[['ยางพารา','#27ae60',91],['ปาล์มน้ำมัน','#f39c12',63],['ผลไม้','#e91e63',18]] },
-];
-
-const DEALERS = [
-  { name:'รุ่งเจริญการเกษตร',           zone:'N1',  province:'ตาก',           district:'พบพระ',         crop:'ข้าวโพด',     active:true  },
-  { name:'ศรีสุวรรณเกษตร',              zone:'N1',  province:'เชียงใหม่',     district:'สันทราย',       crop:'ข้าวนาปี',    active:true  },
-  { name:'แม่ฮ่องสอนอะกริ',             zone:'N1',  province:'แม่ฮ่องสอน',   district:'เมือง',          crop:'ข้าวโพด',     active:false },
-  { name:'บ้านทุ่งเกษตร',               zone:'N2',  province:'พิษณุโลก',     district:'เมือง',          crop:'ข้าวนาปี',    active:true  },
-  { name:'เพชรบูรณ์การเกษตร',           zone:'N2',  province:'เพชรบูรณ์',    district:'หล่มสัก',        crop:'ข้าวโพด',     active:true  },
-  { name:'นครสวรรค์การเกษตร',           zone:'N3',  province:'นครสวรรค์',    district:'เมือง',          crop:'อ้อย',        active:true  },
-  { name:'ตากอะกริซัพพลาย',             zone:'N3',  province:'ตาก',           district:'แม่สอด',         crop:'ข้าวโพด',     active:true  },
-  { name:'ขอนแก่นเกษตรกร',              zone:'NE1', province:'ขอนแก่น',      district:'เมือง',          crop:'ข้าวนาปี',    active:true  },
-  { name:'กาฬสินธุ์เกษตร',              zone:'NE1', province:'กาฬสินธุ์',    district:'กมลาไสย',        crop:'ข้าวนาปี',    active:true  },
-  { name:'สุรินทร์เซลล์',               zone:'NE2', province:'สุรินทร์',      district:'ท่าตูม',          crop:'ข้าวนาปี',    active:false },
-  { name:'บริษัท เดลแอนด์ปี รุ่งเรือง', zone:'NE3', province:'อุดรธานี',     district:'เมือง',          crop:'ข้าวนาปี',    active:true  },
-  { name:'ไทยเกษตรพัฒนา',               zone:'C1',  province:'อยุธยา',        district:'บางปะหัน',       crop:'ข้าวนาปรัง',  active:true  },
-  { name:'ชัยนาทอะกริ',                  zone:'C1',  province:'ชัยนาท',        district:'เมือง',          crop:'ข้าวนาปรัง',  active:true  },
-  { name:'ลพบุรีอะกริ',                  zone:'C2',  province:'ลพบุรี',        district:'โคกสำโรง',       crop:'ข้าวโพด',     active:true  },
-  { name:'สุพรรณบุรีเกษตร',             zone:'C3',  province:'สุพรรณบุรี',   district:'เดิมบางนางบวช',  crop:'อ้อย',        active:true  },
-  { name:'สุราษฎร์เกษตรกร',             zone:'S1',  province:'สุราษฎร์ธานี', district:'พุนพิน',          crop:'ปาล์มน้ำมัน', active:true  },
-  { name:'ชุมพรปาล์มเกษตร',             zone:'S1',  province:'ชุมพร',         district:'ท่าแซะ',          crop:'ปาล์มน้ำมัน', active:true  },
-  { name:'ยางพาราใต้',                   zone:'S2',  province:'กระบี่',        district:'เมือง',          crop:'ยางพารา',     active:false },
-  { name:'กระบี่เกษตรกร',               zone:'S2',  province:'กระบี่',        district:'อ่าวลึก',         crop:'ยางพารา',     active:true  },
-];
-
-let currentZone = 'all';
-let selectedDealerIdx = -1;
-
-// ── Mini map layout (row, col) for each zone ──
-const MINI_LAYOUT = [
-  // row 0 – North
-  [null, 'N1', 'N2', 'N3', null],
-  // row 1 – NE
-  [null, 'NE1','NE2','NE3',null],
-  // row 2 – Central
-  ['C1', 'C2', 'C3', null, null],
-  // row 3 – South (narrow peninsula – offset)
-  [null, 'S1', 'S2', null, null],
-];
-
-function zoneColor(id) {
-  return (ZONES.find(z => z.id === id) || {}).color || '#555';
-}
-
-function buildMiniMap() {
-  const el = document.getElementById('miniMap');
-  el.innerHTML = '';
-  MINI_LAYOUT.forEach(row => {
-    row.forEach(id => {
-      const cell = document.createElement('div');
-      if (!id) { cell.style.aspectRatio = '1'; el.appendChild(cell); return; }
-      const z = ZONES.find(z => z.id === id);
-      cell.className = 'mini-cell';
-      cell.style.background = z.color;
-      cell.textContent = id;
-      cell.title = z.name;
-      cell.innerHTML = `${id}<span class="badge">${z.dealers}</span>`;
-      cell.onclick = () => filterZone(id);
-      el.appendChild(cell);
-    });
-  });
-}
-
-function buildZoneChips() {
-  const el = document.getElementById('zoneChips');
-  el.innerHTML = ZONES.map(z =>
-    `<div class="zone-chip" id="chip-${z.id}" onclick="filterZone('${z.id}')" style="color:${z.color}">
-       <div class="zone-dot" style="background:${z.color}"></div>${z.id}
-     </div>`
-  ).join('');
-}
-
-function filterZone(id) {
-  currentZone = id;
-  document.querySelectorAll('.zone-chip').forEach(c => c.classList.remove('active'));
-  if (id !== 'all') {
-    const chip = document.getElementById('chip-' + id);
-    if (chip) chip.classList.add('active');
-    // show zone info in detail panel
-    const z = ZONES.find(z => z.id === id);
-    if (z) setDetailZone(z);
-  }
-  renderZoneCards();
-  renderTable();
-  updateContentHeader();
-}
-
-function updateContentHeader() {
-  const filtered = currentZone === 'all' ? ZONES : ZONES.filter(z => z.id === currentZone);
-  const totalDealers = filtered.reduce((a,z) => a + z.dealers, 0);
-  const z = currentZone === 'all' ? null : ZONES.find(z => z.id === currentZone);
-  document.getElementById('contentTitle').textContent = z ? `เขต ${z.id} – ${z.name}` : 'ดีลเลอร์ทั้งหมด';
-  document.getElementById('contentSub').textContent = `${totalDealers} ราย ใน ${filtered.length} เขตพื้นที่`;
-}
-
-function renderZoneCards() {
-  const container = document.getElementById('zoneCardsGrid');
-  const list = currentZone === 'all' ? ZONES : ZONES.filter(z => z.id === currentZone);
-  container.innerHTML = list.map(z => `
-    <div class="zone-card" onclick="selectZone('${z.id}')" id="zcard-${z.id}">
-      <div class="zone-card-header">
-        <div class="zone-card-name">
-          <div class="zone-badge-lg" style="background:${z.color}">${z.id}</div>
-          ${z.name}
-        </div>
-        <div class="zone-card-count">
-          <div class="zone-card-count-num" style="color:${z.color}">${z.dealers}</div>
-          <div class="zone-card-count-label">ดีลเลอร์</div>
-        </div>
-      </div>
-      <div class="zone-card-body">
-        <div class="zone-provinces">
-          ${z.provinces.slice(0,4).map(p => `<span class="province-tag">${p}</span>`).join('')}
-        </div>
-        <div class="crop-label">พืชหลัก</div>
-        ${z.crops.map(([name,color,pct]) => `
-          <div class="crop-row">
-            <div class="crop-name">${name}</div>
-            <div class="crop-bar-bg"><div class="crop-bar-fill" style="background:${color};width:${pct}%"></div></div>
-            <div class="crop-pct" style="color:${color}">${pct}%</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderTable() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  let list = DEALERS;
-  if (currentZone !== 'all') list = list.filter(d => d.zone === currentZone);
-  if (search) list = list.filter(d => d.name.toLowerCase().includes(search) || d.province.includes(search));
-  document.getElementById('dealerTbody').innerHTML = list.map((d, i) => `
-    <tr onclick="selectDealer(${i})" id="drow-${i}" ${selectedDealerIdx === i ? 'class="selected"' : ''}>
-      <td><div class="d-name-cell">
-        <div class="d-avatar" style="background:${zoneColor(d.zone)}">${d.name.charAt(0)}</div>
-        ${d.name}
-      </div></td>
-      <td><span class="zone-pill" style="background:${zoneColor(d.zone)}22;color:${zoneColor(d.zone)}">${d.zone}</span></td>
-      <td>${d.province}</td>
-      <td>${d.district}</td>
-      <td>${d.crop}</td>
-      <td><span class="status-dot" style="background:${d.active?'#3fb950':'#f85149'}"></span>${d.active?'Active':'Inactive'}</td>
-    </tr>
-  `).join('');
-}
-
-function selectDealer(idx) {
-  selectedDealerIdx = idx;
-  const d = DEALERS[idx];
-  document.getElementById('dpTitle').textContent = 'ข้อมูลดีลเลอร์';
-  document.getElementById('dpAvatar').style.background = zoneColor(d.zone);
-  document.getElementById('dpAvatar').textContent = d.zone;
-  document.getElementById('dpName').textContent = d.name;
-  document.getElementById('dpSub').textContent = `Zone: ${d.zone}`;
-  document.getElementById('dpProvince').textContent = d.province;
-  document.getElementById('dpDistrict').textContent = d.district;
-  document.getElementById('dpSku').textContent = '6 สูตร';
-  document.getElementById('dpOpp').textContent = '2 รายการ';
-
-  const z = ZONES.find(z => z.id === d.zone);
-  if (z) renderDpCrops(z.crops);
-
-  renderTable();
-}
-
-function selectZone(id) {
-  const z = ZONES.find(z => z.id === id);
-  if (!z) return;
-  setDetailZone(z);
-}
-
-function setDetailZone(z) {
-  document.getElementById('dpTitle').textContent = 'ข้อมูลเขตพื้นที่';
-  document.getElementById('dpAvatar').style.background = z.color;
-  document.getElementById('dpAvatar').textContent = z.id;
-  document.getElementById('dpName').textContent = `เขต ${z.id} – ${z.name}`;
-  document.getElementById('dpSub').textContent = `${z.dealers} ดีลเลอร์`;
-  document.getElementById('dpProvince').textContent = z.provinces[0];
-  document.getElementById('dpDistrict').textContent = `${z.provinces.length} จังหวัด`;
-  document.getElementById('dpSku').textContent = `${z.crops.length * 3} สูตร`;
-  document.getElementById('dpOpp').textContent = `${Math.floor(z.dealers/3)} รายการ`;
-  renderDpCrops(z.crops);
-}
-
-function renderDpCrops(crops) {
-  document.getElementById('dpCrops').innerHTML = crops.map(([name,color,pct]) => `
-    <div class="dp-crop-row">
-      <div class="dp-crop-header">
-        <span><span class="ci" style="background:${color}"></span>${name}</span>
-        <span style="font-weight:700">${pct}%</span>
-      </div>
-      <div class="dp-crop-bar-bg">
-        <div class="dp-crop-bar" style="background:${color};width:${pct}%"></div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function onSearch() { renderTable(); }
-
-// ── Modal ──
-let newDealerActive = true;
-
-function openModal() {
-  // populate zone select
-  const sel = document.getElementById('f-zone');
-  sel.innerHTML = '<option value="">-- เลือกเขต --</option>' +
-    ZONES.map(z => `<option value="${z.id}">${z.id} – ${z.name}</option>`).join('');
-  // reset fields
-  ['f-name','f-province','f-district'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-crop').value = '';
-  document.getElementById('f-zone').value = '';
-  document.getElementById('form-error').style.display = 'none';
-  newDealerActive = true;
-  document.getElementById('opt-active').className = 'status-opt active-opt';
-  document.getElementById('opt-inactive').className = 'status-opt';
-  document.getElementById('addModal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('addModal').classList.remove('open');
-}
-
-function closeModalOnBackdrop(e) {
-  if (e.target === document.getElementById('addModal')) closeModal();
-}
-
-function setStatus(active) {
-  newDealerActive = active;
-  document.getElementById('opt-active').className = active ? 'status-opt active-opt' : 'status-opt';
-  document.getElementById('opt-inactive').className = !active ? 'status-opt inactive-opt' : 'status-opt';
-}
-
-function submitDealer() {
-  const name = document.getElementById('f-name').value.trim();
-  const zone = document.getElementById('f-zone').value;
-  const crop = document.getElementById('f-crop').value;
-  const province = document.getElementById('f-province').value.trim();
-  const district = document.getElementById('f-district').value.trim();
-  const errEl = document.getElementById('form-error');
-
-  if (!name || !zone || !crop || !province) {
-    errEl.textContent = 'กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, เขต, พืชหลัก, จังหวัด)';
-    errEl.style.display = 'block';
-    return;
-  }
-  errEl.style.display = 'none';
-
-  DEALERS.push({ name, zone, province, district: district || 'เมือง', crop, active: newDealerActive });
-
-  // update zone dealer count
-  const z = ZONES.find(z => z.id === zone);
-  if (z) z.dealers++;
-
-  // update sidebar total
-  const totalEl = document.querySelector('.stat-card .stat-value');
-  if (totalEl) totalEl.textContent = DEALERS.length;
-
-  closeModal();
-  renderZoneCards();
-  renderTable();
-  updateContentHeader();
-
-  // select newly added dealer in table if in table view
-  const newIdx = DEALERS.length - 1;
-  selectDealer(newIdx);
-}
-
-function switchView(v) {
-  document.getElementById('grid-view').style.display = v === 'grid' ? '' : 'none';
-  document.getElementById('table-view').style.display = v === 'table' ? '' : 'none';
-  document.querySelectorAll('.view-tab').forEach((t,i) => t.classList.toggle('active', (v==='grid'&&i===0)||(v==='table'&&i===1)));
-}
-
-// Init
-buildMiniMap();
-buildZoneChips();
-renderZoneCards();
-renderTable();
-// Default detail to first zone
-setDetailZone(ZONES[0]);
-</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
