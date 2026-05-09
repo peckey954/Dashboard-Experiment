@@ -399,6 +399,75 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 480px;
+      max-width: calc(100vw - 32px);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      transform: translateY(12px);
+      transition: transform 0.2s;
+    }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 15px; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; color: var(--text-secondary);
+      font-size: 18px; cursor: pointer; line-height: 1;
+      padding: 2px 6px; border-radius: 5px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .modal-close:hover { color: var(--text-primary); background: var(--bg-hover); }
+    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input, .form-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .form-input:focus, .form-select:focus { border-color: #388bfd; }
+    .form-input::placeholder { color: var(--text-secondary); }
+    .form-select option { background: var(--bg-card); }
+    .form-select { cursor: pointer; }
+    .status-toggle { display: flex; gap: 8px; }
+    .status-opt {
+      flex: 1; padding: 8px; border-radius: 7px; border: 1px solid var(--border);
+      background: var(--bg-card); color: var(--text-secondary);
+      font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+      transition: all 0.15s;
+    }
+    .status-opt.active-opt { border-color: #3fb950; background: rgba(63,185,80,0.1); color: #3fb950; }
+    .status-opt.inactive-opt { border-color: #f85149; background: rgba(248,81,73,0.1); color: #f85149; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px; justify-content: flex-end;
+    }
   </style>
 </head>
 <body>
@@ -416,7 +485,7 @@
   <div class="header-actions">
     <button class="btn btn-secondary">📊 Excel</button>
     <button class="btn btn-secondary">📄 PDF</button>
-    <button class="btn btn-primary">+ เพิ่มดีลเลอร์</button>
+    <button class="btn btn-primary" onclick="openModal()">+ เพิ่มดีลเลอร์</button>
   </div>
 </div>
 
@@ -579,6 +648,65 @@
     </div>
   </div>
 
+</div>
+
+<!-- ── Add Dealer Modal ── -->
+<div class="modal-backdrop" id="addModal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">+ เพิ่มดีลเลอร์ใหม่</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <div class="form-label">ชื่อดีลเลอร์ *</div>
+        <input class="form-input" id="f-name" type="text" placeholder="เช่น รุ่งเจริญการเกษตร">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">เขตพื้นที่ *</div>
+          <select class="form-select" id="f-zone"></select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">พืชหลัก *</div>
+          <select class="form-select" id="f-crop">
+            <option value="">-- เลือกพืช --</option>
+            <option>ข้าวนาปี</option>
+            <option>ข้าวนาปรัง</option>
+            <option>ข้าวโพดเลี้ยงสัตว์</option>
+            <option>อ้อยโรงงาน</option>
+            <option>มันสำปะหลัง</option>
+            <option>ยางพารา</option>
+            <option>ปาล์มน้ำมัน</option>
+            <option>ลำไย</option>
+            <option>ผลไม้</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">จังหวัด *</div>
+          <input class="form-input" id="f-province" type="text" placeholder="เช่น ขอนแก่น">
+        </div>
+        <div class="form-group">
+          <div class="form-label">อำเภอ</div>
+          <input class="form-input" id="f-district" type="text" placeholder="เช่น เมือง">
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">สถานะ</div>
+        <div class="status-toggle">
+          <div class="status-opt active-opt" id="opt-active" onclick="setStatus(true)">● Active</div>
+          <div class="status-opt" id="opt-inactive" onclick="setStatus(false)">● Inactive</div>
+        </div>
+      </div>
+      <div id="form-error" style="color:#f85149;font-size:12px;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="submitDealer()">บันทึกดีลเลอร์</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -804,6 +932,74 @@ function renderDpCrops(crops) {
 }
 
 function onSearch() { renderTable(); }
+
+// ── Modal ──
+let newDealerActive = true;
+
+function openModal() {
+  // populate zone select
+  const sel = document.getElementById('f-zone');
+  sel.innerHTML = '<option value="">-- เลือกเขต --</option>' +
+    ZONES.map(z => `<option value="${z.id}">${z.id} – ${z.name}</option>`).join('');
+  // reset fields
+  ['f-name','f-province','f-district'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-crop').value = '';
+  document.getElementById('f-zone').value = '';
+  document.getElementById('form-error').style.display = 'none';
+  newDealerActive = true;
+  document.getElementById('opt-active').className = 'status-opt active-opt';
+  document.getElementById('opt-inactive').className = 'status-opt';
+  document.getElementById('addModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+function closeModalOnBackdrop(e) {
+  if (e.target === document.getElementById('addModal')) closeModal();
+}
+
+function setStatus(active) {
+  newDealerActive = active;
+  document.getElementById('opt-active').className = active ? 'status-opt active-opt' : 'status-opt';
+  document.getElementById('opt-inactive').className = !active ? 'status-opt inactive-opt' : 'status-opt';
+}
+
+function submitDealer() {
+  const name = document.getElementById('f-name').value.trim();
+  const zone = document.getElementById('f-zone').value;
+  const crop = document.getElementById('f-crop').value;
+  const province = document.getElementById('f-province').value.trim();
+  const district = document.getElementById('f-district').value.trim();
+  const errEl = document.getElementById('form-error');
+
+  if (!name || !zone || !crop || !province) {
+    errEl.textContent = 'กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, เขต, พืชหลัก, จังหวัด)';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  DEALERS.push({ name, zone, province, district: district || 'เมือง', crop, active: newDealerActive });
+
+  // update zone dealer count
+  const z = ZONES.find(z => z.id === zone);
+  if (z) z.dealers++;
+
+  // update sidebar total
+  const totalEl = document.querySelector('.stat-card .stat-value');
+  if (totalEl) totalEl.textContent = DEALERS.length;
+
+  closeModal();
+  renderZoneCards();
+  renderTable();
+  updateContentHeader();
+
+  // select newly added dealer in table if in table view
+  const newIdx = DEALERS.length - 1;
+  selectDealer(newIdx);
+}
 
 function switchView(v) {
   document.getElementById('grid-view').style.display = v === 'grid' ? '' : 'none';
