@@ -1364,3 +1364,488 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BAR-MENU LAYOUT — App Shell, Top Bar, Icon Rail, Panel Toggles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* App Shell: full-screen flex column */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Top Bar ── */
+
+.topbar {
+  align-items: center;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+  height: 52px;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 30;
+  gap: 16px;
+}
+
+.tb-left {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tb-logo {
+  height: 28px;
+  width: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.tb-appname {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.tb-caret {
+  width: 10px;
+  height: 6px;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.tb-nav {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+}
+
+.tb-nav-btn {
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tb-nav-btn:hover {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.tb-nav-btn.active {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.tb-right {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tb-wallboard-btn {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+.tb-wallboard-btn:hover {
+  background: rgba(249,115,22,0.1);
+  opacity: 1;
+}
+
+.tb-icon-btn {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+  width: 32px;
+}
+
+.tb-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tb-icon-btn:hover {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.tb-avatar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.tb-avatar {
+  align-items: center;
+  background: var(--primary);
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  font-size: 11px;
+  font-weight: 700;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+/* ── App Body ── */
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Icon Rail ── */
+
+.icon-rail {
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  justify-content: space-between;
+  padding: 8px 0;
+  width: 48px;
+  z-index: 20;
+}
+
+.rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px;
+}
+
+.rail-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+/* Single page icon */
+.rail-item {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  transition: color 0.15s, background 0.15s;
+  width: 36px;
+}
+
+.rail-item svg {
+  height: 18px;
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.rail-item:hover,
+.rail-item.active {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.rail-item.active {
+  color: var(--primary);
+}
+
+/* Tooltip on hover (single items) */
+.rail-item[data-tip]:hover::after {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  color: var(--foreground);
+  content: attr(data-tip);
+  font-size: 12px;
+  font-weight: 500;
+  left: calc(100% + 10px);
+  padding: 5px 10px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  z-index: 100;
+}
+
+/* Group icon with flyout */
+.rail-group {
+  position: relative;
+}
+
+.rail-group-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+  opacity: 0.5;
+}
+
+.rail-flyout {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  left: calc(100% + 10px);
+  min-width: 200px;
+  opacity: 0;
+  padding: 6px 4px;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 200;
+}
+
+.rail-group:hover .rail-flyout {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(0);
+}
+
+.flyout-header {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  padding: 4px 10px 6px;
+  text-transform: uppercase;
+}
+
+.flyout-item {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 13px;
+  gap: 8px;
+  padding: 7px 10px;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+  width: 100%;
+}
+
+.flyout-item svg {
+  flex-shrink: 0;
+  height: 14px;
+  width: 14px;
+}
+
+.flyout-item:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.flyout-item.active {
+  color: var(--primary);
+  background: rgba(249,115,22,0.1);
+}
+
+/* ── Page Wrapper ── */
+
+.page-wrapper {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Page Sub-header (breadcrumb + view tabs) ── */
+
+.page-subheader {
+  align-items: center;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+  gap: 16px;
+  height: 44px;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.page-breadcrumb {
+  align-items: center;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  color: var(--muted-foreground);
+}
+
+#bcPage {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.page-subheader-right {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Three-panel row ── */
+
+.panels-row {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Override sidebar for panel-toggle support */
+.sidebar {
+  flex-shrink: 0;
+  overflow: visible;        /* lets toggle tab overhang */
+  position: relative;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 252px;
+}
+
+.sidebar.collapsed {
+  width: 0;
+}
+
+.sidebar-inner {
+  background: var(--muted);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 252px;
+}
+
+/* Override detail-panel for panel-toggle support */
+.detail-panel {
+  flex-shrink: 0;
+  overflow: visible;
+  position: relative;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 280px;
+}
+
+.detail-panel.collapsed {
+  width: 0;
+}
+
+.detail-inner {
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 280px;
+}
+
+/* Content area fills remaining space */
+#mainContent {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Panel Divider & Toggle Tab ── */
+
+.panel-divider {
+  flex-shrink: 0;
+  position: relative;
+  width: 0;
+  z-index: 25;
+}
+
+.panel-toggle-tab {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: color 0.15s, background 0.15s;
+  width: 14px;
+}
+
+.panel-toggle-tab:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.panel-toggle-tab svg {
+  height: 12px;
+  width: 12px;
+  flex-shrink: 0;
+}
+
+/* Left toggle sits at x=0 of divider → right edge of sidebar */
+#leftDivider .panel-toggle-tab {
+  border-radius: 0 5px 5px 0;
+  border-left: none;
+  left: 0;
+}
+
+/* Right toggle sits at right=-14px → left edge of detail panel */
+#rightDivider .panel-toggle-tab {
+  border-radius: 5px 0 0 5px;
+  border-right: none;
+  right: 0;
+}
+
+/* Light theme adjustments for topbar/rail */
+[data-theme="light"] .topbar,
+[data-theme="light"] .icon-rail {
+  background: #ffffff;
+}
+
+[data-theme="light"] .tb-nav-btn.active {
+  background: rgba(0,0,0,0.05);
+}

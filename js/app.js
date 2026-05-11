@@ -959,6 +959,190 @@ function toggleTheme() {
   }
 }
 
+// ── Navigation Data & Icon Rail ────────────────────────────────────────────
+
+const IC = {
+  home:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>`,
+  mapPin:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  barChart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  target:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  truck:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16,8 20,8 23,11 23,16 16,16 16,8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  box:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  cart:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+  users:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  monitor: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+  brain:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+  map:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2 1,6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>`,
+  leaf:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8C8 10 5.9 16.17 3.82 22"/><path d="M17 8C17 8 22 5 22 2c0 0-5 1-8 4-3.5 3.5-5 9-5 9s5.5-1.5 8-5z"/></svg>`,
+  userChk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>`,
+  list:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+  activity:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+  bulb:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`,
+  dollar:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+  tag:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+  building:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="14" rx="1"/><polyline points="3,9 12,2 21,9"/></svg>`,
+  layers:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 2,7 12,12 22,7 12,2"/><polyline points="2,17 12,22 22,17"/><polyline points="2,12 12,17 22,12"/></svg>`,
+  wheat:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22 16 8"/><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94z"/><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94z"/></svg>`,
+  pie:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>`,
+  trendUp: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+};
+
+/** @const Navigation tree by section. */
+const NAV = {
+  sale: [
+    {type:'page', id:'overview',     icon:IC.home,     label:'Overview'},
+    {type:'div'},
+    {type:'group', id:'dealer-intel', icon:IC.mapPin,  label:'Dealer Intelligence', children:[
+      {id:'dealer-map',  icon:IC.map,     label:'Dealer map',          active:true},
+      {id:'agri-map',    icon:IC.leaf,    label:'Agriculture map'},
+      {id:'farmer-map',  icon:IC.userChk, label:'Farmer map'},
+      {id:'dealer',      icon:IC.list,    label:'Dealer'},
+    ]},
+    {type:'group', id:'sale-intel',   icon:IC.barChart, label:'Sale Intelligence', children:[
+      {id:'sales-activity',  icon:IC.activity, label:'Sales Activity'},
+      {id:'sales-opp',       icon:IC.bulb,     label:'Sales Opportunity'},
+      {id:'budgeting',       icon:IC.dollar,   label:'Budgeting recommendation'},
+    ]},
+    {type:'group', id:'comp-intel',   icon:IC.target,  label:'Competitor Intelligence', children:[
+      {id:'price-mon',       icon:IC.tag,      label:'Price monitoring'},
+      {id:'comp-profiles',   icon:IC.building, label:'Competitor profiles'},
+      {id:'sku-compare',     icon:IC.layers,   label:'SKU comparison'},
+      {id:'crop-market',     icon:IC.wheat,    label:'Crop market view'},
+    ]},
+  ],
+  wms: [
+    {type:'page', id:'truck-queue',   icon:IC.truck,   label:'Truck queue'},
+    {type:'page', id:'stock-mon',     icon:IC.box,     label:'Stock monitoring'},
+    {type:'page', id:'raw-material',  icon:IC.cart,    label:'Raw Material Buying'},
+  ],
+  marketing: [
+    {type:'page', id:'crm',           icon:IC.users,   label:'CRM Performance'},
+    {type:'page', id:'online-plat',   icon:IC.monitor, label:'Online Platform Performance'},
+    {type:'page', id:'raw-mkt',       icon:IC.cart,    label:'Raw Material Buying'},
+    {type:'div'},
+    {type:'group', id:'cust-intel',   icon:IC.brain,   label:'Customer Intelligence', children:[
+      {id:'cust-profile',    icon:IC.userChk, label:'Customer Profile'},
+      {id:'comp-prof-mkt',   icon:IC.building,label:'Competitor profiles'},
+      {id:'cust-seg',        icon:IC.pie,     label:'Customer Segmentation'},
+      {id:'sentiment',       icon:IC.trendUp, label:'Real time sentiment monitoring'},
+    ]},
+  ],
+};
+
+/** @type {string} Active top-level section. */
+let activeSection = 'sale';
+
+/** @type {string} Active page ID. */
+let activePage = 'dealer-map';
+
+/**
+ * Builds the icon rail for a given section.
+ * @param {string} section Section key.
+ */
+function buildIconRail(section) {
+  const list = document.getElementById('railList');
+  if (!list) return;
+  list.innerHTML = '';
+  (NAV[section] || []).forEach((item) => {
+    if (item.type === 'div') {
+      const d = document.createElement('div');
+      d.className = 'rail-group-divider';
+      list.appendChild(d);
+      return;
+    }
+    if (item.type === 'page') {
+      const btn = document.createElement('button');
+      btn.className = 'rail-item' + (item.id === activePage ? ' active' : '');
+      btn.setAttribute('data-tip', item.label);
+      btn.innerHTML = item.icon;
+      btn.onclick = () => navigatePage(item.id, item.label);
+      list.appendChild(btn);
+      return;
+    }
+    if (item.type === 'group') {
+      const grp = document.createElement('div');
+      grp.className = 'rail-group';
+      const activeChild = item.children.find((c) => c.active || c.id === activePage);
+      const btn = document.createElement('button');
+      btn.className = 'rail-item' + (activeChild ? ' active' : '');
+      btn.setAttribute('data-page', item.id);
+      btn.innerHTML = item.icon;
+
+      const flyout = document.createElement('div');
+      flyout.className = 'rail-flyout';
+      flyout.innerHTML = `<div class="flyout-header">${item.label}</div>` +
+        item.children.map((c) => `
+          <button class="flyout-item${c.id === activePage ? ' active' : ''}"
+                  onclick="navigatePage('${c.id}','${c.label}','${item.label}')">
+            ${c.icon}<span>${c.label}</span>
+          </button>`).join('');
+
+      grp.appendChild(btn);
+      grp.appendChild(flyout);
+      list.appendChild(grp);
+    }
+  });
+}
+
+/**
+ * Switches the active top-level section.
+ * @param {string} section 'sale' | 'wms' | 'marketing'
+ */
+function switchSection(section) {
+  activeSection = section;
+  document.querySelectorAll('.tb-nav-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['sale','wms','marketing'][i] === section);
+  });
+  buildIconRail(section);
+}
+
+/**
+ * Navigate to a page — updates breadcrumb and icon states.
+ * @param {string} pageId Page ID.
+ * @param {string} pageLabel Display name.
+ * @param {string=} groupLabel Parent group name (optional).
+ */
+function navigatePage(pageId, pageLabel, groupLabel) {
+  activePage = pageId;
+  const bcSection = document.getElementById('bcSection');
+  const bcPage = document.getElementById('bcPage');
+  if (bcSection) bcSection.textContent = groupLabel || activeSection;
+  if (bcPage) bcPage.textContent = pageLabel;
+  buildIconRail(activeSection);
+}
+
+// ── Panel Toggle (VS Code style) ────────────────────────────────────────────
+
+/** @type {{left: boolean, right: boolean}} Panel collapsed state. */
+const panelState = {left: false, right: false};
+
+const CHEV_L = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>`;
+const CHEV_R = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+/**
+ * Toggles the left sidebar or right detail panel.
+ * @param {'left'|'right'} side Which panel to toggle.
+ */
+function togglePanel(side) {
+  panelState[side] = !panelState[side];
+  const collapsed = panelState[side];
+
+  if (side === 'left') {
+    document.getElementById('leftSidebar').classList.toggle('collapsed', collapsed);
+    document.getElementById('leftToggle').innerHTML = collapsed ? CHEV_R : CHEV_L;
+    document.getElementById('leftToggle').title = collapsed ? 'เปิด sidebar' : 'ปิด sidebar';
+  } else {
+    document.getElementById('rightPanel').classList.toggle('collapsed', collapsed);
+    document.getElementById('rightToggle').innerHTML = collapsed ? CHEV_L : CHEV_R;
+    document.getElementById('rightToggle').title = collapsed ? 'เปิด detail panel' : 'ปิด detail panel';
+  }
+
+  // Allow map to resize after transition
+  if (mapInitialized && leafletMap) {
+    setTimeout(() => leafletMap.invalidateSize(), 250);
+  }
+}
+
 // ── Zone Summary & Top Dealers ─────────────────────────────────────────────
 
 /** Region groups for zone summary bars. */
@@ -1046,3 +1230,4 @@ setDetailZone(ZONES[0]);
 renderZoneSummary();
 renderTopDealers();
 updateStats();
+buildIconRail('sale');
