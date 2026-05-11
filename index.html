@@ -39,20 +39,20 @@
       <div class="sidebar-title">ภาพรวม</div>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-value">102</div>
+          <div class="stat-value" id="stat-total">102</div>
           <div class="stat-label">ดีลเลอร์ทั้งหมด</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">11</div>
-          <div class="stat-label">เขตพื้นที่</div>
+          <div class="stat-value" id="stat-no-dealer">58</div>
+          <div class="stat-label">พื้นที่ไม่มี Dealer</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">77</div>
-          <div class="stat-label">จังหวัด</div>
+          <div class="stat-value" id="stat-overlap" style="color:#ef4444">1</div>
+          <div class="stat-label">พื้นที่ซ้อนทับ</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" style="color:#f85149">12</div>
-          <div class="stat-label">Coverage Gaps</div>
+          <div class="stat-value" id="stat-coverage" style="color:#3fb950">25%</div>
+          <div class="stat-label">Coverage rate</div>
         </div>
       </div>
     </div>
@@ -64,14 +64,23 @@
     </div>
 
     <div class="sidebar-section">
+      <div class="sidebar-title">กรองตามจังหวัด</div>
+      <button class="all-zones-btn" onclick="filterZone('all')">🗺️ ทุกจังหวัด</button>
+    </div>
+
+    <div class="sidebar-section">
       <div class="sidebar-title">กรองตามเขต</div>
-      <button class="all-zones-btn" onclick="filterZone('all')">🗺️ ทุกเขตพื้นที่</button>
       <div class="zone-filter-grid" id="zoneChips"></div>
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-title">แผนที่เขต</div>
-      <div class="mini-map" id="miniMap"></div>
+      <div class="sidebar-title">Zone summary</div>
+      <div class="zone-summary" id="zoneSummary"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Top dealers by headcount</div>
+      <div class="top-dealers-list" id="topDealersList"></div>
     </div>
   </div>
 
@@ -120,12 +129,16 @@
   <!-- Detail Panel -->
   <div class="detail-panel">
     <div class="dp-header">
-      <div class="dp-title" id="dpTitle">ข้อมูลดีลเลอร์</div>
+      <div class="dp-header-row">
+        <div class="dp-title" id="dpTitle">ข้อมูลเขตพื้นที่</div>
+        <button class="btn btn-primary dp-all-btn">คู่มือทั้งหมด</button>
+      </div>
       <div class="dp-dealer-card">
         <div class="dp-avatar" id="dpAvatar" style="background:#1d6fa4">N1</div>
-        <div>
+        <div class="dp-dealer-info">
           <div class="dp-dealer-name" id="dpName">รุ่งเจริญการเกษตร</div>
           <div class="dp-dealer-sub" id="dpSub">Zone: N1</div>
+          <div class="dp-sales-line" id="dpSalesLine">Sales 12.4M | 92% target</div>
         </div>
       </div>
       <div class="dp-info-grid">
@@ -145,53 +158,65 @@
           <div class="dp-info-label">โอกาสใหม่</div>
           <div class="dp-info-val" id="dpOpp" style="color:#f97316">3 รายการ</div>
         </div>
+        <div class="dp-info">
+          <div class="dp-info-label">เกษตรกร</div>
+          <div class="dp-info-val" id="dpFarmers">562K ราย</div>
+        </div>
       </div>
-      <button class="map-btn">🗺️ ดูใน Google Maps</button>
+      <button class="map-btn">📍 ดูใน Google Maps</button>
     </div>
 
     <div class="dp-section" id="dpCropSection">
       <div class="dp-section-title">พืชหลักในพื้นที่ (Top 3)</div>
       <div id="dpCrops"></div>
-      <button class="ghost-btn">สูตรปุ๋ยแนะนำสำหรับพื้นที่ →</button>
     </div>
 
     <div class="dp-section">
-      <div class="dp-section-title">SKU ที่ควรนำเสนอ</div>
-      <div class="sku-list" id="dpSkuList">
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">14-7-35</div>
-          <div class="sku-desc">ปาล์มน้ำมัน, มันสำปะหลังโรงงาน</div>
+      <div class="dp-tabs">
+        <button class="dp-tab active" onclick="switchDpTab('saleops',this)">Sale ops</button>
+        <button class="dp-tab" onclick="switchDpTab('topcrop',this)">Top Crop</button>
+      </div>
+
+      <div id="dp-saleops">
+        <div class="dp-section-title" style="margin-top:10px">SKU ที่ควรนำเสนอ</div>
+        <div class="sku-list" id="dpSkuList">
+          <div class="sku-item">
+            <div class="sku-badge">14-7-35</div>
+            <div class="sku-desc">ปาล์มน้ำมัน, มันสำปะหลังโรงงาน</div>
+          </div>
+          <div class="sku-item">
+            <div class="sku-badge">15-5-20</div>
+            <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ข้าวโพดเลี้ยงสัตว์</div>
+          </div>
+          <div class="sku-item">
+            <div class="sku-badge">16-8-8</div>
+            <div class="sku-desc">ข้าวนาปรัง, ข้าวโพด, มันสำปะหลัง</div>
+          </div>
+          <div class="sku-item">
+            <div class="sku-badge">28-3-3</div>
+            <div class="sku-desc">ข้าวนาปรัง, ยางพารา, อ้อยโรงงาน</div>
+          </div>
         </div>
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">15-5-20</div>
-          <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ข้าวโพดเลี้ยงสัตว์</div>
-        </div>
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">16-8-8</div>
-          <div class="sku-desc">ข้าวนาปรัง, ข้าวโพด, มันสำปะหลัง</div>
-        </div>
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">28-3-3</div>
-          <div class="sku-desc">ข้าวนาปรัง, ยางพารา, อ้อยโรงงาน</div>
+        <div class="dp-section-title" style="margin-top:12px">โอกาสใหม่</div>
+        <div class="sku-list">
+          <div class="sku-item opportunity-item">
+            <div class="sku-badge opp">25-7-7</div>
+            <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ยางพารา</div>
+          </div>
+          <div class="sku-item opportunity-item">
+            <div class="sku-badge opp">18-6-6</div>
+            <div class="sku-desc">ข้าวนาปรัง, ยางพารา</div>
+          </div>
+          <div class="sku-item opportunity-item">
+            <div class="sku-badge opp">16-4-16</div>
+            <div class="sku-desc">มันสำปะหลัง, ปาล์มน้ำมัน</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="dp-section">
-      <div class="dp-section-title">โอกาสใหม่</div>
-      <div class="sku-list">
-        <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">25-7-7</div>
-          <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ยางพารา</div>
-        </div>
-        <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">18-6-6</div>
-          <div class="sku-desc">ข้าวนาปรัง, ยางพารา</div>
-        </div>
-        <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">16-4-16</div>
-          <div class="sku-desc">มันสำปะหลัง, ปาล์มน้ำมัน</div>
-        </div>
+      <div id="dp-topcrop" style="display:none">
+        <div class="dp-section-title" style="margin-top:10px">พืชหลักตามเขต</div>
+        <div id="dpTopCropContent"></div>
       </div>
     </div>
   </div>

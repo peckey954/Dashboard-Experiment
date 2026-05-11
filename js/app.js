@@ -57,7 +57,7 @@ const ZONES = [
   {
     id: 'NE2',
     name: 'อีสาน 2',
-    color: '#c0392b',
+    color: '#d97706',
     dealers: 12,
     provinces: ['นครราชสีมา', 'บุรีรัมย์', 'สุรินทร์', 'ชัยภูมิ'],
     crops: [
@@ -69,7 +69,7 @@ const ZONES = [
   {
     id: 'NE3',
     name: 'อีสาน 3',
-    color: '#e74c3c',
+    color: '#6366f1',
     dealers: 10,
     provinces: ['อุดรธานี', 'หนองคาย', 'เลย', 'สกลนคร'],
     crops: [
@@ -117,7 +117,7 @@ const ZONES = [
   {
     id: 'S1',
     name: 'ใต้ 1',
-    color: '#c0392b',
+    color: '#0891b2',
     dealers: 6,
     provinces: ['ชุมพร', 'สุราษฎร์ธานี', 'นครศรีธรรมราช', 'พัทลุง'],
     crops: [
@@ -129,7 +129,7 @@ const ZONES = [
   {
     id: 'S2',
     name: 'ใต้ 2',
-    color: '#e74c3c',
+    color: '#a855f7',
     dealers: 4,
     provinces: ['กระบี่', 'พังงา', 'ภูเก็ต', 'ตรัง'],
     crops: [
@@ -140,28 +140,49 @@ const ZONES = [
   },
 ];
 
+/** @const {string} Color for provinces with overlapping dealers from multiple zones. */
+const OVERLAP_COLOR = '#ef4444';
+
 /** @const {!Array<!Object>} Dealer records. */
 const DEALERS = [
-  {name: 'รุ่งเจริญการเกษตร',           zone: 'N1',  province: 'ตาก',           district: 'พบพระ',         crop: 'ข้าวโพด',     active: true},
-  {name: 'ศรีสุวรรณเกษตร',              zone: 'N1',  province: 'เชียงใหม่',     district: 'สันทราย',       crop: 'ข้าวนาปี',    active: true},
-  {name: 'แม่ฮ่องสอนอะกริ',             zone: 'N1',  province: 'แม่ฮ่องสอน',   district: 'เมือง',         crop: 'ข้าวโพด',     active: false},
-  {name: 'บ้านทุ่งเกษตร',               zone: 'N2',  province: 'พิษณุโลก',     district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
-  {name: 'เพชรบูรณ์การเกษตร',           zone: 'N2',  province: 'เพชรบูรณ์',    district: 'หล่มสัก',       crop: 'ข้าวโพด',     active: true},
-  {name: 'นครสวรรค์การเกษตร',           zone: 'N3',  province: 'นครสวรรค์',    district: 'เมือง',         crop: 'อ้อย',        active: true},
-  {name: 'ตากอะกริซัพพลาย',             zone: 'N3',  province: 'ตาก',           district: 'แม่สอด',        crop: 'ข้าวโพด',     active: true},
-  {name: 'ขอนแก่นเกษตรกร',              zone: 'NE1', province: 'ขอนแก่น',      district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
-  {name: 'กาฬสินธุ์เกษตร',              zone: 'NE1', province: 'กาฬสินธุ์',    district: 'กมลาไสย',       crop: 'ข้าวนาปี',    active: true},
-  {name: 'สุรินทร์เซลล์',               zone: 'NE2', province: 'สุรินทร์',      district: 'ท่าตูม',         crop: 'ข้าวนาปี',    active: false},
-  {name: 'บริษัท เดลแอนด์ปี รุ่งเรือง', zone: 'NE3', province: 'อุดรธานี',     district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
-  {name: 'ไทยเกษตรพัฒนา',               zone: 'C1',  province: 'อยุธยา',        district: 'บางปะหัน',      crop: 'ข้าวนาปรัง',  active: true},
-  {name: 'ชัยนาทอะกริ',                  zone: 'C1',  province: 'ชัยนาท',        district: 'เมือง',         crop: 'ข้าวนาปรัง',  active: true},
-  {name: 'ลพบุรีอะกริ',                  zone: 'C2',  province: 'ลพบุรี',        district: 'โคกสำโรง',      crop: 'ข้าวโพด',     active: true},
-  {name: 'สุพรรณบุรีเกษตร',             zone: 'C3',  province: 'สุพรรณบุรี',   district: 'เดิมบางนางบวช', crop: 'อ้อย',        active: true},
-  {name: 'สุราษฎร์เกษตรกร',             zone: 'S1',  province: 'สุราษฎร์ธานี', district: 'พุนพิน',         crop: 'ปาล์มน้ำมัน', active: true},
-  {name: 'ชุมพรปาล์มเกษตร',             zone: 'S1',  province: 'ชุมพร',         district: 'ท่าแซะ',         crop: 'ปาล์มน้ำมัน', active: true},
-  {name: 'ยางพาราใต้',                   zone: 'S2',  province: 'กระบี่',        district: 'เมือง',         crop: 'ยางพารา',     active: false},
-  {name: 'กระบี่เกษตรกร',               zone: 'S2',  province: 'กระบี่',        district: 'อ่าวลึก',        crop: 'ยางพารา',     active: true},
+  {name: 'รุ่งเจริญการเกษตร',           zone: 'N1',  province: 'ตาก',           district: 'พบพระ',         crop: 'ข้าวโพด',     active: true,  farmers: 562747, sales: 12.4, target: 92},
+  {name: 'ศรีสุวรรณเกษตร',              zone: 'N1',  province: 'เชียงใหม่',     district: 'สันทราย',       crop: 'ข้าวนาปี',    active: true,  farmers: 210000, sales: 7.8,  target: 85},
+  {name: 'แม่ฮ่องสอนอะกริ',             zone: 'N1',  province: 'แม่ฮ่องสอน',   district: 'เมือง',         crop: 'ข้าวโพด',     active: false, farmers: 88000,  sales: 2.1,  target: 54},
+  {name: 'บ้านทุ่งเกษตร',               zone: 'N2',  province: 'พิษณุโลก',     district: 'เมือง',         crop: 'ข้าวนาปี',    active: true,  farmers: 195000, sales: 5.9,  target: 78},
+  {name: 'เพชรบูรณ์การเกษตร',           zone: 'N2',  province: 'เพชรบูรณ์',    district: 'หล่มสัก',       crop: 'ข้าวโพด',     active: true,  farmers: 142000, sales: 4.3,  target: 71},
+  {name: 'นครสวรรค์การเกษตร',           zone: 'N3',  province: 'นครสวรรค์',    district: 'เมือง',         crop: 'อ้อย',        active: true,  farmers: 178000, sales: 6.1,  target: 88},
+  {name: 'ตากอะกริซัพพลาย',             zone: 'N3',  province: 'ตาก',           district: 'แม่สอด',        crop: 'ข้าวโพด',     active: true,  farmers: 95000,  sales: 3.2,  target: 67},
+  {name: 'ขอนแก่นเกษตรกร',              zone: 'NE1', province: 'ขอนแก่น',      district: 'เมือง',         crop: 'ข้าวนาปี',    active: true,  farmers: 376000, sales: 9.7,  target: 95},
+  {name: 'กาฬสินธุ์เกษตร',              zone: 'NE1', province: 'กาฬสินธุ์',    district: 'กมลาไสย',       crop: 'ข้าวนาปี',    active: true,  farmers: 165000, sales: 4.8,  target: 82},
+  {name: 'สุรินทร์เซลล์',               zone: 'NE2', province: 'สุรินทร์',      district: 'ท่าตูม',         crop: 'ข้าวนาปี',    active: false, farmers: 240000, sales: 5.5,  target: 73},
+  {name: 'บริษัท เดลแอนด์ปี รุ่งเรือง', zone: 'NE3', province: 'อุดรธานี',     district: 'เมือง',         crop: 'ข้าวนาปี',    active: true,  farmers: 312000, sales: 8.2,  target: 89},
+  {name: 'ไทยเกษตรพัฒนา',               zone: 'C1',  province: 'อยุธยา',        district: 'บางปะหัน',      crop: 'ข้าวนาปรัง',  active: true,  farmers: 197000, sales: 6.4,  target: 91},
+  {name: 'ชัยนาทอะกริ',                  zone: 'C1',  province: 'ชัยนาท',        district: 'เมือง',         crop: 'ข้าวนาปรัง',  active: true,  farmers: 124000, sales: 4.1,  target: 86},
+  {name: 'ลพบุรีอะกริ',                  zone: 'C2',  province: 'ลพบุรี',        district: 'โคกสำโรง',      crop: 'ข้าวโพด',     active: true,  farmers: 158000, sales: 5.2,  target: 77},
+  {name: 'สุพรรณบุรีเกษตร',             zone: 'C3',  province: 'สุพรรณบุรี',   district: 'เดิมบางนางบวช', crop: 'อ้อย',        active: true,  farmers: 132000, sales: 4.6,  target: 84},
+  {name: 'สุราษฎร์เกษตรกร',             zone: 'S1',  province: 'สุราษฎร์ธานี', district: 'พุนพิน',         crop: 'ปาล์มน้ำมัน', active: true,  farmers: 85000,  sales: 3.8,  target: 68},
+  {name: 'ชุมพรปาล์มเกษตร',             zone: 'S1',  province: 'ชุมพร',         district: 'ท่าแซะ',         crop: 'ปาล์มน้ำมัน', active: true,  farmers: 67000,  sales: 2.9,  target: 71},
+  {name: 'ยางพาราใต้',                   zone: 'S2',  province: 'กระบี่',        district: 'เมือง',         crop: 'ยางพารา',     active: false, farmers: 54000,  sales: 1.8,  target: 58},
+  {name: 'กระบี่เกษตรกร',               zone: 'S2',  province: 'กระบี่',        district: 'อ่าวลึก',        crop: 'ยางพารา',     active: true,  farmers: 48000,  sales: 2.2,  target: 62},
 ];
+
+/**
+ * Builds a map of province → { zones: Set<string>, dealers: Array } from DEALERS.
+ * Used by v2 map coloring: no-dealer=transparent, single-zone=zone color, multi-zone=red.
+ * @return {!Object}
+ */
+function buildProvinceMap() {
+  const map = {};
+  DEALERS.forEach((d) => {
+    if (!map[d.province]) map[d.province] = {zones: new Set(), dealers: []};
+    map[d.province].zones.add(d.zone);
+    map[d.province].dealers.push(d);
+  });
+  return map;
+}
+
+/** @type {!Object} Computed province → {zones, dealers} map. */
+let provinceMap = buildProvinceMap();
 
 /**
  * Maps Thai province name to zone ID for map coloring.
@@ -471,13 +492,21 @@ function selectDealer(idx) {
   document.getElementById('dpAvatar').style.background = zoneColor(d.zone);
   document.getElementById('dpAvatar').textContent = d.zone;
   document.getElementById('dpName').textContent = d.name;
-  document.getElementById('dpSub').textContent = `Zone: ${d.zone}`;
+  document.getElementById('dpSub').textContent = `${d.zone} · ${d.province}`;
   document.getElementById('dpProvince').textContent = d.province;
   document.getElementById('dpDistrict').textContent = d.district;
   document.getElementById('dpSku').textContent = '6 สูตร';
   const oppEl = document.getElementById('dpOpp');
   oppEl.textContent = '2 รายการ';
   oppEl.style.color = '#f97316';
+
+  const salesEl = document.getElementById('dpSalesLine');
+  if (salesEl && d.sales) salesEl.textContent = `Sales ${d.sales}M | ${d.target}% target`;
+
+  const farmersEl = document.getElementById('dpFarmers');
+  if (farmersEl && d.farmers) {
+    farmersEl.textContent = (d.farmers >= 1000 ? (d.farmers / 1000).toFixed(0) + 'K' : d.farmers) + ' ราย';
+  }
 
   const zone = ZONES.find((z) => z.id === d.zone);
   if (zone) renderDpCrops(zone.crops);
@@ -529,6 +558,18 @@ function renderDpCrops(crops) {
       </div>
     </div>
   `).join('');
+}
+
+/**
+ * Switches between Sale ops and Top Crop tabs in the detail panel.
+ * @param {string} tab Tab ID ('saleops' or 'topcrop').
+ * @param {!Element} btn The clicked button element.
+ */
+function switchDpTab(tab, btn) {
+  document.querySelectorAll('.dp-tab').forEach((t) => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dp-saleops').style.display = tab === 'saleops' ? '' : 'none';
+  document.getElementById('dp-topcrop').style.display = tab === 'topcrop' ? '' : 'none';
 }
 
 /** Handles search input changes. */
@@ -625,14 +666,17 @@ function submitDealer() {
   const matchedZone = ZONES.find((z) => z.id === zone);
   if (matchedZone) matchedZone.dealers++;
 
-  const totalEl = document.querySelector('.stat-card .stat-value');
-  if (totalEl) totalEl.textContent = DEALERS.length;
+  provinceMap = buildProvinceMap();
 
   closeModal();
   renderZoneCards();
   renderTable();
   updateContentHeader();
+  renderZoneSummary();
+  renderTopDealers();
+  updateStats();
   selectDealer(DEALERS.length - 1);
+  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
 }
 
 // ── Map ────────────────────────────────────────────────────────────────────
@@ -647,26 +691,43 @@ function styleProvince(feature) {
   const provName = feature.properties.PROV_NAM_T ||
                    feature.properties.name ||
                    feature.properties.NAME_TH || '';
-  const zoneId = getZoneForProvince(provName);
-  const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
-  const dimmed = currentZone !== 'all' && zoneId !== currentZone;
 
-  if (isLight) {
+  const provData = provinceMap[provName];
+  const borderColor = isLight ? '#b8b0a5' : '#09090b';
+
+  // No dealer in this province — show transparent
+  if (!provData || provData.zones.size === 0) {
     return {
-      fillColor: zone ? zone.color : '#e8e2da',
-      fillOpacity: dimmed ? 0.15 : 1.0,
-      color: '#b8b0a5',
-      weight: 0.8,
+      fillColor: isLight ? '#e8e2da' : '#27272a',
+      fillOpacity: isLight ? 0.25 : 0.08,
+      color: borderColor,
+      weight: 0.6,
+      opacity: 0.5,
+    };
+  }
+
+  // Overlap — dealers from multiple zones → RED
+  if (provData.zones.size > 1) {
+    const dimmed = currentZone !== 'all' && !provData.zones.has(currentZone);
+    return {
+      fillColor: OVERLAP_COLOR,
+      fillOpacity: dimmed ? 0.12 : (isLight ? 0.85 : 0.7),
+      color: borderColor,
+      weight: 1,
       opacity: 0.9,
     };
   }
 
+  // Single zone — use zone color
+  const zoneId = [...provData.zones][0];
+  const zone = ZONES.find((z) => z.id === zoneId);
+  const dimmed = currentZone !== 'all' && zoneId !== currentZone;
   return {
-    fillColor: zone ? zone.color : '#27272a',
-    fillOpacity: dimmed ? 0.1 : 0.6,
-    color: '#09090b',
+    fillColor: zone ? zone.color : '#555',
+    fillOpacity: dimmed ? 0.12 : (isLight ? 0.85 : 0.65),
+    color: borderColor,
     weight: 0.8,
-    opacity: 0.8,
+    opacity: 0.9,
   };
 }
 
@@ -679,28 +740,59 @@ function onEachProvince(feature, layer) {
   const provName = feature.properties.PROV_NAM_T ||
                    feature.properties.name ||
                    feature.properties.NAME_TH || '';
-  const zoneId = getZoneForProvince(provName);
-  const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
+
+  const provData = provinceMap[provName];
 
   layer.on({
     mouseover(e) {
-      e.target.setStyle({fillOpacity: 0.85, weight: 2, color: '#f97316'});
+      e.target.setStyle({fillOpacity: 0.95, weight: 2, color: '#f97316'});
       e.target.bringToFront();
     },
     mouseout() {
       provinceLayer.resetStyle(layer);
     },
     click() {
-      if (zoneId) filterZone(zoneId);
+      if (provData && provData.zones.size === 1) {
+        filterZone([...provData.zones][0]);
+      }
     },
   });
 
   if (provName) {
-    // Permanent label (always visible, hidden in dark mode via CSS)
-    layer.bindTooltip(provName, {
-      permanent: true,
-      direction: 'center',
-      className: 'province-label',
+    let tipHtml;
+    if (!provData || provData.zones.size === 0) {
+      tipHtml = `<div class="prov-tip-empty">
+        <div class="prov-tip-name">${provName}</div>
+        <div class="prov-tip-sub">ยังไม่มีดีลเลอร์</div>
+      </div>`;
+    } else if (provData.zones.size > 1) {
+      const zoneList = [...provData.zones].join(', ');
+      tipHtml = `<div class="prov-tip-overlap">
+        <div class="prov-tip-name">${provName}</div>
+        <div class="prov-tip-badge overlap-badge">⚠ ซ้อนทับ ${provData.zones.size} เขต</div>
+        <div class="prov-tip-sub">เขต: ${zoneList}</div>
+        <div class="prov-tip-sub">${provData.dealers.length} ดีลเลอร์</div>
+      </div>`;
+    } else {
+      const d = provData.dealers[0];
+      const zone = ZONES.find((z) => z.id === d.zone);
+      const farmersK = d.farmers >= 1000 ? (d.farmers / 1000).toFixed(0) + 'K' : d.farmers;
+      tipHtml = `<div class="prov-tip">
+        <div class="prov-tip-name">${d.name}</div>
+        <div class="prov-tip-farmers">${d.farmers.toLocaleString()} ราย</div>
+        <div class="prov-tip-row">
+          <span class="prov-tip-zone" style="color:${zone ? zone.color : '#f97316'}">Zone ${d.zone}</span>
+          · ${d.province} / ${d.district}
+        </div>
+        <div class="prov-tip-row">Sales ฿${d.sales}M · ${d.target}% target</div>
+      </div>`;
+    }
+
+    layer.bindTooltip(tipHtml, {
+      sticky: true,
+      direction: 'top',
+      className: 'province-rich-tooltip',
+      offset: [0, -8],
     });
   }
 }
@@ -867,10 +959,90 @@ function toggleTheme() {
   }
 }
 
+// ── Zone Summary & Top Dealers ─────────────────────────────────────────────
+
+/** Region groups for zone summary bars. */
+const REGION_GROUPS = [
+  {label: 'N',  zones: ['N1','N2','N3'],       target: 35},
+  {label: 'NE', zones: ['NE1','NE2','NE3'],    target: 45},
+  {label: 'C',  zones: ['C1','C2','C3'],        target: 30},
+  {label: 'S',  zones: ['S1','S2'],             target: 18},
+];
+
+/** Renders the zone summary progress bars in the sidebar. */
+function renderZoneSummary() {
+  const el = document.getElementById('zoneSummary');
+  if (!el) return;
+  el.innerHTML = REGION_GROUPS.map(({label, zones, target}) => {
+    const dealers = zones.reduce((s, id) => {
+      const z = ZONES.find((z) => z.id === id);
+      return s + (z ? z.dealers : 0);
+    }, 0);
+    const pct = Math.round(dealers / target * 100);
+    const color = ZONES.find((z) => z.id === zones[0]).color;
+    return `
+      <div class="zs-row">
+        <span class="zs-label">${label}</span>
+        <div class="zs-bar">
+          <div class="zs-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div>
+        </div>
+        <span class="zs-pct">${pct}%</span>
+        <span class="zs-count">${dealers}/${target}</span>
+      </div>`;
+  }).join('');
+}
+
+/** Renders the top-5 dealers by farmers headcount leaderboard. */
+function renderTopDealers() {
+  const el = document.getElementById('topDealersList');
+  if (!el) return;
+  const sorted = [...DEALERS]
+      .filter((d) => d.farmers)
+      .sort((a, b) => b.farmers - a.farmers)
+      .slice(0, 5);
+  const max = sorted[0] ? sorted[0].farmers : 1;
+  el.innerHTML = sorted.map((d, i) => {
+    const color = zoneColor(d.zone);
+    const pct = (d.farmers / max * 100).toFixed(0);
+    const kStr = d.farmers >= 1000 ? (d.farmers / 1000).toFixed(0) + 'K' : d.farmers;
+    return `
+      <div class="td-row">
+        <span class="td-rank">${i + 1}</span>
+        <span class="td-name">${d.name.replace('การเกษตร','').replace('เกษตร','').trim()}·${d.zone}</span>
+        <div class="td-bar-wrap">
+          <div class="td-bar" style="width:${pct}%;background:${color}"></div>
+        </div>
+        <span class="td-val">${kStr}</span>
+      </div>`;
+  }).join('');
+}
+
+/** Computes and updates the v2 sidebar stat counters. */
+function updateStats() {
+  const totalEl = document.getElementById('stat-total');
+  const noDelearEl = document.getElementById('stat-no-dealer');
+  const overlapEl = document.getElementById('stat-overlap');
+  const coverageEl = document.getElementById('stat-coverage');
+  if (!totalEl) return;
+
+  const totalProvinces = Object.keys(PROVINCE_ZONE_MAP).length;
+  const provincesWithDealers = Object.keys(provinceMap).length;
+  const overlapProvinces = Object.values(provinceMap).filter((p) => p.zones.size > 1).length;
+  const noDealer = totalProvinces - provincesWithDealers;
+  const coveragePct = Math.round(provincesWithDealers / totalProvinces * 100);
+
+  totalEl.textContent = DEALERS.length;
+  if (noDelearEl) noDelearEl.textContent = noDealer;
+  if (overlapEl)  overlapEl.textContent = overlapProvinces;
+  if (coverageEl) coverageEl.textContent = coveragePct + '%';
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 
-buildMiniMap();
 buildZoneChips();
 renderZoneCards();
 renderTable();
 setDetailZone(ZONES[0]);
+renderZoneSummary();
+renderTopDealers();
+updateStats();

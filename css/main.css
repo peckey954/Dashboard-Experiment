@@ -1104,6 +1104,248 @@ body {
   font-weight: 700;
 }
 
+/* ── V2: Zone Summary ── */
+
+.zone-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.zs-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+
+.zs-label {
+  width: 22px;
+  font-weight: 700;
+  color: var(--foreground);
+  flex-shrink: 0;
+}
+
+.zs-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--muted);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.zs-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.zs-pct {
+  width: 34px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.zs-count {
+  width: 38px;
+  text-align: right;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+/* ── V2: Top Dealers ── */
+
+.top-dealers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.td-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.td-rank {
+  width: 14px;
+  color: var(--muted-foreground);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.td-name {
+  width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--foreground);
+  flex-shrink: 0;
+}
+
+.td-bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: var(--muted);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.td-bar {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.td-val {
+  width: 32px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+/* ── V2: Detail Panel Header ── */
+
+.dp-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.dp-all-btn {
+  font-size: 11px;
+  padding: 5px 10px;
+  height: auto;
+}
+
+.dp-dealer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dp-sales-line {
+  font-size: 11px;
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+/* ── V2: Detail Panel Tabs ── */
+
+.dp-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.dp-tab {
+  background: none;
+  border: none;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+}
+
+.dp-tab.active {
+  background: var(--muted);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.dp-tab:hover:not(.active) {
+  color: var(--foreground);
+}
+
+/* ── V2: SKU badge cleaned up ── */
+
+.sku-badge {
+  background: var(--muted);
+  color: var(--primary);
+  border: 1px solid rgba(249,115,22,0.3);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sku-badge.opp {
+  background: var(--accent);
+  color: var(--primary);
+}
+
+/* ── V2: Province Hover Tooltip ── */
+
+.province-rich-tooltip {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+  font-family: 'Sarabun', sans-serif !important;
+  font-size: 13px !important;
+  color: var(--foreground) !important;
+  pointer-events: none;
+}
+
+.province-rich-tooltip::before { display: none !important; }
+
+.prov-tip-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.prov-tip-farmers {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.2;
+  margin: 2px 0;
+}
+
+.prov-tip-zone { font-weight: 700; }
+
+.prov-tip-row {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 3px;
+}
+
+.prov-tip-sub {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 2px;
+}
+
+.prov-tip-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.overlap-badge {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.3);
+}
+
+.prov-tip-empty .prov-tip-sub {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
 /* ── Scrollbar ── */
 
 ::-webkit-scrollbar {
