@@ -1624,16 +1624,26 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-  left: calc(100% + 10px);
+  left: calc(100% + 8px);
   min-width: 200px;
   opacity: 0;
   padding: 6px 4px;
   pointer-events: none;
   position: absolute;
   top: 0;
-  transform: translateX(-6px);
+  transform: translateX(-4px);
   transition: opacity 0.15s, transform 0.15s;
   z-index: 200;
+}
+
+/* Transparent bridge fills the gap — keeps hover alive while mouse moves across */
+.rail-flyout::before {
+  bottom: 0;
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 0;
+  width: 14px;
 }
 
 .rail-group:hover .rail-flyout {
