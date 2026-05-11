@@ -69,6 +69,13 @@
             <button class="view-tab" onclick="switchView('table')">≡ ตาราง</button>
             <button class="view-tab" onclick="switchView('map')">🗺 แผนที่</button>
           </div>
+          <button class="tb-icon-btn layout-cycle-btn" id="layoutCycleBtn" onclick="cycleLayout()" title="Toggle panels">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" width="16" height="16">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="9" y1="3" x2="9" y2="21"/>
+              <line x1="15" y1="3" x2="15" y2="21"/>
+            </svg>
+          </button>
           <button class="btn btn-primary" onclick="openModal()">+ เพิ่มดีลเลอร์</button>
         </div>
       </div>
@@ -79,28 +86,6 @@
         <!-- Left Sidebar -->
         <div class="sidebar" id="leftSidebar">
           <div class="sidebar-inner">
-
-            <div class="sidebar-section">
-              <div class="sidebar-title">ภาพรวม</div>
-              <div class="stats-grid">
-                <div class="stat-card">
-                  <div class="stat-value" id="stat-total">102</div>
-                  <div class="stat-label">ดีลเลอร์ทั้งหมด</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value" id="stat-no-dealer">58</div>
-                  <div class="stat-label">พื้นที่ไม่มี Dealer</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value" id="stat-overlap" style="color:#ef4444">1</div>
-                  <div class="stat-label">พื้นที่ซ้อนทับ</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value" id="stat-coverage" style="color:#3fb950">25%</div>
-                  <div class="stat-label">Coverage rate</div>
-                </div>
-              </div>
-            </div>
 
             <div class="sidebar-section">
               <div class="sidebar-title">ค้นหา</div>
@@ -133,21 +118,13 @@
 
         <!-- ── Left panel toggle tab ── -->
         <div class="panel-divider" id="leftDivider">
-          <button class="panel-toggle-tab" id="leftToggle" onclick="togglePanel('left')" title="Toggle sidebar  ⌘B">
-            <svg id="leftToggleIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          <button class="panel-toggle-tab" id="leftToggle" onclick="togglePanel('left')" title="ปิด sidebar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
         </div>
 
         <!-- Content -->
         <div class="content" id="mainContent">
-          <div class="content-header">
-            <div>
-              <div style="font-size:15px;font-weight:700" id="contentTitle">ดีลเลอร์ทั้งหมด</div>
-              <div style="font-size:11px;color:var(--muted-foreground);margin-top:2px" id="contentSub">
-                102 ราย ใน 11 เขตพื้นที่
-              </div>
-            </div>
-          </div>
           <div class="content-body" id="contentBody">
             <div id="grid-view">
               <div class="zone-cards-grid" id="zoneCardsGrid"></div>
@@ -168,6 +145,66 @@
             <div id="map-view" style="display:none">
               <div id="thailand-map"></div>
             </div>
+
+            <!-- ── Dealer Analytics Page ── -->
+            <div id="dealer-view" style="display:none">
+
+              <!-- KPI Strip -->
+              <div class="dv-kpi-strip" id="dvKpiStrip"></div>
+
+              <!-- Row 2: Segment Quadrant + Scatter -->
+              <div class="dv-charts-row dv-charts-row--2col">
+                <div class="dv-panel">
+                  <div class="dv-panel-header">
+                    <span class="dv-panel-title">Dealer Segment</span>
+                    <span class="dv-panel-sub">Target % vs Farmers</span>
+                  </div>
+                  <div class="dv-quadrant" id="dvQuadrant"></div>
+                  <div class="dv-quad-axes">
+                    <span>← ต่ำกว่าเป้า · เกินเป้า → (X = Target %)</span>
+                    <span>Y = จำนวนเกษตรกร</span>
+                  </div>
+                </div>
+                <div class="dv-panel">
+                  <div class="dv-panel-header">
+                    <span class="dv-panel-title">Activity Score vs Sales</span>
+                    <span class="dv-panel-sub">X = Sales ฿M · Y = Target %</span>
+                  </div>
+                  <div class="dv-scatter-wrap">
+                    <div class="dv-scatter" id="dvScatter"></div>
+                    <div class="dv-scatter-xaxis" id="dvScatterXAxis"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 3: Performance list + Top Crop -->
+              <div class="dv-charts-row dv-charts-row--3-1col">
+                <div class="dv-panel">
+                  <div class="dv-panel-header">
+                    <span class="dv-panel-title">Dealer Performance</span>
+                    <span class="dv-panel-sub" id="dvPerfSub"></span>
+                  </div>
+                  <div class="dv-perf-list" id="dvPerfList"></div>
+                </div>
+                <div class="dv-panel">
+                  <div class="dv-panel-header">
+                    <span class="dv-panel-title">Top Crop</span>
+                  </div>
+                  <div class="dv-crop-chart" id="dvCropChart"></div>
+                </div>
+              </div>
+
+              <!-- Row 4: Coverage -->
+              <div class="dv-panel">
+                <div class="dv-panel-header">
+                  <span class="dv-panel-title">Coverage</span>
+                  <span class="dv-panel-sub">จำนวนเกษตรกรต่อดีลเลอร์</span>
+                </div>
+                <div class="dv-coverage-list" id="dvCoverage"></div>
+              </div>
+
+            </div><!-- /#dealer-view -->
+
           </div>
         </div>
 

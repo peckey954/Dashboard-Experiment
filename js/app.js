@@ -367,6 +367,7 @@ function buildMiniMap() {
  */
 function buildZoneChips() {
   const el = document.getElementById('zoneChips');
+  if (!el) return;
   el.innerHTML = ZONES.map((z) => `
     <div class="zone-chip" id="chip-${z.id}" onclick="filterZone('${z.id}')" style="color:${z.color}">
       <div class="zone-dot" style="background:${z.color}"></div>${z.id}
@@ -400,13 +401,7 @@ function filterZone(id) {
  * Updates the content area title and subtitle based on the current filter.
  */
 function updateContentHeader() {
-  const filtered = currentZone === 'all' ? ZONES : ZONES.filter((z) => z.id === currentZone);
-  const totalDealers = filtered.reduce((sum, z) => sum + z.dealers, 0);
-  const zone = currentZone === 'all' ? null : ZONES.find((z) => z.id === currentZone);
-  document.getElementById('contentTitle').textContent =
-      zone ? `เขต ${zone.id} – ${zone.name}` : 'ดีลเลอร์ทั้งหมด';
-  document.getElementById('contentSub').textContent =
-      `${totalDealers} ราย ใน ${filtered.length} เขตพื้นที่`;
+  // content-header removed; no-op
 }
 
 /**
@@ -450,7 +445,8 @@ function renderZoneCards() {
  * Renders the dealer table, filtered by current zone and search query.
  */
 function renderTable() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
+  const searchEl = document.getElementById('searchInput');
+  const search = searchEl ? searchEl.value.toLowerCase() : '';
   let list = DEALERS;
   if (currentZone !== 'all') list = list.filter((d) => d.zone === currentZone);
   if (search) {
@@ -1109,6 +1105,42 @@ function navigatePage(pageId, pageLabel, groupLabel) {
   if (bcSection) bcSection.textContent = groupLabel || activeSection;
   if (bcPage) bcPage.textContent = pageLabel;
   buildIconRail(activeSection);
+
+  // ── Page content switching ──
+  const isDealerPage = pageId === 'dealer';
+  const dealerView = document.getElementById('dealer-view');
+  const gridView   = document.getElementById('grid-view');
+  const tableView  = document.getElementById('table-view');
+  const mapView    = document.getElementById('map-view');
+  const viewTabsEl = document.querySelector('.view-tabs');
+  const addBtn     = document.querySelector('.btn-primary[onclick="openModal()"]');
+  const layoutBtn  = document.getElementById('layoutCycleBtn');
+
+  const contentBody = document.getElementById('contentBody');
+
+  if (isDealerPage) {
+    if (dealerView)  dealerView.style.display = '';
+    if (gridView)    gridView.style.display   = 'none';
+    if (tableView)   tableView.style.display  = 'none';
+    if (mapView)     mapView.style.display    = 'none';
+    if (contentBody) contentBody.classList.add('no-pad');
+    if (viewTabsEl)  viewTabsEl.style.display = 'none';
+    if (addBtn)      addBtn.style.display     = 'none';
+    if (layoutBtn)   layoutBtn.style.display  = 'none';
+    renderDealerPage();
+  } else {
+    if (dealerView)  dealerView.style.display = 'none';
+    if (gridView)    gridView.style.display   = '';
+    if (tableView)   tableView.style.display  = 'none';
+    if (mapView)     mapView.style.display    = 'none';
+    if (contentBody) contentBody.classList.remove('no-pad');
+    if (viewTabsEl)  viewTabsEl.style.display = '';
+    if (addBtn)      addBtn.style.display     = '';
+    if (layoutBtn)   layoutBtn.style.display  = '';
+    document.querySelectorAll('.view-tab').forEach((tab, i) => {
+      tab.classList.toggle('active', i === 0);
+    });
+  }
 }
 
 // ── Panel Toggle (VS Code style) ────────────────────────────────────────────
@@ -1126,7 +1158,6 @@ const CHEV_R = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 function togglePanel(side) {
   panelState[side] = !panelState[side];
   const collapsed = panelState[side];
-
   if (side === 'left') {
     document.getElementById('leftSidebar').classList.toggle('collapsed', collapsed);
     document.getElementById('leftToggle').innerHTML = collapsed ? CHEV_R : CHEV_L;
@@ -1136,8 +1167,37 @@ function togglePanel(side) {
     document.getElementById('rightToggle').innerHTML = collapsed ? CHEV_L : CHEV_R;
     document.getElementById('rightToggle').title = collapsed ? 'เปิด detail panel' : 'ปิด detail panel';
   }
+  if (mapInitialized && leafletMap) {
+    setTimeout(() => leafletMap.invalidateSize(), 250);
+  }
+}
 
-  // Allow map to resize after transition
+/** 0=both visible, 1=both hidden, 2=left hidden, 3=right hidden */
+let layoutState = 0;
+
+/**
+ * Cycles through 4 panel layout states (Figma-style toggle button).
+ * 0: both visible → 1: both hidden → 2: left hidden → 3: right hidden → 0
+ */
+function cycleLayout() {
+  layoutState = (layoutState + 1) % 4;
+  const leftHidden  = layoutState === 1 || layoutState === 2;
+  const rightHidden = layoutState === 1 || layoutState === 3;
+
+  panelState.left  = leftHidden;
+  panelState.right = rightHidden;
+
+  document.getElementById('leftSidebar').classList.toggle('collapsed', leftHidden);
+  document.getElementById('leftToggle').innerHTML = leftHidden ? CHEV_R : CHEV_L;
+  document.getElementById('leftToggle').title = leftHidden ? 'เปิด sidebar' : 'ปิด sidebar';
+
+  document.getElementById('rightPanel').classList.toggle('collapsed', rightHidden);
+  document.getElementById('rightToggle').innerHTML = rightHidden ? CHEV_L : CHEV_R;
+  document.getElementById('rightToggle').title = rightHidden ? 'เปิด detail panel' : 'ปิด detail panel';
+
+  const btn = document.getElementById('layoutCycleBtn');
+  if (btn) btn.classList.toggle('active', layoutState !== 0);
+
   if (mapInitialized && leafletMap) {
     setTimeout(() => leafletMap.invalidateSize(), 250);
   }
@@ -1203,22 +1263,218 @@ function renderTopDealers() {
 
 /** Computes and updates the v2 sidebar stat counters. */
 function updateStats() {
-  const totalEl = document.getElementById('stat-total');
-  const noDelearEl = document.getElementById('stat-no-dealer');
-  const overlapEl = document.getElementById('stat-overlap');
-  const coverageEl = document.getElementById('stat-coverage');
-  if (!totalEl) return;
+  // stat cards removed from sidebar; no-op
+}
 
-  const totalProvinces = Object.keys(PROVINCE_ZONE_MAP).length;
-  const provincesWithDealers = Object.keys(provinceMap).length;
-  const overlapProvinces = Object.values(provinceMap).filter((p) => p.zones.size > 1).length;
-  const noDealer = totalProvinces - provincesWithDealers;
-  const coveragePct = Math.round(provincesWithDealers / totalProvinces * 100);
+// ── Dealer Analytics Page ──────────────────────────────────────────────────
 
-  totalEl.textContent = DEALERS.length;
-  if (noDelearEl) noDelearEl.textContent = noDealer;
-  if (overlapEl)  overlapEl.textContent = overlapProvinces;
-  if (coverageEl) coverageEl.textContent = coveragePct + '%';
+/**
+ * Returns segment key for a dealer based on target% and farmers count.
+ * @param {!Object} d Dealer record.
+ * @return {string} 'star'|'growth'|'performer'|'help'
+ */
+function getSegment(d) {
+  const hiTarget  = (d.target  || 0) >= 90;
+  const hiFarmers = (d.farmers || 0) >= 100000;
+  if (hiTarget  && hiFarmers)  return 'star';
+  if (!hiTarget && hiFarmers)  return 'growth';
+  if (hiTarget  && !hiFarmers) return 'performer';
+  return 'help';
+}
+
+/** Segment display metadata. */
+const SEG_META = {
+  star:      {label: '⭐ Star',       cls: 'star',      color: '#f59e0b'},
+  growth:    {label: '📈 Growth',     cls: 'growth',    color: '#3b82f6'},
+  performer: {label: '💪 Performer',  cls: 'performer', color: '#22c55e'},
+  help:      {label: '⚠️ Needs Help', cls: 'help',      color: '#ef4444'},
+};
+
+/** Renders the 5 KPI summary cards. */
+function renderDvKpis() {
+  const el = document.getElementById('dvKpiStrip');
+  if (!el) return;
+  const active    = DEALERS.filter((d) => d.active).length;
+  const avgSales  = (DEALERS.reduce((s, d) => s + (d.sales   || 0), 0) / DEALERS.length).toFixed(1);
+  const avgTarget = Math.round(DEALERS.reduce((s, d) => s + (d.target || 0), 0) / DEALERS.length);
+  const totalFarm = DEALERS.reduce((s, d) => s + (d.farmers || 0), 0);
+  const farmStr   = totalFarm >= 1e6 ? (totalFarm / 1e6).toFixed(1) + 'M' :
+                    totalFarm >= 1e3 ? Math.round(totalFarm / 1e3) + 'K' : totalFarm;
+  const helpCount = DEALERS.filter((d) => getSegment(d) === 'help').length;
+
+  const kpis = [
+    {val: DEALERS.length, label: 'ดีลเลอร์ทั้งหมด', color: ''},
+    {val: active,         label: 'Active',           color: '#22c55e'},
+    {val: `฿${avgSales}M`, label: 'Avg Sales',       color: ''},
+    {val: `${avgTarget}%`, label: 'Avg Target',      color: avgTarget >= 90 ? '#22c55e' : '#f59e0b'},
+    {val: farmStr,        label: 'เกษตรกรทั้งหมด',   color: ''},
+    {val: helpCount,      label: 'ต้องการการดูแล',   color: helpCount > 0 ? '#ef4444' : '#22c55e'},
+  ];
+
+  el.innerHTML = kpis.map(({val, label, color}) => `
+    <div class="dv-kpi-card">
+      <div class="stat-value" style="${color ? `color:${color}` : ''}">${val}</div>
+      <div class="stat-label">${label}</div>
+    </div>`).join('');
+}
+
+/** Renders the 2×2 segment quadrant. */
+function renderDvQuadrant() {
+  const el = document.getElementById('dvQuadrant');
+  if (!el) return;
+  const groups = {star: [], growth: [], performer: [], help: []};
+  DEALERS.forEach((d) => groups[getSegment(d)].push(d));
+
+  // Grid order: top-left=Growth, top-right=Star, bottom-left=Help, bottom-right=Performer
+  const ORDER = ['growth', 'star', 'help', 'performer'];
+  el.innerHTML = ORDER.map((seg) => {
+    const meta  = SEG_META[seg];
+    const chips = groups[seg].map((d) =>
+      `<span class="dv-quad-chip" style="border-left:3px solid ${zoneColor(d.zone)}" title="${d.name}">${d.name.slice(0, 7)}</span>`
+    ).join('');
+    return `
+      <div class="dv-quad-cell dv-quad-cell--${meta.cls}">
+        <div class="dv-quad-header">
+          ${meta.label}
+          <span style="margin-left:auto;opacity:.6;font-size:10px">${groups[seg].length} ราย</span>
+        </div>
+        <div class="dv-quad-chips">${chips || '<span style="opacity:.4;font-size:10px">—</span>'}</div>
+      </div>`;
+  }).join('');
+}
+
+/** Renders the CSS scatter plot (X=sales, Y=target%). */
+function renderDvScatter() {
+  const el = document.getElementById('dvScatter');
+  const xEl = document.getElementById('dvScatterXAxis');
+  if (!el) return;
+
+  const salesVals = DEALERS.map((d) => d.sales || 0);
+  const minS = Math.min(...salesVals);
+  const maxS = Math.max(...salesVals);
+  const range = maxS - minS || 1;
+
+  // Gridlines at target 70%, 80%, 90%
+  const gridlines = [70, 80, 90].map((pct) => {
+    const bottom = ((pct - 50) / 50 * 88 + 5);
+    const isDash = pct === 90;
+    return `<div class="dv-scatter-gridline${isDash ? ' dv-scatter-gridline--threshold' : ''}"
+                 style="bottom:${bottom}%">
+              <span class="dv-scatter-gridlabel">${pct}%</span>
+            </div>`;
+  }).join('');
+
+  // Dealer dots
+  const dots = DEALERS.map((d) => {
+    const x = ((d.sales || 0) - minS) / range * 88 + 5;
+    const y = ((d.target || 50) - 50) / 50 * 88 + 5;
+    const seg = getSegment(d);
+    return `<div class="dv-dot" style="left:${x}%;bottom:${y}%;background:${zoneColor(d.zone)}"
+                 title="${d.name}\n฿${d.sales}M · ${d.target}% target · ${SEG_META[seg].label}"></div>`;
+  }).join('');
+
+  el.innerHTML = gridlines + dots;
+
+  // X-axis labels
+  if (xEl) {
+    const labels = [minS, ...([2, 4, 6, 8, 10].filter((v) => v > minS && v < maxS)), maxS];
+    xEl.innerHTML = labels.map((v) => `<span>฿${v}M</span>`).join('');
+  }
+}
+
+/** Renders the dealer performance list, sorted by target% desc. */
+function renderDvPerfList() {
+  const el = document.getElementById('dvPerfList');
+  const sub = document.getElementById('dvPerfSub');
+  if (!el) return;
+  const sorted = [...DEALERS].sort((a, b) => (b.target || 0) - (a.target || 0));
+  if (sub) sub.textContent = `เรียงจาก target% สูงสุด`;
+
+  el.innerHTML = sorted.map((d) => {
+    const seg    = getSegment(d);
+    const meta   = SEG_META[seg];
+    const farmK  = (d.farmers || 0) >= 1000 ? Math.round((d.farmers) / 1000) + 'K' : (d.farmers || 0);
+    const barColor = meta.color;
+    const init   = d.name ? d.name.charAt(0) : '?';
+    return `
+      <div class="dv-perf-row">
+        <div class="d-avatar" style="background:${zoneColor(d.zone)}">${init}</div>
+        <div class="dv-perf-info">
+          <div class="dv-perf-name">${d.name}</div>
+          <span class="zone-pill" style="background:${zoneColor(d.zone)}22;color:${zoneColor(d.zone)}">${d.zone}</span>
+        </div>
+        <div class="dv-perf-bars">
+          <div class="dv-perf-bar-wrap">
+            <div class="dv-perf-bar-fill" style="width:${d.target || 0}%;background:${barColor}"></div>
+          </div>
+          <span class="dv-perf-pct">${d.target || 0}%</span>
+        </div>
+        <div class="dv-perf-farmers">${farmK} ราย</div>
+        <span class="dv-seg-badge dv-seg-${meta.cls}">${meta.label}</span>
+      </div>`;
+  }).join('');
+}
+
+/** Renders the Top Crop bar chart, aggregated from DEALERS.crop. */
+function renderDvCropChart() {
+  const el = document.getElementById('dvCropChart');
+  if (!el) return;
+  const counts = {};
+  DEALERS.forEach((d) => { if (d.crop) counts[d.crop] = (counts[d.crop] || 0) + 1; });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const max = sorted[0] ? sorted[0][1] : 1;
+
+  const CROP_COLORS = {
+    'ข้าวโพด': '#f39c12', 'ข้าวนาปี': '#3498db', 'ข้าวนาปรัง': '#2980b9',
+    'อ้อย': '#1abc9c', 'ปาล์มน้ำมัน': '#e67e22', 'ยางพารา': '#27ae60',
+    'มันสำปะหลัง': '#e74c3c', 'ทุเรียน': '#8e44ad', 'ลำไย': '#9b59b6',
+  };
+
+  el.innerHTML = sorted.map(([crop, count]) => {
+    const color = CROP_COLORS[crop] || '#f97316';
+    const pct   = Math.round(count / max * 100);
+    return `
+      <div class="crop-row">
+        <div class="crop-name">${crop}</div>
+        <div class="crop-bar-bg">
+          <div class="crop-bar-fill" style="background:${color};width:${pct}%"></div>
+        </div>
+        <div class="crop-pct" style="color:${color}">${count} ราย</div>
+      </div>`;
+  }).join('');
+}
+
+/** Renders the dealer coverage list, sorted by farmers desc. */
+function renderDvCoverage() {
+  const el = document.getElementById('dvCoverage');
+  if (!el) return;
+  const sorted = [...DEALERS].filter((d) => d.farmers).sort((a, b) => b.farmers - a.farmers);
+  const max = sorted[0] ? sorted[0].farmers : 1;
+
+  el.innerHTML = sorted.map((d) => {
+    const pct   = Math.round(d.farmers / max * 100);
+    const farmK = d.farmers >= 1e6 ? (d.farmers / 1e6).toFixed(1) + 'M' :
+                  d.farmers >= 1e3 ? Math.round(d.farmers / 1e3) + 'K' : d.farmers;
+    return `
+      <div class="dv-cov-row">
+        <span class="dv-cov-province" title="${d.province}">${d.province}</span>
+        <span class="zone-pill" style="background:${zoneColor(d.zone)}22;color:${zoneColor(d.zone)}">${d.zone}</span>
+        <div class="dv-cov-bar-wrap">
+          <div class="dv-cov-bar" style="width:${pct}%;background:${zoneColor(d.zone)}"></div>
+        </div>
+        <span class="dv-cov-val">${farmK}</span>
+      </div>`;
+  }).join('');
+}
+
+/** Master render: builds all dealer analytics widgets. */
+function renderDealerPage() {
+  renderDvKpis();
+  renderDvQuadrant();
+  renderDvScatter();
+  renderDvPerfList();
+  renderDvCropChart();
+  renderDvCoverage();
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
