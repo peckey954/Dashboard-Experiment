@@ -6,161 +6,129 @@
 
 /** @const {!Array<!Object>} Zone definitions with crop and dealer data. */
 const ZONES = [
-  {
-    id: 'N1',
-    name: 'เหนือ 1',
-    color: '#1a6fa5',
-    dealers: 8,
-    provinces: ['เชียงใหม่', 'เชียงราย', 'แม่ฮ่องสอน', 'ลำปาง'],
-    crops: [
-      ['ข้าวโพดเลี้ยงสัตว์', '#f39c12', 75],
-      ['ข้าวนาปี', '#3498db', 48],
-      ['ลำไย', '#8e44ad', 28],
-    ],
-  },
-  {
-    id: 'N2',
-    name: 'เหนือ 2',
-    color: '#1e8bc3',
-    dealers: 11,
-    provinces: ['พิษณุโลก', 'เพชรบูรณ์', 'สุโขทัย', 'อุตรดิตถ์'],
-    crops: [
-      ['ข้าวนาปี', '#3498db', 82],
-      ['ข้าวโพดเลี้ยงสัตว์', '#f39c12', 54],
-      ['มันสำปะหลัง', '#e74c3c', 22],
-    ],
-  },
-  {
-    id: 'N3',
-    name: 'เหนือ 3',
-    color: '#4db8e8',
-    dealers: 9,
-    provinces: ['ตาก', 'กำแพงเพชร', 'นครสวรรค์', 'พิจิตร'],
-    crops: [
-      ['ข้าวโพดเลี้ยงสัตว์', '#f39c12', 68],
-      ['ข้าวนาปี', '#3498db', 52],
-      ['อ้อยโรงงาน', '#1abc9c', 33],
-    ],
-  },
-  {
-    id: 'NE1',
-    name: 'อีสาน 1',
-    color: '#e6a817',
-    dealers: 14,
-    provinces: ['ขอนแก่น', 'มหาสารคาม', 'กาฬสินธุ์', 'ร้อยเอ็ด'],
-    crops: [
-      ['ข้าวนาปี', '#3498db', 88],
-      ['อ้อยโรงงาน', '#1abc9c', 38],
-      ['มันสำปะหลัง', '#e74c3c', 18],
-    ],
-  },
-  {
-    id: 'NE2',
-    name: 'อีสาน 2',
-    color: '#c0392b',
-    dealers: 12,
-    provinces: ['นครราชสีมา', 'บุรีรัมย์', 'สุรินทร์', 'ชัยภูมิ'],
-    crops: [
-      ['ข้าวนาปี', '#3498db', 89],
-      ['ยางพารา', '#27ae60', 30],
-      ['มันสำปะหลัง', '#e74c3c', 21],
-    ],
-  },
-  {
-    id: 'NE3',
-    name: 'อีสาน 3',
-    color: '#e74c3c',
-    dealers: 10,
-    provinces: ['อุดรธานี', 'หนองคาย', 'เลย', 'สกลนคร'],
-    crops: [
-      ['ข้าวนาปี', '#3498db', 83],
-      ['ยางพารา', '#27ae60', 27],
-      ['อ้อยโรงงาน', '#1abc9c', 17],
-    ],
-  },
-  {
-    id: 'C1',
-    name: 'กลาง 1',
-    color: '#16a085',
-    dealers: 9,
-    provinces: ['อยุธยา', 'อ่างทอง', 'สิงห์บุรี', 'ชัยนาท'],
-    crops: [
-      ['ข้าวนาปรัง', '#2980b9', 90],
-      ['ข้าวนาปี', '#27ae60', 68],
-      ['อ้อยโรงงาน', '#f39c12', 24],
-    ],
-  },
-  {
-    id: 'C2',
-    name: 'กลาง 2',
-    color: '#8e44ad',
-    dealers: 11,
-    provinces: ['ลพบุรี', 'สระบุรี', 'นครนายก', 'ปราจีนบุรี'],
-    crops: [
-      ['ข้าวนาปรัง', '#2980b9', 76],
-      ['ข้าวโพดเลี้ยงสัตว์', '#f39c12', 44],
-      ['มันสำปะหลัง', '#e74c3c', 29],
-    ],
-  },
-  {
-    id: 'C3',
-    name: 'กลาง 3',
-    color: '#27ae60',
-    dealers: 8,
-    provinces: ['ราชบุรี', 'กาญจนบุรี', 'สุพรรณบุรี', 'นครปฐม'],
-    crops: [
-      ['ข้าวนาปรัง', '#2980b9', 79],
-      ['อ้อยโรงงาน', '#f39c12', 54],
-      ['ข้าวโพดเลี้ยงสัตว์', '#e67e22', 19],
-    ],
-  },
-  {
-    id: 'S1',
-    name: 'ใต้ 1',
-    color: '#c0392b',
-    dealers: 6,
-    provinces: ['ชุมพร', 'สุราษฎร์ธานี', 'นครศรีธรรมราช', 'พัทลุง'],
-    crops: [
-      ['ปาล์มน้ำมัน', '#f39c12', 84],
-      ['ยางพารา', '#27ae60', 72],
-      ['ข้าวนาปี', '#3498db', 14],
-    ],
-  },
-  {
-    id: 'S2',
-    name: 'ใต้ 2',
-    color: '#e74c3c',
-    dealers: 4,
-    provinces: ['กระบี่', 'พังงา', 'ภูเก็ต', 'ตรัง'],
-    crops: [
-      ['ยางพารา', '#27ae60', 91],
-      ['ปาล์มน้ำมัน', '#f39c12', 63],
-      ['ผลไม้', '#e91e63', 18],
-    ],
-  },
+  // ── เหนือ (North) ──────────────────────────────────────────────────────
+  {id:'N1', name:'เหนือ 1',       color:'#1e40af', dealers:8,
+   provinces:['เชียงใหม่','เชียงราย','แม่ฮ่องสอน','ลำปาง','ลำพูน','พะเยา'],
+   crops:[['ข้าวโพดเลี้ยงสัตว์','#f59e0b',65],['ข้าวนาปี','#3b82f6',45],['ลำไย','#8b5cf6',25]]},
+  {id:'N2', name:'เหนือ 2',       color:'#2563eb', dealers:9,
+   provinces:['พิษณุโลก','เพชรบูรณ์','สุโขทัย','อุตรดิตถ์','แพร่','น่าน'],
+   crops:[['ข้าวนาปี','#3b82f6',78],['ข้าวโพดเลี้ยงสัตว์','#f59e0b',50],['มันสำปะหลัง','#ef4444',20]]},
+  {id:'N3', name:'เหนือ 3',       color:'#60a5fa', dealers:7,
+   provinces:['ตาก','กำแพงเพชร','นครสวรรค์','พิจิตร','อุทัยธานี'],
+   crops:[['ข้าวโพดเลี้ยงสัตว์','#f59e0b',60],['ข้าวนาปี','#3b82f6',48],['อ้อยโรงงาน','#10b981',30]]},
+  // ── อีสาน (Northeast) ──────────────────────────────────────────────────
+  {id:'NE1', name:'อีสาน 1',      color:'#65a30d', dealers:12,
+   provinces:['ขอนแก่น','มหาสารคาม','กาฬสินธุ์','ร้อยเอ็ด','ยโสธร'],
+   crops:[['ข้าวนาปี','#3b82f6',85],['อ้อยโรงงาน','#10b981',35],['มันสำปะหลัง','#ef4444',15]]},
+  {id:'NE2', name:'อีสาน 2',      color:'#16a34a', dealers:14,
+   provinces:['นครราชสีมา','บุรีรัมย์','สุรินทร์','ชัยภูมิ','ศรีสะเกษ','อุบลราชธานี'],
+   crops:[['ข้าวนาปี','#3b82f6',88],['ยางพารา','#22c55e',28],['มันสำปะหลัง','#ef4444',18]]},
+  {id:'NE3', name:'อีสาน 3',      color:'#15803d', dealers:11,
+   provinces:['อุดรธานี','หนองคาย','เลย','สกลนคร','หนองบัวลำภู','นครพนม','มุกดาหาร','อำนาจเจริญ','บึงกาฬ'],
+   crops:[['ข้าวนาปี','#3b82f6',80],['ยางพารา','#22c55e',25],['อ้อยโรงงาน','#10b981',15]]},
+  // ── กลาง (Central) ─────────────────────────────────────────────────────
+  {id:'C1', name:'กลาง 1',        color:'#7c3aed', dealers:9,
+   provinces:['อยุธยา','อ่างทอง','สิงห์บุรี','ชัยนาท','ลพบุรี','สระบุรี'],
+   crops:[['ข้าวนาปรัง','#2563eb',88],['ข้าวนาปี','#3b82f6',65],['อ้อยโรงงาน','#f59e0b',22]]},
+  {id:'C2', name:'กลาง 2',        color:'#8b5cf6', dealers:8,
+   provinces:['กรุงเทพมหานคร','นนทบุรี','ปทุมธานี','สมุทรปราการ','นครนายก'],
+   crops:[['ข้าวนาปรัง','#2563eb',72],['ข้าวโพดเลี้ยงสัตว์','#f59e0b',38],['มันสำปะหลัง','#ef4444',22]]},
+  {id:'C3', name:'กลาง 3',        color:'#a78bfa', dealers:7,
+   provinces:['สุพรรณบุรี','นครปฐม'],
+   crops:[['ข้าวนาปรัง','#2563eb',75],['อ้อยโรงงาน','#f59e0b',50],['ข้าวโพดเลี้ยงสัตว์','#f59e0b',18]]},
+  // ── ตะวันออก (East) ────────────────────────────────────────────────────
+  {id:'E1', name:'ตะวันออก 1',    color:'#ea580c', dealers:8,
+   provinces:['ชลบุรี','ระยอง','ฉะเชิงเทรา'],
+   crops:[['มันสำปะหลัง','#ef4444',58],['ข้าวนาปี','#3b82f6',30],['ยางพารา','#22c55e',20]]},
+  {id:'E2', name:'ตะวันออก 2',    color:'#f97316', dealers:6,
+   provinces:['จันทบุรี','ตราด','สระแก้ว'],
+   crops:[['ผลไม้','#f43f5e',52],['ยางพารา','#22c55e',35],['มันสำปะหลัง','#ef4444',20]]},
+  {id:'E3', name:'ตะวันออก 3',    color:'#fb923c', dealers:5,
+   provinces:['ปราจีนบุรี'],
+   crops:[['ข้าวนาปรัง','#2563eb',62],['มันสำปะหลัง','#ef4444',42],['อ้อยโรงงาน','#10b981',22]]},
+  // ── ตะวันตก (West) ─────────────────────────────────────────────────────
+  {id:'W1', name:'ตะวันตก 1',     color:'#0f766e', dealers:7,
+   provinces:['กาญจนบุรี','ราชบุรี'],
+   crops:[['อ้อยโรงงาน','#10b981',68],['ข้าวนาปรัง','#2563eb',48],['ข้าวโพดเลี้ยงสัตว์','#f59e0b',25]]},
+  {id:'W2', name:'ตะวันตก 2',     color:'#0d9488', dealers:5,
+   provinces:['เพชรบุรี','ประจวบคีรีขันธ์'],
+   crops:[['สับปะรด','#f59e0b',55],['ข้าวนาปี','#3b82f6',38],['มะพร้าว','#78716c',25]]},
+  {id:'W3', name:'ตะวันตก 3',     color:'#14b8a6', dealers:4,
+   provinces:['สมุทรสาคร','สมุทรสงคราม'],
+   crops:[['ข้าวนาปรัง','#2563eb',78],['มะพร้าว','#78716c',40],['ผักสวนครัว','#22c55e',28]]},
+  // ── ใต้ (South) ────────────────────────────────────────────────────────
+  {id:'S1', name:'ใต้ 1',          color:'#dc2626', dealers:8,
+   provinces:['ชุมพร','สุราษฎร์ธานี','นครศรีธรรมราช','พัทลุง'],
+   crops:[['ปาล์มน้ำมัน','#f59e0b',80],['ยางพารา','#22c55e',65],['ข้าวนาปี','#3b82f6',14]]},
+  {id:'S2', name:'ใต้ 2',          color:'#ef4444', dealers:6,
+   provinces:['สงขลา','ตรัง','สตูล'],
+   crops:[['ยางพารา','#22c55e',85],['ปาล์มน้ำมัน','#f59e0b',52],['ข้าวนาปี','#3b82f6',18]]},
+  {id:'S3', name:'ใต้ 3',          color:'#f43f5e', dealers:5,
+   provinces:['กระบี่','พังงา','ภูเก็ต','ปัตตานี','ยะลา','นราธิวาส'],
+   crops:[['ยางพารา','#22c55e',88],['ปาล์มน้ำมัน','#f59e0b',58],['ผลไม้','#f43f5e',18]]},
 ];
 
 /** @const {!Array<!Object>} Dealer records. */
 const DEALERS = [
-  {name: 'รุ่งเจริญการเกษตร',           zone: 'N1',  province: 'ตาก',           district: 'พบพระ',         crop: 'ข้าวโพด',     active: true},
-  {name: 'ศรีสุวรรณเกษตร',              zone: 'N1',  province: 'เชียงใหม่',     district: 'สันทราย',       crop: 'ข้าวนาปี',    active: true},
+  // N1
+  {name: 'รุ่งเจริญการเกษตร',           zone: 'N1',  province: 'เชียงใหม่',     district: 'สันทราย',       crop: 'ข้าวโพด',     active: true},
+  {name: 'ศรีสุวรรณเกษตร',              zone: 'N1',  province: 'เชียงราย',      district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
   {name: 'แม่ฮ่องสอนอะกริ',             zone: 'N1',  province: 'แม่ฮ่องสอน',   district: 'เมือง',         crop: 'ข้าวโพด',     active: false},
-  {name: 'บ้านทุ่งเกษตร',               zone: 'N2',  province: 'พิษณุโลก',     district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
+  // N2
+  {name: 'บ้านทุ่งเกษตร',               zone: 'N2',  province: 'พิษณุโลก',      district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
   {name: 'เพชรบูรณ์การเกษตร',           zone: 'N2',  province: 'เพชรบูรณ์',    district: 'หล่มสัก',       crop: 'ข้าวโพด',     active: true},
+  // N3
   {name: 'นครสวรรค์การเกษตร',           zone: 'N3',  province: 'นครสวรรค์',    district: 'เมือง',         crop: 'อ้อย',        active: true},
   {name: 'ตากอะกริซัพพลาย',             zone: 'N3',  province: 'ตาก',           district: 'แม่สอด',        crop: 'ข้าวโพด',     active: true},
+  // NE1
   {name: 'ขอนแก่นเกษตรกร',              zone: 'NE1', province: 'ขอนแก่น',      district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
   {name: 'กาฬสินธุ์เกษตร',              zone: 'NE1', province: 'กาฬสินธุ์',    district: 'กมลาไสย',       crop: 'ข้าวนาปี',    active: true},
+  // NE2
   {name: 'สุรินทร์เซลล์',               zone: 'NE2', province: 'สุรินทร์',      district: 'ท่าตูม',         crop: 'ข้าวนาปี',    active: false},
+  {name: 'โคราชเกษตร',                   zone: 'NE2', province: 'นครราชสีมา',   district: 'เมือง',         crop: 'มันสำปะหลัง', active: true},
+  // NE3
   {name: 'บริษัท เดลแอนด์ปี รุ่งเรือง', zone: 'NE3', province: 'อุดรธานี',     district: 'เมือง',         crop: 'ข้าวนาปี',    active: true},
+  {name: 'หนองคายเกษตรกร',              zone: 'NE3', province: 'หนองคาย',      district: 'เมือง',         crop: 'ยางพารา',     active: true},
+  // C1
   {name: 'ไทยเกษตรพัฒนา',               zone: 'C1',  province: 'อยุธยา',        district: 'บางปะหัน',      crop: 'ข้าวนาปรัง',  active: true},
   {name: 'ชัยนาทอะกริ',                  zone: 'C1',  province: 'ชัยนาท',        district: 'เมือง',         crop: 'ข้าวนาปรัง',  active: true},
-  {name: 'ลพบุรีอะกริ',                  zone: 'C2',  province: 'ลพบุรี',        district: 'โคกสำโรง',      crop: 'ข้าวโพด',     active: true},
+  {name: 'ลพบุรีอะกริ',                  zone: 'C1',  province: 'ลพบุรี',        district: 'โคกสำโรง',      crop: 'ข้าวโพด',     active: true},
+  // C2
+  {name: 'กรุงเทพเกษตรพาณิชย์',         zone: 'C2',  province: 'กรุงเทพมหานคร', district: 'ลาดกระบัง',    crop: 'ข้าวนาปรัง',  active: true},
+  {name: 'ปทุมธานีการเกษตร',             zone: 'C2',  province: 'ปทุมธานี',      district: 'ธัญบุรี',       crop: 'ข้าวนาปรัง',  active: true},
+  // C3
   {name: 'สุพรรณบุรีเกษตร',             zone: 'C3',  province: 'สุพรรณบุรี',   district: 'เดิมบางนางบวช', crop: 'อ้อย',        active: true},
+  {name: 'นครปฐมอะกริ',                  zone: 'C3',  province: 'นครปฐม',       district: 'เมือง',         crop: 'ข้าวนาปรัง',  active: true},
+  // E1
+  {name: 'ชลบุรีอะกริซัพพลาย',          zone: 'E1',  province: 'ชลบุรี',        district: 'พนัสนิคม',      crop: 'มันสำปะหลัง', active: true},
+  {name: 'ระยองเกษตรพัฒนา',             zone: 'E1',  province: 'ระยอง',         district: 'เมือง',         crop: 'มันสำปะหลัง', active: true},
+  {name: 'ฉะเชิงเทราอะกริ',             zone: 'E1',  province: 'ฉะเชิงเทรา',   district: 'บางคล้า',       crop: 'ข้าวนาปี',    active: false},
+  // E2
+  {name: 'จันทบุรีผลไม้เกษตร',          zone: 'E2',  province: 'จันทบุรี',      district: 'เมือง',         crop: 'ผลไม้',       active: true},
+  {name: 'ตราดยางพารา',                  zone: 'E2',  province: 'ตราด',          district: 'เกาะช้าง',      crop: 'ยางพารา',     active: true},
+  // E3
+  {name: 'ปราจีนบุรีอะกริ',             zone: 'E3',  province: 'ปราจีนบุรี',   district: 'กบินทร์บุรี',   crop: 'มันสำปะหลัง', active: true},
+  {name: 'บ้านสะอาดเกษตร',              zone: 'E3',  province: 'ปราจีนบุรี',   district: 'เมือง',         crop: 'อ้อย',        active: false},
+  // W1
+  {name: 'กาญจนบุรีเกษตร',              zone: 'W1',  province: 'กาญจนบุรี',    district: 'ท่ามะกา',       crop: 'อ้อย',        active: true},
+  {name: 'ราชบุรีการเกษตร',             zone: 'W1',  province: 'ราชบุรี',       district: 'โพธาราม',       crop: 'ข้าวนาปรัง',  active: true},
+  // W2
+  {name: 'เพชรบุรีอะกริ',               zone: 'W2',  province: 'เพชรบุรี',      district: 'เขาย้อย',       crop: 'สับปะรด',     active: true},
+  {name: 'ประจวบคีรีขันธ์เกษตร',        zone: 'W2',  province: 'ประจวบคีรีขันธ์', district: 'ปราณบุรี',   crop: 'มะพร้าว',     active: false},
+  // W3
+  {name: 'สมุทรสาครเกษตรกร',            zone: 'W3',  province: 'สมุทรสาคร',    district: 'เมือง',         crop: 'ผักสวนครัว',  active: true},
+  {name: 'สมุทรสงครามอะกริ',            zone: 'W3',  province: 'สมุทรสงคราม',  district: 'เมือง',         crop: 'มะพร้าว',     active: true},
+  // S1
   {name: 'สุราษฎร์เกษตรกร',             zone: 'S1',  province: 'สุราษฎร์ธานี', district: 'พุนพิน',         crop: 'ปาล์มน้ำมัน', active: true},
   {name: 'ชุมพรปาล์มเกษตร',             zone: 'S1',  province: 'ชุมพร',         district: 'ท่าแซะ',         crop: 'ปาล์มน้ำมัน', active: true},
-  {name: 'ยางพาราใต้',                   zone: 'S2',  province: 'กระบี่',        district: 'เมือง',         crop: 'ยางพารา',     active: false},
-  {name: 'กระบี่เกษตรกร',               zone: 'S2',  province: 'กระบี่',        district: 'อ่าวลึก',        crop: 'ยางพารา',     active: true},
+  {name: 'นครศรีเกษตรกร',               zone: 'S1',  province: 'นครศรีธรรมราช', district: 'ทุ่งสง',        crop: 'ยางพารา',     active: true},
+  // S2
+  {name: 'สงขลายางพารา',                zone: 'S2',  province: 'สงขลา',         district: 'หาดใหญ่',       crop: 'ยางพารา',     active: true},
+  {name: 'ตรังเกษตรพัฒนา',              zone: 'S2',  province: 'ตรัง',           district: 'เมือง',         crop: 'ยางพารา',     active: false},
+  // S3
+  {name: 'ยางพาราใต้',                   zone: 'S3',  province: 'กระบี่',        district: 'เมือง',         crop: 'ยางพารา',     active: false},
+  {name: 'กระบี่เกษตรกร',               zone: 'S3',  province: 'กระบี่',        district: 'อ่าวลึก',        crop: 'ยางพารา',     active: true},
+  {name: 'ภูเก็ตอะกริ',                  zone: 'S3',  province: 'ภูเก็ต',        district: 'เมือง',         crop: 'ปาล์มน้ำมัน', active: true},
 ];
 
 /**
@@ -185,20 +153,77 @@ const PROVINCE_ZONE_MAP = {
   'หนองบัวลำภู': 'NE3', 'นครพนม': 'NE3', 'มุกดาหาร': 'NE3', 'อำนาจเจริญ': 'NE3', 'บึงกาฬ': 'NE3',
   // C1
   'อยุธยา': 'C1', 'พระนครศรีอยุธยา': 'C1', 'อ่างทอง': 'C1',
-  'สิงห์บุรี': 'C1', 'ชัยนาท': 'C1', 'สระบุรี': 'C1',
-  'กรุงเทพมหานคร': 'C1', 'นนทบุรี': 'C1', 'ปทุมธานี': 'C1', 'สมุทรปราการ': 'C1',
+  'สิงห์บุรี': 'C1', 'ชัยนาท': 'C1', 'สระบุรี': 'C1', 'ลพบุรี': 'C1',
   // C2
-  'ลพบุรี': 'C2', 'นครนายก': 'C2', 'ปราจีนบุรี': 'C2',
-  'ฉะเชิงเทรา': 'C2', 'สระแก้ว': 'C2', 'ชลบุรี': 'C2', 'ระยอง': 'C2',
-  'จันทบุรี': 'C2', 'ตราด': 'C2',
+  'กรุงเทพมหานคร': 'C2', 'นนทบุรี': 'C2', 'ปทุมธานี': 'C2',
+  'สมุทรปราการ': 'C2', 'นครนายก': 'C2',
   // C3
-  'ราชบุรี': 'C3', 'กาญจนบุรี': 'C3', 'สุพรรณบุรี': 'C3', 'นครปฐม': 'C3',
-  'สมุทรสาคร': 'C3', 'สมุทรสงคราม': 'C3', 'เพชรบุรี': 'C3', 'ประจวบคีรีขันธ์': 'C3',
+  'สุพรรณบุรี': 'C3', 'นครปฐม': 'C3',
+  // E1
+  'ชลบุรี': 'E1', 'ระยอง': 'E1', 'ฉะเชิงเทรา': 'E1',
+  // E2
+  'จันทบุรี': 'E2', 'ตราด': 'E2', 'สระแก้ว': 'E2',
+  // E3
+  'ปราจีนบุรี': 'E3',
+  // W1
+  'กาญจนบุรี': 'W1', 'ราชบุรี': 'W1',
+  // W2
+  'เพชรบุรี': 'W2', 'ประจวบคีรีขันธ์': 'W2',
+  // W3
+  'สมุทรสาคร': 'W3', 'สมุทรสงคราม': 'W3',
   // S1
-  'ชุมพร': 'S1', 'สุราษฎร์ธานี': 'S1', 'นครศรีธรรมราช': 'S1', 'พัทลุง': 'S1',
+  'ชุมพร': 'S1', 'ระนอง': 'S1', 'สุราษฎร์ธานี': 'S1', 'นครศรีธรรมราช': 'S1', 'พัทลุง': 'S1',
   // S2
-  'กระบี่': 'S2', 'พังงา': 'S2', 'ภูเก็ต': 'S2', 'ตรัง': 'S2',
-  'สตูล': 'S2', 'สงขลา': 'S2', 'ปัตตานี': 'S2', 'ยะลา': 'S2', 'นราธิวาส': 'S2',
+  'สงขลา': 'S2', 'ตรัง': 'S2', 'สตูล': 'S2',
+  // S3
+  'กระบี่': 'S3', 'พังงา': 'S3', 'ภูเก็ต': 'S3',
+  'ปัตตานี': 'S3', 'ยะลา': 'S3', 'นราธิวาส': 'S3',
+};
+
+/**
+ * Translates GeoJSON English province names to Thai for zone/dealer matching.
+ * @const {!Object<string, string>}
+ */
+const EN_TO_TH_PROVINCE = {
+  'Amnat Charoen': 'อำนาจเจริญ', 'Ang Thong': 'อ่างทอง',
+  'Bangkok Metropolis': 'กรุงเทพมหานคร', 'Bueng Kan': 'บึงกาฬ',
+  'Buri Ram': 'บุรีรัมย์', 'Chachoengsao': 'ฉะเชิงเทรา',
+  'Chai Nat': 'ชัยนาท', 'Chaiyaphum': 'ชัยภูมิ',
+  'Chanthaburi': 'จันทบุรี', 'Chiang Mai': 'เชียงใหม่',
+  'Chiang Rai': 'เชียงราย', 'Chon Buri': 'ชลบุรี',
+  'Chumphon': 'ชุมพร', 'Kalasin': 'กาฬสินธุ์',
+  'Kamphaeng Phet': 'กำแพงเพชร', 'Kanchanaburi': 'กาญจนบุรี',
+  'Khon Kaen': 'ขอนแก่น', 'Krabi': 'กระบี่',
+  'Lampang': 'ลำปาง', 'Lamphun': 'ลำพูน',
+  'Loei': 'เลย', 'Lop Buri': 'ลพบุรี',
+  'Mae Hong Son': 'แม่ฮ่องสอน', 'Maha Sarakham': 'มหาสารคาม',
+  'Mukdahan': 'มุกดาหาร', 'Nakhon Nayok': 'นครนายก',
+  'Nakhon Pathom': 'นครปฐม', 'Nakhon Phanom': 'นครพนม',
+  'Nakhon Ratchasima': 'นครราชสีมา', 'Nakhon Sawan': 'นครสวรรค์',
+  'Nakhon Si Thammarat': 'นครศรีธรรมราช', 'Nan': 'น่าน',
+  'Narathiwat': 'นราธิวาส', 'Nong Bua Lam Phu': 'หนองบัวลำภู',
+  'Nong Khai': 'หนองคาย', 'Nonthaburi': 'นนทบุรี',
+  'Pathum Thani': 'ปทุมธานี', 'Pattani': 'ปัตตานี',
+  'Phangnga': 'พังงา', 'Phatthalung': 'พัทลุง',
+  'Phayao': 'พะเยา', 'Phetchabun': 'เพชรบูรณ์',
+  'Phetchaburi': 'เพชรบุรี', 'Phichit': 'พิจิตร',
+  'Phitsanulok': 'พิษณุโลก', 'Phra Nakhon Si Ayutthaya': 'พระนครศรีอยุธยา',
+  'Phrae': 'แพร่', 'Phuket': 'ภูเก็ต',
+  'Prachin Buri': 'ปราจีนบุรี', 'Prachuap Khiri Khan': 'ประจวบคีรีขันธ์',
+  'Ranong': 'ระนอง', 'Ratchaburi': 'ราชบุรี',
+  'Rayong': 'ระยอง', 'Roi Et': 'ร้อยเอ็ด',
+  'Sa Kaeo': 'สระแก้ว', 'Sakon Nakhon': 'สกลนคร',
+  'Samut Prakan': 'สมุทรปราการ', 'Samut Sakhon': 'สมุทรสาคร',
+  'Samut Songkhram': 'สมุทรสงคราม', 'Saraburi': 'สระบุรี',
+  'Satun': 'สตูล', 'Si Sa Ket': 'ศรีสะเกษ',
+  'Sing Buri': 'สิงห์บุรี', 'Songkhla': 'สงขลา',
+  'Sukhothai': 'สุโขทัย', 'Suphan Buri': 'สุพรรณบุรี',
+  'Surat Thani': 'สุราษฎร์ธานี', 'Surin': 'สุรินทร์',
+  'Tak': 'ตาก', 'Trang': 'ตรัง',
+  'Trat': 'ตราด', 'Ubon Ratchathani': 'อุบลราชธานี',
+  'Udon Thani': 'อุดรธานี', 'Uthai Thani': 'อุทัยธานี',
+  'Uttaradit': 'อุตรดิตถ์', 'Yala': 'ยะลา',
+  'Yasothon': 'ยโสธร',
 };
 
 /**
@@ -274,6 +299,9 @@ let selectedDealerIdx = -1;
 /** @type {boolean} Whether the filter sidebar is open. */
 let filterSidebarOpen = true;
 
+/** @type {?string} Active coverage overlay: 'dealer' | 'gap' | null. */
+let coverageMode = null;
+
 /** @type {boolean} Active status for the new dealer modal form. */
 let newDealerActive = true;
 
@@ -312,13 +340,19 @@ const TILE_URLS = {
 const zoneColor = (id) => (ZONES.find((z) => z.id === id) || {}).color || '#555';
 
 /**
- * Returns the zone ID for a given Thai province name using partial matching.
- * @param {string} provName Province name in Thai.
+ * Returns the zone ID for a province name (Thai or English).
+ * GeoJSON uses English names; DEALERS use Thai names.
+ * @param {string} provName Province name (Thai or English).
  * @return {?string} Zone ID or null if not found.
  */
 function getZoneForProvince(provName) {
   if (!provName) return null;
+  // Direct Thai match
   if (PROVINCE_ZONE_MAP[provName]) return PROVINCE_ZONE_MAP[provName];
+  // Translate English → Thai then match
+  const thai = EN_TO_TH_PROVINCE[provName];
+  if (thai && PROVINCE_ZONE_MAP[thai]) return PROVINCE_ZONE_MAP[thai];
+  // Partial match fallback (handles slight name variations)
   const keys = Object.keys(PROVINCE_ZONE_MAP);
   const match = keys.find((k) => provName.includes(k) || k.includes(provName));
   return match ? PROVINCE_ZONE_MAP[match] : null;
@@ -366,16 +400,30 @@ function buildFsZoneRows() {
 function filterZone(id) {
   currentZone = id;
 
-  // Update zone row active states
-  document.querySelectorAll('.fs-zone-row').forEach((r) => r.classList.remove('fs-zone-row--active'));
+  // Reset all rows to neutral
+  document.querySelectorAll('.fs-zone-row').forEach((r) => {
+    r.classList.remove('fs-zone-row--active');
+    r.style.background = '';
+    r.style.borderColor = '';
+  });
+
+  // Apply this zone's own color to the active row
+  const color = id === 'all' ? 'var(--primary)' : zoneColor(id);
   const activeRow = document.getElementById(id === 'all' ? 'zone-row-all' : `zone-row-${id}`);
-  if (activeRow) activeRow.classList.add('fs-zone-row--active');
+  if (activeRow) {
+    activeRow.classList.add('fs-zone-row--active');
+    if (id !== 'all') {
+      const hex = zoneColor(id);
+      activeRow.style.background  = hex + '22';
+      activeRow.style.borderColor = hex + '88';
+    }
+  }
 
   if (id !== 'all') {
     const zone = ZONES.find((z) => z.id === id);
     if (zone) setDetailZone(zone);
   } else {
-    setDetailZone(ZONES[0]);
+    setDetailAll();
   }
 
   if (mapInitialized) {
@@ -516,6 +564,86 @@ function selectDealer(idx) {
  * Populates the right sidebar with zone-level information.
  * @param {!Object} zone Zone data object.
  */
+/** Shows aggregate stats for all zones in the right sidebar. */
+function setDetailAll() {
+  const badge = document.getElementById('dsZoneBadge');
+  if (badge) { badge.textContent = 'ALL'; badge.style.background = 'var(--primary)'; }
+
+  const nameEl = document.getElementById('dsDealerName');
+  if (nameEl) nameEl.textContent = 'ภาพรวมทุกเขต';
+
+  const salesEl = document.getElementById('dsDealerSales');
+  if (salesEl) salesEl.textContent = `${DEALERS.length} ดีลเลอร์ · ${ZONES.length} เขต`;
+
+  const stats = computeZoneStats('all');
+
+  const dealersEl = document.getElementById('dsStatDealers');
+  if (dealersEl) dealersEl.textContent = stats.dealerCount;
+
+  const noDealerEl = document.getElementById('dsStatNoDealer');
+  if (noDealerEl) noDealerEl.textContent = stats.noDealerCount;
+
+  const overlapEl = document.getElementById('dsStatOverlap');
+  if (overlapEl) overlapEl.textContent = stats.overlapCount;
+
+  const coverageEl = document.getElementById('dsStatCoverage');
+  if (coverageEl) coverageEl.textContent = stats.coverageRate + '%';
+
+  const allProvinces = [...new Set(ZONES.flatMap((z) => z.provinces))];
+  const provEl = document.getElementById('dsProvince');
+  if (provEl) provEl.textContent = `${allProvinces.length} จังหวัด`;
+
+  const distEl = document.getElementById('dsDistrict');
+  if (distEl) distEl.textContent = `${ZONES.length} เขต`;
+
+  const oppEl = document.getElementById('dsOpp');
+  if (oppEl) oppEl.textContent = `${Math.floor(DEALERS.length / 3)} โอกาส`;
+
+  const farmEl = document.getElementById('dsFarmers');
+  if (farmEl) farmEl.textContent = `${(DEALERS.length * 2800).toLocaleString()} ราย`;
+
+  const areaEl = document.getElementById('dsArea');
+  if (areaEl) areaEl.textContent = `${(DEALERS.length * 8500).toLocaleString()} ไร่`;
+
+  const allCrops = {};
+  ZONES.forEach((z) => z.crops.forEach(([name, color, pct]) => {
+    if (!allCrops[name]) allCrops[name] = {color, pct: 0};
+    allCrops[name].pct = Math.max(allCrops[name].pct, pct);
+  }));
+  const topCrops = Object.entries(allCrops)
+    .sort((a, b) => b[1].pct - a[1].pct).slice(0, 3)
+    .map(([name, {color, pct}]) => [name, color, pct]);
+  renderDsDonut(topCrops);
+  renderDsSkuList(ZONES[0]);
+  renderDsOpsContent(ZONES[0]);
+}
+
+/**
+ * Computes coverage statistics for a zone (or 'all').
+ * @param {string} zoneId Zone ID or 'all'.
+ * @return {{dealerCount:number, noDealerCount:number, overlapCount:number, coverageRate:number}}
+ */
+function computeZoneStats(zoneId) {
+  const zones = zoneId === 'all' ? ZONES : ZONES.filter((z) => z.id === zoneId);
+  const allProvinces = zones.flatMap((z) => z.provinces);
+  const uniqueProvinces = [...new Set(allProvinces)];
+
+  const dealers = zoneId === 'all' ? DEALERS : DEALERS.filter((d) => d.zone === zoneId);
+
+  const countByProvince = {};
+  dealers.forEach((d) => {
+    countByProvince[d.province] = (countByProvince[d.province] || 0) + 1;
+  });
+
+  const dealerCount    = dealers.length;
+  const noDealerCount  = uniqueProvinces.filter((p) => !countByProvince[p]).length;
+  const overlapCount   = uniqueProvinces.filter((p) => (countByProvince[p] || 0) >= 2).length;
+  const withDealer     = uniqueProvinces.filter((p) => countByProvince[p]).length;
+  const coverageRate   = Math.round((withDealer / (uniqueProvinces.length || 1)) * 100);
+
+  return {dealerCount, noDealerCount, overlapCount, coverageRate};
+}
+
 function setDetailZone(zone) {
   const badge = document.getElementById('dsZoneBadge');
   if (badge) { badge.textContent = zone.id; badge.style.background = zone.color; }
@@ -526,11 +654,19 @@ function setDetailZone(zone) {
   const salesEl = document.getElementById('dsDealerSales');
   if (salesEl) salesEl.textContent = `${zone.dealers} ดีลเลอร์`;
 
-  const dealersEl = document.getElementById('dsStatDealers');
-  if (dealersEl) dealersEl.textContent = zone.dealers;
+  const stats = computeZoneStats(zone.id);
 
-  const zonesEl = document.getElementById('dsStatZones');
-  if (zonesEl) zonesEl.textContent = zone.provinces.length;
+  const dealersEl = document.getElementById('dsStatDealers');
+  if (dealersEl) dealersEl.textContent = stats.dealerCount;
+
+  const noDealerEl = document.getElementById('dsStatNoDealer');
+  if (noDealerEl) noDealerEl.textContent = stats.noDealerCount;
+
+  const overlapEl = document.getElementById('dsStatOverlap');
+  if (overlapEl) overlapEl.textContent = stats.overlapCount;
+
+  const coverageEl = document.getElementById('dsStatCoverage');
+  if (coverageEl) coverageEl.textContent = stats.coverageRate + '%';
 
   const provEl = document.getElementById('dsProvince');
   if (provEl) provEl.textContent = zone.provinces[0];
@@ -539,7 +675,7 @@ function setDetailZone(zone) {
   if (distEl) distEl.textContent = `${zone.provinces.length} จังหวัด`;
 
   const oppEl = document.getElementById('dsOpp');
-  if (oppEl) oppEl.textContent = `${Math.floor(zone.dealers / 3)} รายการ`;
+  if (oppEl) oppEl.textContent = `${Math.floor(zone.dealers / 3)} โอกาส`;
 
   const farmEl = document.getElementById('dsFarmers');
   if (farmEl) farmEl.textContent = `${(zone.dealers * 2800).toLocaleString()} ราย`;
@@ -655,6 +791,39 @@ function renderDsOpsContent(zone) {
   reduceEl.innerHTML = renderGroups(reduceData, 'reduce');
 }
 
+// ── Coverage overlay ──────────────────────────────────────────────────────
+
+/**
+ * Returns true if any dealer exists in the given province (respecting zone filter).
+ * GeoJSON province names are English; dealer records use Thai.
+ * @param {string} provName Province name from GeoJSON (English).
+ * @return {boolean}
+ */
+function provinceHasDealer(provName) {
+  const thai = EN_TO_TH_PROVINCE[provName] || provName;
+  return DEALERS.some((d) => {
+    if (currentZone !== 'all' && d.zone !== currentZone) return false;
+    return d.province === thai || d.province === provName ||
+           thai.includes(d.province) || d.province.includes(thai);
+  });
+}
+
+/**
+ * Toggles coverage overlay mode on the map.
+ * @param {string} mode 'dealer' | 'gap' | 'overlap'.
+ */
+function toggleCoverage(mode) {
+  coverageMode = coverageMode === mode ? null : mode;
+
+  ['dealer', 'gap', 'overlap'].forEach((m) => {
+    const cardId = {dealer: 'scDealers', gap: 'scNoDealer', overlap: 'scOverlap'}[m];
+    const card = document.getElementById(cardId);
+    if (card) card.classList.toggle('ds-stat-card--active', coverageMode === m);
+  });
+
+  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+}
+
 // ── Map ────────────────────────────────────────────────────────────────────
 
 /**
@@ -664,13 +833,63 @@ function renderDsOpsContent(zone) {
  */
 function styleProvince(feature) {
   const isDark = document.documentElement.dataset.theme === 'dark';
-  const provName = feature.properties.PROV_NAM_T ||
-                   feature.properties.name ||
-                   feature.properties.NAME_TH || '';
+  const provName = feature.properties.name || '';
   const zoneId = getZoneForProvince(provName);
   const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
   const dimmed = currentZone !== 'all' && zoneId !== currentZone;
 
+  // ── Coverage overlay modes ──────────────────────────────────────────────
+  if (coverageMode) {
+    const inScope = currentZone === 'all' || zoneId === currentZone;
+    const hasDealer = inScope && provinceHasDealer(provName);
+
+    if (coverageMode === 'dealer') {
+      if (!inScope) {
+        return {fillColor: isDark ? '#27272a' : '#e5e7eb', fillOpacity: 0.3,
+                color: isDark ? '#3f3f46' : '#d1d5db', weight: 0.5, opacity: 0.4};
+      }
+      return hasDealer
+        ? {fillColor: zone ? zone.color : '#3b82f6', fillOpacity: 0.9,
+           color: zone ? zone.color : '#3b82f6', weight: 1.5, opacity: 1}
+        : {fillColor: '#94a3b8', fillOpacity: 0.35,
+           color: '#cbd5e1', weight: 0.6, opacity: 0.6};
+    }
+
+    if (coverageMode === 'gap') {
+      if (!inScope) {
+        return {fillColor: isDark ? '#27272a' : '#e5e7eb', fillOpacity: 0.3,
+                color: isDark ? '#3f3f46' : '#d1d5db', weight: 0.5, opacity: 0.4};
+      }
+      return hasDealer
+        ? {fillColor: zone ? zone.color : '#3b82f6', fillOpacity: 0.3,
+           color: isDark ? '#3f3f46' : '#cbd5e1', weight: 0.6, opacity: 0.5}
+        : {fillColor: isDark ? '#94a3b8' : '#475569', fillOpacity: isDark ? 0.7 : 0.78,
+           color: isDark ? '#cbd5e1' : '#334155', weight: 1.2, opacity: 0.9};
+    }
+
+    if (coverageMode === 'overlap') {
+      if (!inScope) {
+        return {fillColor: isDark ? '#27272a' : '#e5e7eb', fillOpacity: 0.3,
+                color: isDark ? '#3f3f46' : '#d1d5db', weight: 0.5, opacity: 0.4};
+      }
+      const thai = EN_TO_TH_PROVINCE[provName] || provName;
+      const dealerCount = DEALERS.filter((d) => {
+        if (currentZone !== 'all' && d.zone !== currentZone) return false;
+        return d.province === thai || d.province === provName;
+      }).length;
+      if (dealerCount >= 2) {
+        return {fillColor: '#dc2626', fillOpacity: 0.9, color: '#b91c1c', weight: 1.5, opacity: 1};
+      }
+      if (dealerCount === 1) {
+        return {fillColor: zone ? zone.color : '#3b82f6', fillOpacity: 0.35,
+                color: isDark ? '#3f3f46' : '#cbd5e1', weight: 0.6, opacity: 0.5};
+      }
+      return {fillColor: '#94a3b8', fillOpacity: 0.2,
+              color: isDark ? '#3f3f46' : '#cbd5e1', weight: 0.5, opacity: 0.4};
+    }
+  }
+
+  // ── Normal mode ──────────────────────────────────────────────────────────
   if (!isDark) {
     return {
       fillColor: zone ? zone.color : '#e8e2da',
@@ -696,15 +915,15 @@ function styleProvince(feature) {
  * @param {!Object} layer Leaflet layer.
  */
 function onEachProvince(feature, layer) {
-  const provName = feature.properties.PROV_NAM_T ||
-                   feature.properties.name ||
-                   feature.properties.NAME_TH || '';
-  const zoneId = getZoneForProvince(provName);
+  const engName = feature.properties.name || '';
+  const thaiName = EN_TO_TH_PROVINCE[engName] || engName;
+  const zoneId = getZoneForProvince(engName);
   const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
 
   layer.on({
     mouseover(e) {
-      e.target.setStyle({fillOpacity: 0.85, weight: 2, color: '#f97316'});
+      const color = zone ? zone.color : '#f97316';
+      e.target.setStyle({fillOpacity: 0.95, weight: 2, color});
       e.target.bringToFront();
     },
     mouseout() {
@@ -715,9 +934,8 @@ function onEachProvince(feature, layer) {
     },
   });
 
-  if (provName) {
-    // Permanent label (always visible, hidden in dark mode via CSS)
-    layer.bindTooltip(provName, {
+  if (thaiName) {
+    layer.bindTooltip(thaiName, {
       permanent: true,
       direction: 'center',
       className: 'province-label',
@@ -821,7 +1039,7 @@ function initMap() {
     interactive: false,
   }).addTo(leafletMap);
 
-  fetch('https://cdn.jsdelivr.net/gh/apisit/thailand.json@master/thailand.json')
+  fetch('./thailand.json')
       .then((r) => r.json())
       .then((data) => {
         provinceLayer = L.geoJSON(data, {
@@ -967,6 +1185,6 @@ function submitDealer() {
 
 document.addEventListener('DOMContentLoaded', () => {
   buildFsZoneRows();
-  setDetailZone(ZONES[0]);
+  filterZone('all');
   initMap();
 });

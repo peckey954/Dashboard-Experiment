@@ -25,6 +25,7 @@
   --radius:               8px;
   --sidebar-bg:           #f8fafc;
   --sidebar-border:       #e2e8f0;
+  --sidebar-shadow:       0 2px 12px rgba(0,0,0,0.08);
 }
 
 /* Dark mode overrides */
@@ -43,6 +44,7 @@
   --accent-foreground:    #f97316;
   --sidebar-bg:           #18181b;
   --sidebar-border:       #3f3f46;
+  --sidebar-shadow:       0 2px 16px rgba(0,0,0,0.4);
 }
 
 * {
@@ -158,6 +160,7 @@ body {
 /* ── Layout ── */
 
 .main {
+  background: var(--muted);
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -175,6 +178,7 @@ body {
   justify-content: space-between;
   padding: 8px 0;
   width: 48px;
+  z-index: 20;
 }
 
 .ir-top,
@@ -217,17 +221,24 @@ body {
 /* ── Filter Sidebar ── */
 
 .filter-sidebar {
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--sidebar-shadow);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  margin: 10px 8px 10px 10px;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), margin 0.22s, opacity 0.22s;
   width: 240px;
+  z-index: 10;
 }
 
 .filter-sidebar.fs-collapsed {
+  margin-left: 10px;
+  opacity: 0;
+  pointer-events: none;
   width: 0;
 }
 
@@ -247,7 +258,7 @@ body {
 /* Filter header */
 .fs-header {
   align-items: center;
-  border-bottom: 1px solid var(--sidebar-border);
+  border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   padding: 12px 14px;
@@ -380,16 +391,18 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
+  padding: 6px;
 }
 
 .fs-zone-row {
   align-items: center;
-  border-bottom: 1px solid var(--sidebar-border);
-  border-left: 2px solid transparent;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
   display: grid;
   gap: 6px;
   grid-template-columns: 10px 1fr 60px 36px 30px;
+  margin-bottom: 2px;
   padding: 7px 10px;
   transition: background 0.12s, border-color 0.12s;
 }
@@ -400,15 +413,11 @@ body {
 
 .fs-zone-row--active {
   background: var(--accent);
-  border-left-color: var(--primary);
-}
-
-.fs-zone-row--all {
-  border-left-color: transparent;
 }
 
 .fs-zone-row--all.fs-zone-row--active {
-  border-left-color: var(--primary);
+  background: rgba(249,115,22,0.1);
+  border-color: rgba(249,115,22,0.5);
 }
 
 .fs-zone-dot {
@@ -455,9 +464,11 @@ body {
 /* ── Page Content ── */
 
 .page-content {
+  border-radius: 12px;
   display: flex;
   flex: 1;
   flex-direction: column;
+  margin: 10px 0;
   min-width: 0;
   overflow: hidden;
 }
@@ -576,16 +587,23 @@ body {
 
 .detail-sidebar {
   background: var(--card);
-  border-left: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--sidebar-shadow);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  margin: 10px 10px 10px 8px;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), margin 0.22s, opacity 0.22s;
   width: 280px;
+  z-index: 10;
 }
 
 .detail-sidebar.ds-collapsed {
+  margin-right: 10px;
+  opacity: 0;
+  pointer-events: none;
   width: 0;
 }
 
@@ -641,6 +659,17 @@ body {
 .ds-icon-btn:hover {
   background: var(--muted);
   color: var(--foreground);
+}
+
+.ds-icon-btn--active {
+  background: var(--accent);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.ds-icon-btn--active:hover {
+  background: var(--accent);
+  color: var(--primary);
 }
 
 /* Dealer card */
@@ -714,10 +743,38 @@ body {
   color: var(--primary);
 }
 
+.ds-stat-val--success {
+  color: #16a34a;
+}
+
+.ds-stat-val--warning {
+  color: #d97706;
+}
+
+.ds-stat-val--danger {
+  color: #dc2626;
+}
+
 .ds-stat-label {
   color: var(--muted-foreground);
   font-size: 10px;
   margin-top: 3px;
+}
+
+.ds-stat-card--click {
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.ds-stat-card--click:hover {
+  border-color: var(--primary);
+  background: var(--accent);
+}
+
+.ds-stat-card--active {
+  border-color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary) 10%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
 /* Info rows */
@@ -749,6 +806,37 @@ body {
 
 .ds-info-val--primary {
   color: var(--primary);
+}
+
+/* Inline chip row (Province · District · Opportunities) */
+.ds-info-inline {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 0 6px;
+}
+
+.ds-info-chip {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--foreground);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+.ds-info-chip--primary {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.ds-info-chip-sep {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  padding: 0 1px;
 }
 
 /* Donut section */

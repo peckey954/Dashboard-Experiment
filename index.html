@@ -195,21 +195,6 @@
       <!-- Header -->
       <div class="ds-header">
         <span class="ds-title">ข้อมูลดีลเลอร์</span>
-        <div class="ds-header-actions">
-          <button class="ds-icon-btn" title="ดูตำแหน่ง">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0"/>
-              <circle cx="12" cy="8" r="2"/>
-              <path d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712"/>
-            </svg>
-          </button>
-          <button class="ds-icon-btn" title="เปิดใน Google Maps">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 3h6v6"/><path d="M10 14 21 3"/>
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            </svg>
-          </button>
-        </div>
       </div>
 
       <!-- Dealer card -->
@@ -221,47 +206,45 @@
         </div>
       </div>
 
-      <!-- 2×2 stats -->
+      <!-- 2×2 stats — clickable for coverage overlay -->
       <div class="ds-stats-grid">
-        <div class="ds-stat-card">
-          <div class="ds-stat-val" id="dsStatDealers">19</div>
-          <div class="ds-stat-label">ดีลเลอร์</div>
+        <div class="ds-stat-card ds-stat-card--click" id="scDealers" onclick="toggleCoverage('dealer')" title="แสดงพื้นที่ที่มี Dealer">
+          <div class="ds-stat-val" id="dsStatDealers">41</div>
+          <div class="ds-stat-label">ดีลเลอร์ทั้งหมด</div>
+        </div>
+        <div class="ds-stat-card ds-stat-card--click" id="scNoDealer" onclick="toggleCoverage('gap')" title="แสดงพื้นที่ที่ไม่มี Dealer">
+          <div class="ds-stat-val ds-stat-val--warning" id="dsStatNoDealer">—</div>
+          <div class="ds-stat-label">พื้นที่ไม่มี Dealer</div>
+        </div>
+        <div class="ds-stat-card ds-stat-card--click" id="scOverlap" onclick="toggleCoverage('overlap')" title="แสดงพื้นที่ซ้อนทับ">
+          <div class="ds-stat-val ds-stat-val--danger" id="dsStatOverlap">—</div>
+          <div class="ds-stat-label">พื้นที่ซ้อนทับ</div>
         </div>
         <div class="ds-stat-card">
-          <div class="ds-stat-val" id="dsStatZones">11</div>
-          <div class="ds-stat-label">เขตพื้นที่</div>
-        </div>
-        <div class="ds-stat-card">
-          <div class="ds-stat-val" id="dsStatGaps">12</div>
-          <div class="ds-stat-label">Coverage Gaps</div>
-        </div>
-        <div class="ds-stat-card">
-          <div class="ds-stat-val ds-stat-val--primary" id="dsStatTarget">84%</div>
-          <div class="ds-stat-label">เฉลี่ยเป้า</div>
+          <div class="ds-stat-val ds-stat-val--success" id="dsStatCoverage">—%</div>
+          <div class="ds-stat-label">Coverage rate</div>
         </div>
       </div>
 
       <!-- Info rows -->
       <div class="ds-info-section">
-        <div class="ds-info-row">
-          <span class="ds-info-label">จังหวัด</span>
-          <span class="ds-info-val" id="dsProvince">ตาก</span>
+        <!-- Row 1: Province · District · Opportunities — inline chips -->
+        <div class="ds-info-inline">
+          <span class="ds-info-chip" id="dsProvince">—</span>
+          <span class="ds-info-chip-sep">·</span>
+          <span class="ds-info-chip" id="dsDistrict">—</span>
+          <span class="ds-info-chip-sep">·</span>
+          <span class="ds-info-chip ds-info-chip--primary" id="dsOpp">—</span>
         </div>
+        <!-- Row 2: เกษตรกรเข้าถึง -->
         <div class="ds-info-row">
-          <span class="ds-info-label">อำเภอ</span>
-          <span class="ds-info-val" id="dsDistrict">พบพระ</span>
+          <span class="ds-info-label">เกษตรกรเข้าถึง</span>
+          <span class="ds-info-val" id="dsFarmers">—</span>
         </div>
+        <!-- Row 3: พื้นที่ถือครอง -->
         <div class="ds-info-row">
-          <span class="ds-info-label">โอกาสใหม่</span>
-          <span class="ds-info-val ds-info-val--primary" id="dsOpp">3 รายการ</span>
-        </div>
-        <div class="ds-info-row">
-          <span class="ds-info-label">เกษตรกร</span>
-          <span class="ds-info-val" id="dsFarmers">45,200 ราย</span>
-        </div>
-        <div class="ds-info-row">
-          <span class="ds-info-label">พื้นที่</span>
-          <span class="ds-info-val" id="dsArea">120,000 ไร่</span>
+          <span class="ds-info-label">พื้นที่ถือครอง</span>
+          <span class="ds-info-val" id="dsArea">—</span>
         </div>
       </div>
 
