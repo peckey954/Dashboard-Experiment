@@ -98,56 +98,120 @@
         </button>
       </div>
 
-      <!-- Dealer selector -->
-      <div class="fs-control">
-        <div class="fs-select-btn">
-          <span id="dealerSelectLabel">ดีลเลอร์ทั้งหมด</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </div>
-      </div>
+      <!-- Dealer mode pane -->
+      <div id="fsDealerPane">
 
-      <!-- Province selector -->
-      <div class="fs-control">
-        <div class="fs-select-btn">
-          <span id="provinceSelectLabel">จังหวัดทั้งหมด</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Zone search + sort -->
-      <div class="fs-search-row">
-        <div class="fs-search-wrap">
-          <svg class="fs-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-          </svg>
-          <input class="fs-search-input" type="text" placeholder="ค้นหาเขต..." id="zoneSearchInput" oninput="filterZoneList()">
-        </div>
-        <button class="fs-sort-btn" onclick="sortZoneList()" title="เรียงลำดับ">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Zone list -->
-      <div class="fs-zone-list" id="fsZoneList">
-        <!-- ALL row -->
-        <div class="fs-zone-row fs-zone-row--all fs-zone-row--active" id="zone-row-all" onclick="filterZone('all')">
-          <div class="fs-zone-dot" style="background:#f97316;border-radius:2px"></div>
-          <span class="fs-zone-name" style="color:#f97316">ทั้งหมด</span>
-          <div class="fs-zone-bar-wrap">
-            <div class="fs-zone-bar" style="width:100%;background:#f97316"></div>
+        <!-- Dealer selector -->
+        <div class="fs-control">
+          <div class="fs-select-btn">
+            <span id="dealerSelectLabel">ดีลเลอร์ทั้งหมด</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
           </div>
-          <span class="fs-zone-count" id="fsAllCount">19/19</span>
-          <span class="fs-zone-pct">100%</span>
         </div>
-        <!-- Zone rows populated by JS -->
-        <div id="fsZoneRows"></div>
-      </div>
+
+        <!-- Province selector -->
+        <div class="fs-control">
+          <div class="fs-select-btn">
+            <span id="provinceSelectLabel">จังหวัดทั้งหมด</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Zone search + sort -->
+        <div class="fs-search-row">
+          <div class="fs-search-wrap">
+            <svg class="fs-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="fs-search-input" type="text" placeholder="ค้นหาเขต..." id="zoneSearchInput" oninput="filterZoneList()">
+          </div>
+          <button class="fs-sort-btn" onclick="sortZoneList()" title="เรียงลำดับ">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Zone list -->
+        <div class="fs-zone-list" id="fsZoneList">
+          <!-- ALL row -->
+          <div class="fs-zone-row fs-zone-row--all fs-zone-row--active" id="zone-row-all" onclick="filterZone('all')">
+            <div class="fs-zone-dot" style="background:#f97316;border-radius:2px"></div>
+            <span class="fs-zone-name" style="color:#f97316">ทั้งหมด</span>
+            <div class="fs-zone-bar-wrap">
+              <div class="fs-zone-bar" style="width:100%;background:#f97316"></div>
+            </div>
+            <span class="fs-zone-count" id="fsAllCount">19/19</span>
+            <span class="fs-zone-pct">100%</span>
+          </div>
+          <!-- Zone rows populated by JS -->
+          <div id="fsZoneRows"></div>
+        </div>
+
+      </div><!-- #fsDealerPane -->
+
+      <!-- Potential mode pane (hidden initially) -->
+      <div id="fsPotentialPane" style="display:none">
+
+        <!-- Sort toggle -->
+        <div class="fs-pt-sort-bar">
+          <button class="fs-pt-sort-btn fs-pt-sort-btn--active" id="ptSortOpp" onclick="sortPotential('opportunity')">Top โอกาส</button>
+          <button class="fs-pt-sort-btn" id="ptSortGap" onclick="sortPotential('gap')">Top Gap</button>
+        </div>
+
+        <!-- Crop list -->
+        <div class="fs-pt-crop-list" id="fsPtCropList">
+          <!-- populated by JS -->
+        </div>
+
+        <!-- Separator -->
+        <div class="fs-pt-separator"></div>
+
+        <!-- Heatmap legend -->
+        <div class="fs-pt-legend-wrap">
+          <div class="fs-pt-legend-header">
+            <span>ศักยภาพตลาด</span>
+            <span class="fs-pt-legend-unit">ล้านบาท</span>
+          </div>
+          <div class="fs-pt-legend-list">
+            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(5)" style="cursor:pointer">
+              <div class="fs-pt-legend-dot" style="background:#f97316"></div>
+              <span class="fs-pt-legend-range">&ge; 600</span>
+              <span class="fs-pt-legend-label">มากที่สุด</span>
+            </div>
+            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(4)" style="cursor:pointer">
+              <div class="fs-pt-legend-dot" style="background:#fb923c"></div>
+              <span class="fs-pt-legend-range">300 – 599</span>
+              <span class="fs-pt-legend-label">มาก</span>
+            </div>
+            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(3)" style="cursor:pointer">
+              <div class="fs-pt-legend-dot" style="background:#fdba74"></div>
+              <span class="fs-pt-legend-range">150 – 299</span>
+              <span class="fs-pt-legend-label">ปานกลาง</span>
+            </div>
+            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(2)" style="cursor:pointer">
+              <div class="fs-pt-legend-dot" style="background:#fed7aa"></div>
+              <span class="fs-pt-legend-range">50 – 149</span>
+              <span class="fs-pt-legend-label">น้อย</span>
+            </div>
+            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(1)" style="cursor:pointer">
+              <div class="fs-pt-legend-dot" style="background:#fff7ed;border:1px solid #fed7aa"></div>
+              <span class="fs-pt-legend-range">&lt; 50</span>
+              <span class="fs-pt-legend-label">น้อยมาก</span>
+            </div>
+            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(0)" style="cursor:pointer">
+              <div class="fs-pt-legend-dot" style="background:#94a3b8"></div>
+              <span class="fs-pt-legend-range">—</span>
+              <span class="fs-pt-legend-label">ไม่มีข้อมูล</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- #fsPotentialPane -->
 
     </div>
   </aside>
@@ -175,7 +239,7 @@
         <div class="page-tabs" id="pageTabs">
           <button class="page-tab page-tab--active" onclick="switchPageTab('dealer', this)">Dealer</button>
           <button class="page-tab" onclick="switchPageTab('crop', this)">Crop</button>
-          <button class="page-tab" onclick="switchPageTab('ops', this)">Ops</button>
+          <button class="page-tab" onclick="switchPageTab('potential', this)">Potential</button>
           <button class="page-tab" onclick="switchPageTab('farmer', this)">Farmer</button>
         </div>
       </div>
@@ -196,6 +260,9 @@
       <div class="ds-header">
         <span class="ds-title">ข้อมูลดีลเลอร์</span>
       </div>
+
+      <!-- Dealer mode content -->
+      <div id="dsDealerContent">
 
       <!-- Dealer card -->
       <div class="ds-dealer-card">
@@ -279,6 +346,71 @@
           <div id="dsOpsReduce"></div>
         </div>
       </div>
+
+      </div><!-- #dsDealerContent -->
+
+      <!-- Potential mode pane (hidden initially) -->
+      <div id="dsPotentialPane" style="display:none">
+
+        <!-- Summary -->
+        <div class="pt-summary-section">
+          <div class="pt-summary-kpi">
+            <span class="pt-kpi-val" id="ptKpiVal">—</span>
+            <span class="pt-kpi-sub" id="ptKpiSub">มูลค่าตลาดประเมิน</span>
+          </div>
+          <div class="pt-summary-inline">
+            <span class="ds-info-chip" id="ptProvCount">— จังหวัด</span>
+            <span class="ds-info-chip-sep">·</span>
+            <span class="ds-info-chip" id="ptDistCount">— เขต</span>
+            <span class="ds-info-chip-sep">·</span>
+            <span class="ds-info-chip ds-info-chip--primary" id="ptOppCount">— โอกาส</span>
+          </div>
+          <div class="pt-summary-rows">
+            <div class="ds-info-row">
+              <span class="ds-info-label">เกษตรกรเข้าถึง</span>
+              <span class="ds-info-val" id="ptFarmers">—</span>
+            </div>
+            <div class="ds-info-row">
+              <span class="ds-info-label">พื้นที่ถือครอง</span>
+              <span class="ds-info-val" id="ptArea">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bar chart -->
+        <div class="pt-chart-section">
+          <div class="pt-chart-header">
+            <span class="pt-chart-title">ศักยภาพตลาด (ลบ.)</span>
+            <div class="pt-chart-toggle">
+              <button class="pt-toggle-btn pt-toggle-btn--active" id="ptToggleProv" onclick="switchPotentialChart('province')">จังหวัด</button>
+              <button class="pt-toggle-btn" id="ptToggleZone" onclick="switchPotentialChart('zone')">เขต</button>
+            </div>
+          </div>
+          <div class="pt-chart-legend">
+            <div class="pt-chart-legend-item"><div class="pt-legend-sq" style="background:#fed7aa"></div>ตลาด</div>
+            <div class="pt-chart-legend-item"><div class="pt-legend-sq" style="background:#f97316"></div>ขายได้</div>
+            <div class="pt-chart-legend-item"><div class="pt-legend-sq pt-legend-sq--gap"></div>โอกาส</div>
+          </div>
+          <div class="pt-bar-chart" id="ptBarChart"></div>
+        </div>
+
+        <!-- Opportunity cards -->
+        <div class="pt-opp-section">
+          <div class="pt-opp-header">โอกาส</div>
+          <div class="pt-opp-list" id="ptOppList"></div>
+        </div>
+
+        <!-- CTA -->
+        <div class="pt-cta-section">
+          <button class="pt-cta-btn" onclick="createCampaign()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+            สร้างแคมเปญโฆษณา
+          </button>
+        </div>
+
+      </div><!-- #dsPotentialPane -->
 
     </div>
   </aside>

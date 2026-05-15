@@ -132,6 +132,126 @@ const DEALERS = [
 ];
 
 /**
+ * Market potential data per province: estimated market value and actual sales
+ * in ล้านบาท (million THB), plus leading crops in the province.
+ * @const {!Object<string, {market:number, sales:number, crops:!Array<string>}>}
+ */
+const PROVINCE_POTENTIAL = {
+  // N1  — ~30% of provinces hit ≥600M (orange-500); rest spread lighter
+  'เชียงใหม่':          {market:850,  sales:188, crops:['ลำไย','ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์']},
+  'เชียงราย':           {market:580,  sales:128, crops:['ข้าวนาปี','ลำไย','ข้าวโพดเลี้ยงสัตว์']},
+  'แม่ฮ่องสอน':        {market:null, sales:0,   crops:['ข้าวนาปี']},
+  'ลำปาง':              {market:420,  sales:93,  crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์','ลำไย']},
+  'ลำพูน':              {market:290,  sales:64,  crops:['ลำไย','ข้าวนาปี']},
+  'พะเยา':              {market:265,  sales:58,  crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์']},
+  // N2
+  'พิษณุโลก':           {market:602,  sales:133, crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์','มันสำปะหลัง']},
+  'เพชรบูรณ์':         {market:610,  sales:135, crops:['ข้าวโพดเลี้ยงสัตว์','ข้าวนาปี','มันสำปะหลัง']},
+  'สุโขทัย':           {market:85,   sales:19,  crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์']},
+  'อุตรดิตถ์':         {market:185,  sales:41,  crops:['ข้าวนาปี','ลำไย']},
+  'แพร่':               {market:175,  sales:38,  crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์']},
+  'น่าน':               {market:168,  sales:37,  crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์']},
+  // N3
+  'ตาก':                {market:190,  sales:42,  crops:['ข้าวโพดเลี้ยงสัตว์','ข้าวนาปี','อ้อยโรงงาน']},
+  'กำแพงเพชร':         {market:405,  sales:89,  crops:['ข้าวนาปี','อ้อยโรงงาน','มันสำปะหลัง']},
+  'นครสวรรค์':         {market:600,  sales:132, crops:['ข้าวนาปี','อ้อยโรงงาน','ข้าวโพดเลี้ยงสัตว์']},
+  'พิจิตร':             {market:175,  sales:38,  crops:['ข้าวนาปี','ข้าวนาปรัง']},
+  'อุทัยธานี':         {market:110,  sales:24,  crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์']},
+  // NE1
+  'ขอนแก่น':           {market:1050, sales:231, crops:['ข้าวนาปี','อ้อยโรงงาน','มันสำปะหลัง']},
+  'มหาสารคาม':         {market:605,  sales:133, crops:['ข้าวนาปี','อ้อยโรงงาน']},
+  'กาฬสินธุ์':         {market:620,  sales:136, crops:['ข้าวนาปี','มันสำปะหลัง']},
+  'ร้อยเอ็ด':          {market:670,  sales:147, crops:['ข้าวนาปี','มันสำปะหลัง']},
+  'ยโสธร':              {market:295,  sales:65,  crops:['ข้าวนาปี']},
+  // NE2
+  'นครราชสีมา':        {market:1200, sales:264, crops:['ข้าวนาปี','อ้อยโรงงาน','มันสำปะหลัง']},
+  'บุรีรัมย์':         {market:695,  sales:153, crops:['ข้าวนาปี','มันสำปะหลัง','ยางพารา']},
+  'สุรินทร์':          {market:480,  sales:106, crops:['ข้าวนาปี','ยางพารา']},
+  'ชัยภูมิ':           {market:435,  sales:96,  crops:['ข้าวนาปี','อ้อยโรงงาน','มันสำปะหลัง']},
+  'ศรีสะเกษ':          {market:630,  sales:139, crops:['ข้าวนาปี','มันสำปะหลัง']},
+  'อุบลราชธานี':      {market:920,  sales:202, crops:['ข้าวนาปี','ยางพารา','มันสำปะหลัง']},
+  // NE3
+  'อุดรธานี':          {market:720,  sales:158, crops:['ข้าวนาปี','ยางพารา','อ้อยโรงงาน']},
+  'หนองคาย':           {market:310,  sales:68,  crops:['ข้าวนาปี','ยางพารา']},
+  'เลย':                {market:165,  sales:36,  crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์']},
+  'สกลนคร':            {market:620,  sales:136, crops:['ข้าวนาปี','ยางพารา']},
+  'หนองบัวลำภู':      {market:155,  sales:34,  crops:['ข้าวนาปี']},
+  'นครพนม':            {market:250,  sales:55,  crops:['ข้าวนาปี','ยางพารา']},
+  'มุกดาหาร':          {market:140,  sales:31,  crops:['ข้าวนาปี','ยางพารา']},
+  'อำนาจเจริญ':       {market:150,  sales:33,  crops:['ข้าวนาปี']},
+  'บึงกาฬ':            {market:120,  sales:26,  crops:['ข้าวนาปี','ยางพารา']},
+  // C1
+  'อยุธยา':            {market:610,  sales:134, crops:['ข้าวนาปรัง','ข้าวนาปี','อ้อยโรงงาน']},
+  'อ่างทอง':           {market:100,  sales:22,  crops:['ข้าวนาปรัง','ข้าวนาปี']},
+  'สิงห์บุรี':        {market:85,   sales:19,  crops:['ข้าวนาปรัง','ข้าวนาปี']},
+  'ชัยนาท':            {market:195,  sales:43,  crops:['ข้าวนาปรัง','ข้าวนาปี','อ้อยโรงงาน']},
+  'ลพบุรี':            {market:608,  sales:134, crops:['ข้าวนาปี','ข้าวโพดเลี้ยงสัตว์','อ้อยโรงงาน']},
+  'สระบุรี':           {market:225,  sales:50,  crops:['ข้าวนาปรัง','อ้อยโรงงาน']},
+  // C2
+  'กรุงเทพมหานคร':   {market:120,  sales:26,  crops:['ข้าวนาปรัง','ข้าวโพดเลี้ยงสัตว์']},
+  'นนทบุรี':           {market:45,   sales:10,  crops:['ข้าวนาปรัง']},
+  'ปทุมธานี':         {market:40,   sales:9,   crops:['ข้าวนาปรัง','ข้าวนาปี']},
+  'สมุทรปราการ':      {market:32,   sales:7,   crops:['ข้าวนาปรัง']},
+  'นครนายก':          {market:115,  sales:25,  crops:['ข้าวนาปรัง','มันสำปะหลัง']},
+  // C3
+  'สุพรรณบุรี':       {market:640,  sales:141, crops:['ข้าวนาปรัง','อ้อยโรงงาน','ข้าวโพดเลี้ยงสัตว์']},
+  'นครปฐม':           {market:null, sales:0,   crops:['ข้าวนาปรัง','มะพร้าว']},
+  // E1
+  'ชลบุรี':            {market:null, sales:0,   crops:['มันสำปะหลัง','ข้าวนาปี']},
+  'ระยอง':             {market:1100, sales:242, crops:['มันสำปะหลัง','ยางพารา','ข้าวนาปี']},
+  'ฉะเชิงเทรา':      {market:360,  sales:79,  crops:['ข้าวนาปี','มันสำปะหลัง']},
+  // E2
+  'จันทบุรี':         {market:1300, sales:286, crops:['ทุเรียน','ยางพารา']},
+  'ตราด':              {market:856,  sales:188, crops:['ทุเรียน','ยางพารา']},
+  'สระแก้ว':          {market:445,  sales:98,  crops:['ยางพารา','มันสำปะหลัง']},
+  // E3
+  'ปราจีนบุรี':       {market:330,  sales:73,  crops:['ข้าวนาปรัง','มันสำปะหลัง','อ้อยโรงงาน']},
+  // W1
+  'กาญจนบุรี':        {market:650,  sales:143, crops:['อ้อยโรงงาน','ข้าวนาปรัง','ข้าวโพดเลี้ยงสัตว์']},
+  'ราชบุรี':           {market:390,  sales:86,  crops:['อ้อยโรงงาน','ข้าวนาปรัง','มะพร้าว']},
+  // W2
+  'เพชรบุรี':         {market:115,  sales:25,  crops:['สับปะรด','ข้าวนาปี','มะพร้าว']},
+  'ประจวบคีรีขันธ์':  {market:110,  sales:24,  crops:['สับปะรด','ข้าวนาปี','มะพร้าว']},
+  // W3
+  'สมุทรสาคร':        {market:125,  sales:28,  crops:['ข้าวนาปรัง','มะพร้าว']},
+  'สมุทรสงคราม':     {market:30,   sales:7,   crops:['ข้าวนาปรัง','มะพร้าว']},
+  // S1
+  'ชุมพร':             {market:455,  sales:100, crops:['ปาล์มน้ำมัน','ยางพารา','ทุเรียน']},
+  'สุราษฎร์ธานี':   {market:820,  sales:180, crops:['ปาล์มน้ำมัน','ยางพารา']},
+  'นครศรีธรรมราช':  {market:745,  sales:164, crops:['ปาล์มน้ำมัน','ยางพารา','ข้าวนาปี']},
+  'พัทลุง':           {market:375,  sales:82,  crops:['ปาล์มน้ำมัน','ยางพารา','ข้าวนาปี']},
+  // S2
+  'สงขลา':            {market:780,  sales:172, crops:['ยางพารา','ปาล์มน้ำมัน']},
+  'ตรัง':              {market:455,  sales:100, crops:['ยางพารา','ปาล์มน้ำมัน']},
+  'สตูล':              {market:245,  sales:54,  crops:['ยางพารา','ปาล์มน้ำมัน']},
+  // S3
+  'กระบี่':            {market:450,  sales:99,  crops:['ปาล์มน้ำมัน','ยางพารา']},
+  'พังงา':             {market:230,  sales:51,  crops:['ยางพารา','ปาล์มน้ำมัน']},
+  'ภูเก็ต':            {market:25,   sales:6,   crops:['มะพร้าว']},
+  'ปัตตานี':          {market:210,  sales:46,  crops:['ยางพารา','ปาล์มน้ำมัน']},
+  'ยะลา':              {market:195,  sales:43,  crops:['ยางพารา','ปาล์มน้ำมัน']},
+  'นราธิวาส':         {market:185,  sales:41,  crops:['ยางพารา','ปาล์มน้ำมัน']},
+  'ระนอง':             {market:70,   sales:15,  crops:['ยางพารา','ปาล์มน้ำมัน']},
+};
+
+/**
+ * Crop types shown in the Potential filter sidebar.
+ * @const {!Array<{id:string, name:string, color:string, pct:number}>}
+ */
+const PT_CROPS = [
+  {id:'all',                 name:'ทั้งหมด',               color:'#f97316', pct:100},
+  {id:'ข้าวนาปี',            name:'ข้าวนาปี',              color:'#3b82f6', pct:85},
+  {id:'ยางพารา',             name:'ยางพารา',               color:'#22c55e', pct:78},
+  {id:'มันสำปะหลัง',         name:'มันสำปะหลัง',           color:'#ef4444', pct:62},
+  {id:'ข้าวโพดเลี้ยงสัตว์', name:'ข้าวโพดเลี้ยงสัตว์',    color:'#f59e0b', pct:58},
+  {id:'ปาล์มน้ำมัน',         name:'ปาล์มน้ำมัน',           color:'#84cc16', pct:52},
+  {id:'อ้อยโรงงาน',          name:'อ้อยโรงงาน',            color:'#10b981', pct:48},
+  {id:'ข้าวนาปรัง',          name:'ข้าวนาปรัง',            color:'#2563eb', pct:42},
+  {id:'ทุเรียน',              name:'ทุเรียน',               color:'#d97706', pct:38},
+  {id:'ลำไย',                name:'ลำไย',                 color:'#8b5cf6', pct:32},
+];
+
+/**
  * Maps Thai province name to zone ID for map coloring.
  * @const {!Object<string, string>}
  */
@@ -299,8 +419,20 @@ let selectedDealerIdx = -1;
 /** @type {boolean} Whether the filter sidebar is open. */
 let filterSidebarOpen = true;
 
-/** @type {?string} Active coverage overlay: 'dealer' | 'gap' | null. */
+/** @type {?string} Active coverage overlay: 'dealer' | 'gap' | 'overlap' | null. */
 let coverageMode = null;
+
+/** @type {boolean} Whether the Potential heatmap mode is active. */
+let potentialMode = false;
+
+/** @type {string} Active crop filter in potential mode. */
+let potentialCrop = 'all';
+
+/** @type {?number} Active potential level filter (0-5), null = all. */
+let potentialLevel = null;
+
+/** @type {string} Chart grouping in potential mode: 'province' | 'zone'. */
+let potentialChartMode = 'province';
 
 /** @type {boolean} Active status for the new dealer modal form. */
 let newDealerActive = true;
@@ -491,6 +623,342 @@ function toggleFilterSidebar() {
 function switchPageTab(tab, btn) {
   document.querySelectorAll('.page-tab').forEach((t) => t.classList.remove('page-tab--active'));
   if (btn) btn.classList.add('page-tab--active');
+  if (tab === 'potential') {
+    enterPotentialMode();
+  } else if (potentialMode) {
+    exitPotentialMode();
+  }
+}
+
+// ── Potential Mode ────────────────────────────────────────────────────────────
+
+/**
+ * Returns the heatmap fill color for a market value in ลบ.
+ * @param {?number} value Market value in million THB, or null for no-data.
+ * @return {string} Hex color.
+ */
+function potentialColor(value) {
+  if (value == null) return '#94a3b8'; // no data → grey
+  if (value >= 600)  return '#f97316'; // orange-500 (~30% of provinces)
+  if (value >= 300)  return '#fb923c'; // orange-400
+  if (value >= 150)  return '#fdba74'; // orange-300
+  if (value >= 50)   return '#fed7aa'; // orange-200
+  return '#fff7ed';                    // orange-50 (<50M, very pale)
+}
+
+/**
+ * Returns the potential level index (0-5) for a market value.
+ * 5=highest (≥600M), 0=no data.
+ */
+function getPotentialLevel(value) {
+  if (value == null) return 0;
+  if (value >= 600)  return 5;
+  if (value >= 300)  return 4;
+  if (value >= 150)  return 3;
+  if (value >= 50)   return 2;
+  return 1;
+}
+
+/**
+ * Returns potential data for a province name (Thai or English via EN_TO_TH_PROVINCE).
+ * @param {string} provName Province name.
+ * @return {?{market:number,sales:number,crops:!Array<string>}}
+ */
+function getProvPotential(provName) {
+  if (PROVINCE_POTENTIAL[provName]) return PROVINCE_POTENTIAL[provName];
+  const thai = EN_TO_TH_PROVINCE[provName];
+  if (thai && PROVINCE_POTENTIAL[thai]) return PROVINCE_POTENTIAL[thai];
+  return null;
+}
+
+/** Activates the Potential heatmap mode. */
+function enterPotentialMode() {
+  potentialMode = true;
+  potentialLevel = null;
+
+  const dealerPane = document.getElementById('fsDealerPane');
+  const ptPane     = document.getElementById('fsPotentialPane');
+  if (dealerPane) dealerPane.style.display = 'none';
+  if (ptPane)     ptPane.style.display     = '';
+
+  const dealerContent = document.getElementById('dsDealerContent');
+  const ptContent     = document.getElementById('dsPotentialPane');
+  if (dealerContent) dealerContent.style.display = 'none';
+  if (ptContent)     ptContent.style.display     = '';
+
+  renderPtCropList();
+  renderPtRightSidebar();
+
+  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+}
+
+/** Deactivates the Potential heatmap mode and restores dealer view. */
+function exitPotentialMode() {
+  potentialMode = false;
+  potentialCrop  = 'all';
+  potentialLevel = null;
+
+  const dealerPane = document.getElementById('fsDealerPane');
+  const ptPane     = document.getElementById('fsPotentialPane');
+  if (dealerPane) dealerPane.style.display = '';
+  if (ptPane)     ptPane.style.display     = 'none';
+
+  const dealerContent = document.getElementById('dsDealerContent');
+  const ptContent     = document.getElementById('dsPotentialPane');
+  if (dealerContent) dealerContent.style.display = '';
+  if (ptContent)     ptContent.style.display     = 'none';
+
+  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+}
+
+/** Renders the crop filter list in the left sidebar. */
+function renderPtCropList() {
+  const el = document.getElementById('fsPtCropList');
+  if (!el) return;
+
+  const crops = potentialCrop === 'all'
+    ? PT_CROPS
+    : PT_CROPS.slice().sort((a, b) => {
+        if (a.id === 'all') return -1;
+        if (b.id === 'all') return 1;
+        return b.pct - a.pct;
+      });
+
+  el.innerHTML = crops.map((c) => {
+    const isActive = potentialCrop === c.id;
+    return `
+      <div class="fs-pt-crop-row${isActive ? ' fs-pt-crop-row--active' : ''}"
+           onclick="filterPotentialCrop('${c.id}')"
+           style="${isActive ? `border-color:${c.color}44;background:${c.color}11` : ''}">
+        <div class="fs-pt-crop-dot" style="background:${c.color}"></div>
+        <span class="fs-pt-crop-name">${c.name}</span>
+        <div class="fs-pt-crop-bar-wrap">
+          <div class="fs-pt-crop-bar-fill" style="width:${c.pct}%;background:${c.color}"></div>
+        </div>
+        <span class="fs-pt-crop-pct">${c.pct}%</span>
+      </div>`;
+  }).join('');
+}
+
+/**
+ * Filters the heatmap by crop type.
+ * @param {string} cropId Crop ID or 'all'.
+ */
+function filterPotentialCrop(cropId) {
+  potentialCrop = cropId;
+  potentialLevel = null;
+  renderPtCropList();
+  renderPtRightSidebar();
+  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+}
+
+/**
+ * Sorts the crop list and heatmap.
+ * @param {string} mode 'opportunity' | 'gap'.
+ */
+function sortPotential(mode) {
+  document.getElementById('ptSortOpp').classList.toggle('fs-pt-sort-btn--active', mode === 'opportunity');
+  document.getElementById('ptSortGap').classList.toggle('fs-pt-sort-btn--active', mode === 'gap');
+  renderPtCropList();
+}
+
+/**
+ * Highlights provinces in the selected heatmap level band.
+ * @param {number} level 0-5.
+ */
+function filterPotentialLevel(level) {
+  potentialLevel = potentialLevel === level ? null : level;
+  document.querySelectorAll('.fs-pt-legend-row').forEach((r, i) => {
+    r.classList.toggle('fs-pt-legend-row--active', potentialLevel === (5 - i));
+  });
+  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+}
+
+/** Renders all right-sidebar potential content. */
+function renderPtRightSidebar() {
+  // Aggregate stats
+  const allData = Object.values(PROVINCE_POTENTIAL);
+  const totalMarket = allData.reduce((s, d) => s + d.market, 0);
+  const totalSales  = allData.reduce((s, d) => s + d.sales,  0);
+  const gap         = totalMarket - totalSales;
+  const provCount   = allData.length;
+
+  const kpiValEl = document.getElementById('ptKpiVal');
+  if (kpiValEl) kpiValEl.textContent = (totalMarket / 1000).toFixed(1) + 'K ลบ.';
+
+  const provEl = document.getElementById('ptProvCount');
+  if (provEl) provEl.textContent = `${provCount} จังหวัด`;
+
+  const distEl = document.getElementById('ptDistCount');
+  if (distEl) distEl.textContent = `${ZONES.length} เขต`;
+
+  const oppEl = document.getElementById('ptOppCount');
+  if (oppEl) oppEl.textContent = `${Math.round(gap / 10)} โอกาส`;
+
+  const farmEl = document.getElementById('ptFarmers');
+  if (farmEl) farmEl.textContent = (DEALERS.length * 2800).toLocaleString() + ' ราย';
+
+  const areaEl = document.getElementById('ptArea');
+  if (areaEl) areaEl.textContent = (DEALERS.length * 8500).toLocaleString() + ' ไร่';
+
+  renderPtBarChart();
+  renderPtOppCards();
+}
+
+/** Switches the bar chart between province and zone grouping. */
+function switchPotentialChart(mode) {
+  potentialChartMode = mode;
+  document.getElementById('ptToggleProv').classList.toggle('pt-toggle-btn--active', mode === 'province');
+  document.getElementById('ptToggleZone').classList.toggle('pt-toggle-btn--active', mode === 'zone');
+  renderPtBarChart();
+}
+
+/** Renders the grouped bar chart (Figma orange-tone style) in the right sidebar. */
+function renderPtBarChart() {
+  const el = document.getElementById('ptBarChart');
+  if (!el) return;
+
+  const CHART_H = 120; // px height of the bar area
+
+  let groups;
+  if (potentialChartMode === 'province') {
+    groups = Object.entries(PROVINCE_POTENTIAL)
+      .filter(([, d]) => d && d.market)
+      .map(([name, d]) => ({name, market: d.market, sales: d.sales, gap: d.market - d.sales}))
+      .sort((a, b) => b.market - a.market).slice(0, 5);
+  } else {
+    groups = ZONES.map((z) => {
+      const provs = z.provinces.map((p) => PROVINCE_POTENTIAL[p]).filter((d) => d && d.market);
+      const market = provs.reduce((s, d) => s + d.market, 0);
+      const sales  = provs.reduce((s, d) => s + d.sales,  0);
+      return {name: z.id, market, sales, gap: market - sales};
+    }).sort((a, b) => b.market - a.market).slice(0, 5);
+  }
+
+  const rawMax = Math.max(...groups.map((g) => g.market));
+  const yMax = Math.ceil(rawMax / 500) * 500;
+  const fmtK = (v) => v >= 1000 ? (v % 1000 === 0 ? v / 1000 + 'k' : (v / 1000).toFixed(1) + 'k') : String(v);
+
+  // Y-axis gridlines (0, 25%, 50%, 75%, 100%)
+  const glHtml = [0, 0.25, 0.5, 0.75, 1].map((frac) => {
+    const b = (frac * CHART_H).toFixed(1);
+    return `<div class="pt-gl" style="bottom:${b}px"><span class="pt-gl-label">${fmtK(Math.round(yMax * frac))}</span></div>`;
+  }).join('');
+
+  // Bar groups
+  const barsHtml = groups.map((g) => {
+    const hM = Math.max(2, (g.market / yMax) * CHART_H).toFixed(1);
+    const hS = Math.max(2, (g.sales  / yMax) * CHART_H).toFixed(1);
+    const hG = Math.max(2, (g.gap    / yMax) * CHART_H).toFixed(1);
+    const nm = g.name.length > 5 ? g.name.slice(0, 4) + '…' : g.name;
+    return `
+      <div class="pt-bar-group">
+        <div class="pt-bar-top-label" style="bottom:${(+hM + 3).toFixed(0)}px">${fmtK(Math.round(g.market))}</div>
+        <div class="pt-bar-trio">
+          <div class="ptb" style="height:${hM}px;background:#fed7aa" title="ตลาด ${g.market} ลบ."></div>
+          <div class="ptb" style="height:${hS}px;background:#f97316" title="ขาย ${g.sales} ลบ."></div>
+          <div class="ptb ptb--gap" style="height:${hG}px" title="โอกาส ${g.gap} ลบ."></div>
+        </div>
+        <div class="pt-bar-name">${nm}</div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="pt-chart-canvas" style="height:${CHART_H}px">
+      <div class="pt-chart-gls">${glHtml}</div>
+      <div class="pt-chart-bars">${barsHtml}</div>
+    </div>`;
+}
+
+/** Fertilizer formulas recommended by crop type. */
+const CROP_FORMULAS = {
+  'ข้าวนาปี':            [{code:'16-20-0', desc:'ระยะแตกกอ'}, {code:'46-0-0', desc:'ระยะออกรวง'}],
+  'ข้าวนาปรัง':          [{code:'16-20-0', desc:'ระยะแตกกอ'}, {code:'46-0-0', desc:'ระยะออกรวง'}],
+  'ข้าวโพดเลี้ยงสัตว์': [{code:'15-15-15', desc:'หลังปลูก 15 วัน'}, {code:'46-0-0', desc:'ระยะออกดอก'}],
+  'ยางพารา':             [{code:'20-10-12', desc:'ช่วงเปิดกรีด'}, {code:'15-7-18', desc:'บำรุงต้น'}],
+  'ปาล์มน้ำมัน':         [{code:'12-6-22', desc:'ระยะออกทะลาย'}, {code:'0-0-60', desc:'เพิ่มน้ำมัน'}],
+  'มันสำปะหลัง':         [{code:'15-15-15', desc:'ครั้งแรก'}, {code:'13-13-21', desc:'ครั้งที่สอง'}],
+  'อ้อยโรงงาน':          [{code:'16-8-8',  desc:'หลังปลูก'}, {code:'21-0-0',  desc:'ระยะแตกกอ'}],
+  'ทุเรียน':              [{code:'8-24-24', desc:'ติดดอกออกผล'}, {code:'13-13-21', desc:'บำรุงผล'}],
+  'ลำไย':                [{code:'14-7-35', desc:'ก่อนออกดอก'}, {code:'8-24-24', desc:'ติดผล'}],
+};
+
+/** Renders opportunity cards in the right sidebar. */
+function renderPtOppCards() {
+  const el = document.getElementById('ptOppList');
+  if (!el) return;
+
+  const cropFilter = potentialCrop === 'all' ? null : potentialCrop;
+  const allProvs = Object.entries(PROVINCE_POTENTIAL);
+
+  // Aggregate gap by crop
+  const cropGap = {};
+  allProvs.forEach(([, d]) => {
+    d.crops.forEach((crop) => {
+      if (!cropFilter || crop === cropFilter) {
+        cropGap[crop] = (cropGap[crop] || 0) + (d.market - d.sales) / d.crops.length;
+      }
+    });
+  });
+
+  const topCrops = Object.entries(cropGap)
+    .sort((a, b) => b[1] - a[1]).slice(0, 2);
+
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const now = new Date();
+  const seasonStart = months[now.getMonth()];
+  const seasonEnd   = months[(now.getMonth() + 2) % 12];
+
+  el.innerHTML = topCrops.map(([crop, gapVal]) => {
+    const cropInfo = PT_CROPS.find((c) => c.id === crop) || {color:'#94a3b8', pct:50};
+    const formulas = CROP_FORMULAS[crop] || [{code:'15-15-15', desc:'บำรุงทั่วไป'}];
+    const oppPct   = Math.min(99, Math.round(cropInfo.pct * 0.85));
+    const provCount = allProvs.filter(([, d]) => d.crops.includes(crop)).length;
+
+    return `
+      <div class="pt-opp-card">
+        <div class="pt-opp-card-header">
+          <div class="pt-opp-crop-dot" style="background:${cropInfo.color}"></div>
+          <span class="pt-opp-crop-name">${crop}</span>
+          <span class="pt-opp-pct" style="color:${cropInfo.color}">${oppPct}% โอกาส</span>
+        </div>
+        <div class="pt-opp-progress-wrap">
+          <div class="pt-opp-progress-fill" style="width:${oppPct}%;background:${cropInfo.color}"></div>
+        </div>
+        <div class="pt-opp-body">
+          <div class="pt-opp-body-row">
+            <span class="pt-opp-body-label">โอกาสเพิ่มยอดขาย</span>
+            <span class="pt-opp-body-val" style="color:${cropInfo.color}">${Math.round(gapVal).toLocaleString()} ลบ.</span>
+          </div>
+          ${formulas.map((f) => `
+            <div class="pt-opp-formula-row">
+              <span class="pt-product-badge">${f.code}</span>
+              <span class="pt-opp-formula-desc">${f.desc}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="pt-opp-stats">
+          <div class="ds-info-row">
+            <span class="ds-info-label">พื้นที่เป้าหมาย</span>
+            <span class="ds-info-val">${provCount} จังหวัด</span>
+          </div>
+          <div class="ds-info-row">
+            <span class="ds-info-label">เกษตรกรเข้าถึง</span>
+            <span class="ds-info-val">${(provCount * 3200).toLocaleString()} ราย</span>
+          </div>
+          <div class="ds-info-row">
+            <span class="ds-info-label">ช่วงแนะนำ</span>
+            <span class="ds-info-val pt-opp-season">${seasonStart} – ${seasonEnd} ${now.getFullYear() + 543}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/** Placeholder for campaign creation flow. */
+function createCampaign() {
+  alert('เปิดระบบสร้างแคมเปญโฆษณา\n(ฟีเจอร์นี้จะเชื่อมต่อกับ Ad Platform)');
 }
 
 // ── Right Detail Sidebar ──────────────────────────────────────────────────
@@ -837,6 +1305,31 @@ function styleProvince(feature) {
   const zoneId = getZoneForProvince(provName);
   const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
   const dimmed = currentZone !== 'all' && zoneId !== currentZone;
+
+  // ── Potential heatmap mode ─────────────────────────────────────────────
+  if (potentialMode) {
+    const ptData = getProvPotential(provName);
+    const marketVal = ptData ? ptData.market : null;
+
+    // Crop filter: dim provinces not growing the selected crop
+    let cropMatch = true;
+    if (potentialCrop !== 'all' && ptData) {
+      cropMatch = ptData.crops.includes(potentialCrop);
+    }
+
+    // Level filter
+    let levelMatch = true;
+    if (potentialLevel !== null && ptData) {
+      levelMatch = getPotentialLevel(marketVal) === potentialLevel;
+    }
+
+    const show = cropMatch && levelMatch && ptData;
+    const color = potentialColor(show ? marketVal : null);
+    const opacity = show ? 0.88 : 0.18;
+    const strokeColor = isDark ? '#1c1917' : '#d6d3d1';
+
+    return {fillColor: color, fillOpacity: opacity, color: strokeColor, weight: 0.7, opacity: 0.8};
+  }
 
   // ── Coverage overlay modes ──────────────────────────────────────────────
   if (coverageMode) {
