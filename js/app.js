@@ -260,11 +260,19 @@ const MINI_LAYOUT = [
   [null, 'S1',  'S2',  null,  null],
 ];
 
+// ── State ─────────────────────────────────────────────────────────────────
+
 /** @type {string} Currently active zone filter. */
 let currentZone = 'all';
 
+/** @type {boolean} Whether zone sort is ascending (by dealer count). */
+let zoneSortAsc = false;
+
 /** @type {number} Index of the selected dealer row (-1 = none). */
 let selectedDealerIdx = -1;
+
+/** @type {boolean} Whether the filter sidebar is open. */
+let filterSidebarOpen = true;
 
 /** @type {boolean} Active status for the new dealer modal form. */
 let newDealerActive = true;
@@ -316,59 +324,60 @@ function getZoneForProvince(provName) {
   return match ? PROVINCE_ZONE_MAP[match] : null;
 }
 
+// ── Filter Sidebar ────────────────────────────────────────────────────────
+
 /**
- * Builds the mini map grid in the sidebar.
+ * Builds zone rows in the filter sidebar from ZONES data.
  */
-function buildMiniMap() {
-  const el = document.getElementById('miniMap');
-  el.innerHTML = '';
-  MINI_LAYOUT.forEach((row) => {
-    row.forEach((id) => {
-      const cell = document.createElement('div');
-      if (!id) {
-        cell.style.aspectRatio = '1';
-        el.appendChild(cell);
-        return;
-      }
-      const zone = ZONES.find((z) => z.id === id);
-      cell.className = 'mini-cell';
-      cell.style.background = zone.color;
-      cell.title = zone.name;
-      cell.innerHTML = `${id}<span class="badge">${zone.dealers}</span>`;
-      cell.onclick = () => filterZone(id);
-      el.appendChild(cell);
-    });
-  });
+function buildFsZoneRows() {
+  const container = document.getElementById('fsZoneRows');
+  if (!container) return;
+
+  const zoneCounts = {};
+  DEALERS.forEach((d) => { zoneCounts[d.zone] = (zoneCounts[d.zone] || 0) + 1; });
+  const total = DEALERS.length;
+  const maxCount = Math.max(...Object.values(zoneCounts), 1);
+
+  const el = document.getElementById('fsAllCount');
+  if (el) el.textContent = `${total}/${total}`;
+
+  container.innerHTML = ZONES.map((z) => {
+    const count = zoneCounts[z.id] || 0;
+    const pct = total ? Math.round(count / total * 100) : 0;
+    const barW = maxCount ? Math.round(count / maxCount * 100) : 0;
+    return `
+      <div class="fs-zone-row" id="zone-row-${z.id}" onclick="filterZone('${z.id}')">
+        <div class="fs-zone-dot" style="background:${z.color};border-radius:2px"></div>
+        <span class="fs-zone-name" style="color:${z.color}">${z.id} ${z.name}</span>
+        <div class="fs-zone-bar-wrap">
+          <div class="fs-zone-bar" style="width:${barW}%;background:${z.color}"></div>
+        </div>
+        <span class="fs-zone-count">${count}/${total}</span>
+        <span class="fs-zone-pct">${pct}%</span>
+      </div>
+    `;
+  }).join('');
 }
 
 /**
- * Builds the zone filter chips in the sidebar.
- */
-function buildZoneChips() {
-  const el = document.getElementById('zoneChips');
-  el.innerHTML = ZONES.map((z) => `
-    <div class="zone-chip" id="chip-${z.id}" onclick="filterZone('${z.id}')" style="color:${z.color}">
-      <div class="zone-dot" style="background:${z.color}"></div>${z.id}
-    </div>
-  `).join('');
-}
-
-/**
- * Filters the dashboard to a specific zone or all zones.
+ * Filters the map and detail panel to a zone or all zones.
  * @param {string} id Zone ID or 'all'.
  */
 function filterZone(id) {
   currentZone = id;
-  document.querySelectorAll('.zone-chip').forEach((c) => c.classList.remove('active'));
+
+  // Update zone row active states
+  document.querySelectorAll('.fs-zone-row').forEach((r) => r.classList.remove('fs-zone-row--active'));
+  const activeRow = document.getElementById(id === 'all' ? 'zone-row-all' : `zone-row-${id}`);
+  if (activeRow) activeRow.classList.add('fs-zone-row--active');
+
   if (id !== 'all') {
-    const chip = document.getElementById(`chip-${id}`);
-    if (chip) chip.classList.add('active');
     const zone = ZONES.find((z) => z.id === id);
     if (zone) setDetailZone(zone);
+  } else {
+    setDetailZone(ZONES[0]);
   }
-  renderZoneCards();
-  renderTable();
-  updateContentHeader();
+
   if (mapInitialized) {
     if (provinceLayer) provinceLayer.setStyle(styleProvince);
     renderDealerMarkers();
@@ -376,263 +385,274 @@ function filterZone(id) {
 }
 
 /**
- * Updates the content area title and subtitle based on the current filter.
+ * Filters zone rows in the sidebar by the search input.
  */
-function updateContentHeader() {
-  const filtered = currentZone === 'all' ? ZONES : ZONES.filter((z) => z.id === currentZone);
-  const totalDealers = filtered.reduce((sum, z) => sum + z.dealers, 0);
-  const zone = currentZone === 'all' ? null : ZONES.find((z) => z.id === currentZone);
-  document.getElementById('contentTitle').textContent =
-      zone ? `เขต ${zone.id} – ${zone.name}` : 'ดีลเลอร์ทั้งหมด';
-  document.getElementById('contentSub').textContent =
-      `${totalDealers} ราย ใน ${filtered.length} เขตพื้นที่`;
+function filterZoneList() {
+  const q = (document.getElementById('zoneSearchInput') || {}).value.toLowerCase();
+  document.querySelectorAll('#fsZoneRows .fs-zone-row').forEach((row) => {
+    const name = row.querySelector('.fs-zone-name').textContent.toLowerCase();
+    row.style.display = name.includes(q) ? '' : 'none';
+  });
 }
 
 /**
- * Renders the zone cards grid.
+ * Toggles zone sort order by dealer count.
  */
-function renderZoneCards() {
-  const container = document.getElementById('zoneCardsGrid');
-  const list = currentZone === 'all' ? ZONES : ZONES.filter((z) => z.id === currentZone);
-  container.innerHTML = list.map((z) => `
-    <div class="zone-card" onclick="selectZone('${z.id}')" id="zcard-${z.id}">
-      <div class="zone-card-header">
-        <div class="zone-card-name">
-          <div class="zone-badge-lg" style="background:${z.color}">${z.id}</div>
-          ${z.name}
-        </div>
-        <div class="zone-card-count">
-          <div class="zone-card-count-num" style="color:${z.color}">${z.dealers}</div>
-          <div class="zone-card-count-label">ดีลเลอร์</div>
-        </div>
-      </div>
-      <div class="zone-card-body">
-        <div class="zone-provinces">
-          ${z.provinces.slice(0, 4).map((p) => `<span class="province-tag">${p}</span>`).join('')}
-        </div>
-        <div class="crop-label">พืชหลัก</div>
-        ${z.crops.map(([name, color, pct]) => `
-          <div class="crop-row">
-            <div class="crop-name">${name}</div>
-            <div class="crop-bar-bg">
-              <div class="crop-bar-fill" style="background:${color};width:${pct}%"></div>
-            </div>
-            <div class="crop-pct" style="color:${color}">${pct}%</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
+function sortZoneList() {
+  zoneSortAsc = !zoneSortAsc;
+  const container = document.getElementById('fsZoneRows');
+  if (!container) return;
+  const rows = Array.from(container.querySelectorAll('.fs-zone-row'));
+  rows.sort((a, b) => {
+    const ca = parseInt(a.querySelector('.fs-zone-count').textContent) || 0;
+    const cb = parseInt(b.querySelector('.fs-zone-count').textContent) || 0;
+    return zoneSortAsc ? ca - cb : cb - ca;
+  });
+  rows.forEach((r) => container.appendChild(r));
 }
 
 /**
- * Renders the dealer table, filtered by current zone and search query.
+ * Resets all filters to the default (all zones).
  */
-function renderTable() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  let list = DEALERS;
-  if (currentZone !== 'all') list = list.filter((d) => d.zone === currentZone);
-  if (search) {
-    list = list.filter(
-        (d) => d.name.toLowerCase().includes(search) || d.province.includes(search));
-  }
-  document.getElementById('dealerTbody').innerHTML = list.map((d, i) => `
-    <tr onclick="selectDealer(${i})" id="drow-${i}" ${selectedDealerIdx === i ? 'class="selected"' : ''}>
-      <td>
-        <div class="d-name-cell">
-          <div class="d-avatar" style="background:${zoneColor(d.zone)}">${d.name.charAt(0)}</div>
-          ${d.name}
-        </div>
-      </td>
-      <td>
-        <span class="zone-pill" style="background:${zoneColor(d.zone)}22;color:${zoneColor(d.zone)}">
-          ${d.zone}
-        </span>
-      </td>
-      <td>${d.province}</td>
-      <td>${d.district}</td>
-      <td>${d.crop}</td>
-      <td>
-        <span class="status-dot" style="background:${d.active ? '#3fb950' : '#f85149'}"></span>
-        ${d.active ? 'Active' : 'Inactive'}
-      </td>
-    </tr>
-  `).join('');
+function clearFilters() {
+  filterZone('all');
+  const input = document.getElementById('zoneSearchInput');
+  if (input) input.value = '';
+  filterZoneList();
 }
 
 /**
- * Selects a dealer by index and updates the detail panel.
+ * Toggles the filter sidebar open/closed.
+ */
+function toggleFilterSidebar() {
+  filterSidebarOpen = !filterSidebarOpen;
+  const sb = document.getElementById('filterSidebar');
+  const btn = document.getElementById('sbPanelBtn');
+  if (sb) sb.classList.toggle('fs-collapsed', !filterSidebarOpen);
+  if (btn) btn.classList.toggle('active', !filterSidebarOpen);
+  if (mapInitialized && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 250);
+}
+
+// ── Page tabs ─────────────────────────────────────────────────────────────
+
+/**
+ * Switches the active top-level page tab.
+ * @param {string} tab Tab name ('dealer', 'crop', 'ops', 'farmer').
+ * @param {!Element} btn The clicked button element.
+ */
+function switchPageTab(tab, btn) {
+  document.querySelectorAll('.page-tab').forEach((t) => t.classList.remove('page-tab--active'));
+  if (btn) btn.classList.add('page-tab--active');
+}
+
+// ── Right Detail Sidebar ──────────────────────────────────────────────────
+
+/**
+ * Switches right-sidebar tab between SKU and Ops.
+ * @param {string} tab 'sku' or 'ops'.
+ */
+function switchDsTab(tab) {
+  const skuBtn  = document.getElementById('dsTabSku');
+  const opsBtn  = document.getElementById('dsTabOps');
+  const skuPane = document.getElementById('dsSkuPane');
+  const opsPane = document.getElementById('dsOpsPane');
+  if (!skuPane || !opsPane) return;
+
+  const isSku = tab === 'sku';
+  skuBtn.classList.toggle('ds-tab--active', isSku);
+  opsBtn.classList.toggle('ds-tab--active', !isSku);
+  skuPane.classList.toggle('ds-tab-pane--hidden', !isSku);
+  opsPane.classList.toggle('ds-tab-pane--hidden', isSku);
+}
+
+/**
+ * Populates the right sidebar with dealer-level information.
  * @param {number} idx Dealer index in the DEALERS array.
  */
 function selectDealer(idx) {
   selectedDealerIdx = idx;
   const d = DEALERS[idx];
-  document.getElementById('dpTitle').textContent = 'ข้อมูลดีลเลอร์';
-  document.getElementById('dpAvatar').style.background = zoneColor(d.zone);
-  document.getElementById('dpAvatar').textContent = d.zone;
-  document.getElementById('dpName').textContent = d.name;
-  document.getElementById('dpSub').textContent = `Zone: ${d.zone}`;
-  document.getElementById('dpProvince').textContent = d.province;
-  document.getElementById('dpDistrict').textContent = d.district;
-  document.getElementById('dpSku').textContent = '6 สูตร';
-  const oppEl = document.getElementById('dpOpp');
-  oppEl.textContent = '2 รายการ';
-  oppEl.style.color = '#f97316';
+  const color = zoneColor(d.zone);
+
+  const badge = document.getElementById('dsZoneBadge');
+  if (badge) { badge.textContent = d.zone; badge.style.background = color; }
+
+  const nameEl = document.getElementById('dsDealerName');
+  if (nameEl) nameEl.textContent = d.name;
+
+  const salesEl = document.getElementById('dsDealerSales');
+  if (salesEl) salesEl.textContent = '฿12.5M · เป้า ฿14M';
+
+  const dealersEl = document.getElementById('dsStatDealers');
+  if (dealersEl) dealersEl.textContent = DEALERS.filter((x) => x.zone === d.zone).length;
+
+  const zonesEl = document.getElementById('dsStatZones');
+  if (zonesEl) zonesEl.textContent = '1';
+
+  const provEl = document.getElementById('dsProvince');
+  if (provEl) provEl.textContent = d.province;
+
+  const distEl = document.getElementById('dsDistrict');
+  if (distEl) distEl.textContent = d.district;
+
+  const oppEl = document.getElementById('dsOpp');
+  if (oppEl) oppEl.textContent = '2 รายการ';
+
+  const farmEl = document.getElementById('dsFarmers');
+  if (farmEl) farmEl.textContent = '45,200 ราย';
+
+  const areaEl = document.getElementById('dsArea');
+  if (areaEl) areaEl.textContent = '120,000 ไร่';
 
   const zone = ZONES.find((z) => z.id === d.zone);
-  if (zone) renderDpCrops(zone.crops);
-
-  renderTable();
+  if (zone) {
+    renderDsDonut(zone.crops);
+    renderDsSkuList(zone);
+    renderDsOpsContent(zone);
+  }
 }
 
 /**
- * Selects a zone and shows its info in the detail panel.
- * @param {string} id Zone ID.
- */
-function selectZone(id) {
-  const zone = ZONES.find((z) => z.id === id);
-  if (zone) setDetailZone(zone);
-}
-
-/**
- * Populates the detail panel with zone-level information.
+ * Populates the right sidebar with zone-level information.
  * @param {!Object} zone Zone data object.
  */
 function setDetailZone(zone) {
-  document.getElementById('dpTitle').textContent = 'ข้อมูลเขตพื้นที่';
-  document.getElementById('dpAvatar').style.background = zone.color;
-  document.getElementById('dpAvatar').textContent = zone.id;
-  document.getElementById('dpName').textContent = `เขต ${zone.id} – ${zone.name}`;
-  document.getElementById('dpSub').textContent = `${zone.dealers} ดีลเลอร์`;
-  document.getElementById('dpProvince').textContent = zone.provinces[0];
-  document.getElementById('dpDistrict').textContent = `${zone.provinces.length} จังหวัด`;
-  document.getElementById('dpSku').textContent = `${zone.crops.length * 3} สูตร`;
-  const zoneOppEl = document.getElementById('dpOpp');
-  zoneOppEl.textContent = `${Math.floor(zone.dealers / 3)} รายการ`;
-  zoneOppEl.style.color = '#f97316';
-  renderDpCrops(zone.crops);
+  const badge = document.getElementById('dsZoneBadge');
+  if (badge) { badge.textContent = zone.id; badge.style.background = zone.color; }
+
+  const nameEl = document.getElementById('dsDealerName');
+  if (nameEl) nameEl.textContent = `เขต ${zone.id} – ${zone.name}`;
+
+  const salesEl = document.getElementById('dsDealerSales');
+  if (salesEl) salesEl.textContent = `${zone.dealers} ดีลเลอร์`;
+
+  const dealersEl = document.getElementById('dsStatDealers');
+  if (dealersEl) dealersEl.textContent = zone.dealers;
+
+  const zonesEl = document.getElementById('dsStatZones');
+  if (zonesEl) zonesEl.textContent = zone.provinces.length;
+
+  const provEl = document.getElementById('dsProvince');
+  if (provEl) provEl.textContent = zone.provinces[0];
+
+  const distEl = document.getElementById('dsDistrict');
+  if (distEl) distEl.textContent = `${zone.provinces.length} จังหวัด`;
+
+  const oppEl = document.getElementById('dsOpp');
+  if (oppEl) oppEl.textContent = `${Math.floor(zone.dealers / 3)} รายการ`;
+
+  const farmEl = document.getElementById('dsFarmers');
+  if (farmEl) farmEl.textContent = `${(zone.dealers * 2800).toLocaleString()} ราย`;
+
+  const areaEl = document.getElementById('dsArea');
+  if (areaEl) areaEl.textContent = `${(zone.dealers * 8500).toLocaleString()} ไร่`;
+
+  renderDsDonut(zone.crops);
+  renderDsSkuList(zone);
+  renderDsOpsContent(zone);
 }
 
 /**
- * Renders crop bars in the detail panel.
+ * Renders a donut SVG chart for the given crops array.
  * @param {!Array<!Array>} crops Array of [name, color, percent] tuples.
  */
-function renderDpCrops(crops) {
-  document.getElementById('dpCrops').innerHTML = crops.map(([name, color, pct]) => `
-    <div class="dp-crop-row">
-      <div class="dp-crop-header">
-        <span><span class="ci" style="background:${color}"></span>${name}</span>
-        <span style="font-weight:700">${pct}%</span>
-      </div>
-      <div class="dp-crop-bar-bg">
-        <div class="dp-crop-bar" style="background:${color};width:${pct}%"></div>
-      </div>
+function renderDsDonut(crops) {
+  const svg = document.getElementById('dsDonutSvg');
+  const legend = document.getElementById('dsDonutLegend');
+  if (!svg || !legend) return;
+
+  const R = 32;
+  const C = 2 * Math.PI * R;
+  const total = crops.reduce((s, c) => s + c[2], 0) || 1;
+  let cumulative = 0;
+
+  const arcs = crops.map(([, color, pct]) => {
+    const seg = (pct / total) * C;
+    const offset = -cumulative;
+    cumulative += seg;
+    return `<circle cx="50" cy="50" r="${R}" fill="none" stroke="${color}" stroke-width="12"
+      stroke-dasharray="${seg.toFixed(1)} ${C.toFixed(1)}"
+      stroke-dashoffset="${offset.toFixed(1)}"
+      transform="rotate(-90 50 50)"/>`;
+  }).join('');
+
+  svg.innerHTML = arcs + `<circle cx="50" cy="50" r="20" fill="var(--card)"/>`;
+
+  legend.innerHTML = crops.map(([name, color, pct]) => `
+    <div class="ds-donut-legend-item">
+      <div class="ds-donut-legend-dot" style="background:${color}"></div>
+      <span class="ds-donut-legend-label">${name}</span>
+      <span class="ds-donut-legend-pct">${pct}%</span>
     </div>
   `).join('');
 }
 
-/** Handles search input changes. */
-function onSearch() {
-  renderTable();
+/**
+ * Renders the SKU recommendation list for a zone.
+ * @param {!Object} zone Zone data object.
+ */
+function renderDsSkuList(zone) {
+  const el = document.getElementById('dsSkuList');
+  if (!el) return;
+
+  const skus = [
+    {formula: '15-5-20', pct: 85, color: '#22c55e', match: true},
+    {formula: '16-8-8',  pct: 72, color: '#22c55e', match: true},
+    {formula: '14-7-35', pct: 45, color: '#f97316', match: false},
+    {formula: '28-3-3',  pct: 63, color: '#22c55e', match: true},
+    {formula: '25-7-7',  pct: 28, color: '#ef4444', match: false},
+  ];
+
+  const checkSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
+  const xSvg    = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>`;
+
+  el.innerHTML = skus.map((s) => `
+    <div class="ds-sku-row">
+      <div class="ds-sku-formula">${s.formula}</div>
+      <div class="ds-sku-bar-wrap">
+        <div class="ds-sku-bar" style="width:${s.pct}%;background:${s.color}"></div>
+      </div>
+      <span class="ds-sku-pct">${s.pct}%</span>
+      <span class="ds-sku-icon" style="color:${s.color}">${s.match ? checkSvg : xSvg}</span>
+    </div>
+  `).join('');
 }
 
 /**
- * Switches between grid, table, and map views.
- * @param {string} view 'grid', 'table', or 'map'.
+ * Renders the Ops tab content (formulas to sell and reduce).
+ * @param {!Object} zone Zone data object.
  */
-function switchView(view) {
-  document.getElementById('grid-view').style.display = view === 'grid' ? '' : 'none';
-  document.getElementById('table-view').style.display = view === 'table' ? '' : 'none';
-  document.getElementById('map-view').style.display = view === 'map' ? '' : 'none';
+function renderDsOpsContent(zone) {
+  const sellEl   = document.getElementById('dsOpsSell');
+  const reduceEl = document.getElementById('dsOpsReduce');
+  if (!sellEl || !reduceEl) return;
 
-  const body = document.getElementById('contentBody');
-  if (body) body.classList.toggle('no-pad', view === 'map');
+  const sellData = [
+    {crop: zone.crops[0] ? zone.crops[0][0] : 'ข้าวโพด', formulas: ['15-5-20', '16-8-8'], opp: '28 รายการ'},
+    {crop: zone.crops[1] ? zone.crops[1][0] : 'ข้าวนาปี', formulas: ['14-7-35'],            opp: '15 รายการ'},
+  ];
 
-  document.querySelectorAll('.view-tab').forEach((tab, i) => {
-    tab.classList.toggle('active',
-        (view === 'grid' && i === 0) ||
-        (view === 'table' && i === 1) ||
-        (view === 'map' && i === 2));
-  });
+  const reduceData = [
+    {crop: zone.crops[0] ? zone.crops[0][0] : 'ข้าวโพด', formulas: ['28-3-3', '25-7-7'], note: 'ลดได้ 35%'},
+    {crop: zone.crops[1] ? zone.crops[1][0] : 'ข้าวนาปี', formulas: ['16-4-16'],           note: 'ลดได้ 22%'},
+  ];
 
-  if (view === 'map') initMap();
-}
+  const renderGroups = (data, type) => data.map((item) => `
+    <div class="ds-ops-group">
+      <div class="ds-ops-crop-label">${item.crop}</div>
+      <div class="ds-ops-formulas">
+        ${item.formulas.map((f) => `
+          <div class="ds-ops-formula-box ds-ops-formula-box--${type}">
+            <span class="ds-ops-formula">${f}</span>
+            <span class="ds-ops-opp">${item.opp || item.note}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
 
-// ── Modal ──────────────────────────────────────────────────────────────────
-
-/** Opens the add-dealer modal and resets the form. */
-function openModal() {
-  const sel = document.getElementById('f-zone');
-  sel.innerHTML = '<option value="">-- เลือกเขต --</option>' +
-      ZONES.map((z) => `<option value="${z.id}">${z.id} – ${z.name}</option>`).join('');
-
-  ['f-name', 'f-province', 'f-district'].forEach((id) => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('f-crop').value = '';
-  document.getElementById('f-zone').value = '';
-  document.getElementById('form-error').style.display = 'none';
-
-  newDealerActive = true;
-  document.getElementById('opt-active').className = 'status-opt active-opt';
-  document.getElementById('opt-inactive').className = 'status-opt';
-  document.getElementById('addModal').classList.add('open');
-}
-
-/** Closes the add-dealer modal. */
-function closeModal() {
-  document.getElementById('addModal').classList.remove('open');
-}
-
-/**
- * Closes the modal when the backdrop (outside the dialog) is clicked.
- * @param {!Event} e Click event.
- */
-function closeModalOnBackdrop(e) {
-  if (e.target === document.getElementById('addModal')) closeModal();
-}
-
-/**
- * Toggles the active/inactive status selector in the modal.
- * @param {boolean} active True for active, false for inactive.
- */
-function setStatus(active) {
-  newDealerActive = active;
-  document.getElementById('opt-active').className =
-      active ? 'status-opt active-opt' : 'status-opt';
-  document.getElementById('opt-inactive').className =
-      !active ? 'status-opt inactive-opt' : 'status-opt';
-}
-
-/** Validates the modal form and adds a new dealer on success. */
-function submitDealer() {
-  const name = document.getElementById('f-name').value.trim();
-  const zone = document.getElementById('f-zone').value;
-  const crop = document.getElementById('f-crop').value;
-  const province = document.getElementById('f-province').value.trim();
-  const district = document.getElementById('f-district').value.trim();
-  const errEl = document.getElementById('form-error');
-
-  if (!name || !zone || !crop || !province) {
-    errEl.textContent = 'กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, เขต, พืชหลัก, จังหวัด)';
-    errEl.style.display = 'block';
-    return;
-  }
-  errEl.style.display = 'none';
-
-  DEALERS.push({name, zone, province, district: district || 'เมือง', crop, active: newDealerActive});
-
-  const matchedZone = ZONES.find((z) => z.id === zone);
-  if (matchedZone) matchedZone.dealers++;
-
-  const totalEl = document.querySelector('.stat-card .stat-value');
-  if (totalEl) totalEl.textContent = DEALERS.length;
-
-  closeModal();
-  renderZoneCards();
-  renderTable();
-  updateContentHeader();
-  selectDealer(DEALERS.length - 1);
+  sellEl.innerHTML   = renderGroups(sellData,   'sell');
+  reduceEl.innerHTML = renderGroups(reduceData, 'reduce');
 }
 
 // ── Map ────────────────────────────────────────────────────────────────────
@@ -643,7 +663,7 @@ function submitDealer() {
  * @return {!Object} Leaflet PathOptions.
  */
 function styleProvince(feature) {
-  const isLight = document.documentElement.dataset.theme === 'light';
+  const isDark = document.documentElement.dataset.theme === 'dark';
   const provName = feature.properties.PROV_NAM_T ||
                    feature.properties.name ||
                    feature.properties.NAME_TH || '';
@@ -651,10 +671,10 @@ function styleProvince(feature) {
   const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
   const dimmed = currentZone !== 'all' && zoneId !== currentZone;
 
-  if (isLight) {
+  if (!isDark) {
     return {
       fillColor: zone ? zone.color : '#e8e2da',
-      fillOpacity: dimmed ? 0.15 : 1.0,
+      fillOpacity: dimmed ? 0.15 : 0.85,
       color: '#b8b0a5',
       weight: 0.8,
       opacity: 0.9,
@@ -756,7 +776,7 @@ function renderDealerMarkers() {
   });
 }
 
-/** Initializes the Leaflet map (called once on first map tab open). */
+/** Initializes the Leaflet map on page load. */
 function initMap() {
   if (mapInitialized) {
     if (provinceLayer) provinceLayer.setStyle(styleProvince);
@@ -771,14 +791,11 @@ function initMap() {
     zoomControl: true,
   });
 
-  // Custom pane sits between base tile (z:200) and GeoJSON overlay (z:400).
-  // voyager_only_labels renders here so province fills hide Thailand's tile labels
-  // while surrounding-country labels remain visible (not covered by any fill).
   leafletMap.createPane('labelsPane');
   leafletMap.getPane('labelsPane').style.zIndex = 300;
   leafletMap.getPane('labelsPane').style.pointerEvents = 'none';
 
-  const isInitLight = document.documentElement.dataset.theme === 'light';
+  const isInitLight = document.documentElement.dataset.theme !== 'dark';
   const theme = isInitLight ? 'light' : 'dark';
   tileLayer = L.tileLayer(TILE_URLS[theme], {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
@@ -795,7 +812,7 @@ function initMap() {
   leafletMap.on('zoomend', updateLabelVisibility);
 
   // Gray overlay covers surrounding countries — provinces are added on top so Thailand stays clear
-  const isLight = document.documentElement.dataset.theme === 'light';
+  const isLight = document.documentElement.dataset.theme !== 'dark';
   worldOverlayLayer = L.rectangle([[-85.05, -180], [85.05, 180]], {
     fillColor: '#64748b',
     fillOpacity: isLight ? 0.42 : 0,
@@ -827,19 +844,27 @@ function updateLabelVisibility() {
 /** Updates the gray world overlay opacity based on current theme. */
 function updateWorldOverlay() {
   if (!worldOverlayLayer) return;
-  const isLight = document.documentElement.dataset.theme === 'light';
+  const isLight = document.documentElement.dataset.theme !== 'dark';
   worldOverlayLayer.setStyle({fillOpacity: isLight ? 0.42 : 0});
 }
 
 // ── Theme ──────────────────────────────────────────────────────────────────
 
-/** Toggles between dark and light theme and swaps map tiles accordingly. */
+/** Toggles between dark and light theme and updates map tiles. */
 function toggleTheme() {
-  const isLight = document.documentElement.dataset.theme === 'light';
-  const nextTheme = isLight ? 'dark' : 'light';
-  document.documentElement.dataset.theme = nextTheme;
-  document.getElementById('themeBtn').textContent = isLight ? '☀️ Light' : '🌙 Dark';
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const goingDark = !isDark;
 
+  document.documentElement.dataset.theme = goingDark ? 'dark' : '';
+
+  const btn = document.getElementById('themeBtn');
+  if (btn) {
+    const moonSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+    const sunSvg  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+    btn.innerHTML = goingDark ? `${sunSvg} Light` : `${moonSvg} Dark`;
+  }
+
+  const nextTheme = goingDark ? 'dark' : 'light';
   if (leafletMap && tileLayer) {
     leafletMap.removeLayer(tileLayer);
     tileLayer = L.tileLayer(TILE_URLS[nextTheme], {
@@ -848,7 +873,7 @@ function toggleTheme() {
     }).addTo(leafletMap);
     tileLayer.bringToBack();
 
-    if (nextTheme === 'light') {
+    if (!goingDark) {
       if (!labelsLayer) {
         labelsLayer = L.tileLayer(
             'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
@@ -867,10 +892,81 @@ function toggleTheme() {
   }
 }
 
+// ── Modal ──────────────────────────────────────────────────────────────────
+
+/** Opens the add-dealer modal. */
+function openModal() {
+  const sel = document.getElementById('f-zone');
+  sel.innerHTML = '<option value="">-- เลือกเขต --</option>' +
+      ZONES.map((z) => `<option value="${z.id}">${z.id} – ${z.name}</option>`).join('');
+  ['f-name', 'f-province', 'f-district'].forEach((id) => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-crop').value = '';
+  document.getElementById('f-zone').value = '';
+  document.getElementById('form-error').style.display = 'none';
+  newDealerActive = true;
+  document.getElementById('opt-active').className = 'status-opt active-opt';
+  document.getElementById('opt-inactive').className = 'status-opt';
+  document.getElementById('addModal').classList.add('open');
+}
+
+/** Closes the add-dealer modal. */
+function closeModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+/**
+ * Closes the modal when the backdrop is clicked.
+ * @param {!Event} e Click event.
+ */
+function closeModalOnBackdrop(e) {
+  if (e.target === document.getElementById('addModal')) closeModal();
+}
+
+/**
+ * Toggles the active/inactive status selector.
+ * @param {boolean} active True for active.
+ */
+function setStatus(active) {
+  newDealerActive = active;
+  document.getElementById('opt-active').className =
+      active ? 'status-opt active-opt' : 'status-opt';
+  document.getElementById('opt-inactive').className =
+      !active ? 'status-opt inactive-opt' : 'status-opt';
+}
+
+/** Validates and submits the add-dealer form. */
+function submitDealer() {
+  const name     = document.getElementById('f-name').value.trim();
+  const zone     = document.getElementById('f-zone').value;
+  const crop     = document.getElementById('f-crop').value;
+  const province = document.getElementById('f-province').value.trim();
+  const district = document.getElementById('f-district').value.trim();
+  const errEl    = document.getElementById('form-error');
+
+  if (!name || !zone || !crop || !province) {
+    errEl.textContent = 'กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, เขต, พืชหลัก, จังหวัด)';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  DEALERS.push({name, zone, province, district: district || 'เมือง', crop, active: newDealerActive});
+
+  const matchedZone = ZONES.find((z) => z.id === zone);
+  if (matchedZone) matchedZone.dealers++;
+
+  buildFsZoneRows();
+  closeModal();
+  selectDealer(DEALERS.length - 1);
+  if (mapInitialized) renderDealerMarkers();
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 
-buildMiniMap();
-buildZoneChips();
-renderZoneCards();
-renderTable();
-setDetailZone(ZONES[0]);
+document.addEventListener('DOMContentLoaded', () => {
+  buildFsZoneRows();
+  setDetailZone(ZONES[0]);
+  initMap();
+});

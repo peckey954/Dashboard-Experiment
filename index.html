@@ -12,189 +12,293 @@
 </head>
 <body>
 
-<!-- ── Header ── -->
+<!-- ── Top Header ── -->
 <div class="header">
   <div class="header-left">
     <img src="Parich.png" alt="PARICH" class="logo-img">
-    <div class="breadcrumb">
-      <span style="color:var(--text-secondary)">แผนที่ดีลเลอร์</span>
-      <span style="color:var(--text-secondary)">/</span>
-      <span>ภาพรวมพื้นที่</span>
-    </div>
+    <div class="header-divider"></div>
+    <span class="header-tagline">Sales Intelligence</span>
   </div>
   <div class="header-actions">
-    <button class="btn btn-secondary" id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
-    <button class="btn btn-secondary">📊 Excel</button>
-    <button class="btn btn-secondary">📄 PDF</button>
-    <button class="btn btn-primary" onclick="openModal()">+ เพิ่มดีลเลอร์</button>
+    <button class="btn btn-ghost" id="themeBtn" onclick="toggleTheme()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      Dark
+    </button>
+    <button class="btn btn-ghost">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Excel
+    </button>
+    <button class="btn btn-ghost">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+      PDF
+    </button>
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      เพิ่มดีลเลอร์
+    </button>
   </div>
 </div>
 
 <!-- ── Main ── -->
 <div class="main">
 
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-title">ภาพรวม</div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value">102</div>
-          <div class="stat-label">ดีลเลอร์ทั้งหมด</div>
+  <!-- Icon Rail -->
+  <nav class="icon-rail">
+    <div class="ir-top">
+      <button class="ir-btn ir-btn--active" title="Dealer Intelligence">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </button>
+      <button class="ir-btn" title="Analytics">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </button>
+      <button class="ir-btn" title="Map">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+          <line x1="8" y1="2" x2="8" y2="18"/>
+          <line x1="16" y1="6" x2="16" y2="22"/>
+        </svg>
+      </button>
+      <button class="ir-btn" title="Reports">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </button>
+    </div>
+    <div class="ir-bottom">
+      <button class="ir-btn" title="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Filter Sidebar (Left) -->
+  <aside class="filter-sidebar" id="filterSidebar">
+    <div class="fs-inner">
+
+      <!-- Header -->
+      <div class="fs-header">
+        <span class="fs-title">ตัวกรอง</span>
+        <button class="fs-refresh-btn" onclick="clearFilters()" title="รีเซ็ต">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Dealer selector -->
+      <div class="fs-control">
+        <div class="fs-select-btn">
+          <span id="dealerSelectLabel">ดีลเลอร์ทั้งหมด</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
         </div>
-        <div class="stat-card">
-          <div class="stat-value">11</div>
-          <div class="stat-label">เขตพื้นที่</div>
+      </div>
+
+      <!-- Province selector -->
+      <div class="fs-control">
+        <div class="fs-select-btn">
+          <span id="provinceSelectLabel">จังหวัดทั้งหมด</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
         </div>
-        <div class="stat-card">
-          <div class="stat-value">77</div>
-          <div class="stat-label">จังหวัด</div>
+      </div>
+
+      <!-- Zone search + sort -->
+      <div class="fs-search-row">
+        <div class="fs-search-wrap">
+          <svg class="fs-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input class="fs-search-input" type="text" placeholder="ค้นหาเขต..." id="zoneSearchInput" oninput="filterZoneList()">
         </div>
-        <div class="stat-card">
-          <div class="stat-value" style="color:#f85149">12</div>
-          <div class="stat-label">Coverage Gaps</div>
+        <button class="fs-sort-btn" onclick="sortZoneList()" title="เรียงลำดับ">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Zone list -->
+      <div class="fs-zone-list" id="fsZoneList">
+        <!-- ALL row -->
+        <div class="fs-zone-row fs-zone-row--all fs-zone-row--active" id="zone-row-all" onclick="filterZone('all')">
+          <div class="fs-zone-dot" style="background:#f97316;border-radius:2px"></div>
+          <span class="fs-zone-name" style="color:#f97316">ทั้งหมด</span>
+          <div class="fs-zone-bar-wrap">
+            <div class="fs-zone-bar" style="width:100%;background:#f97316"></div>
+          </div>
+          <span class="fs-zone-count" id="fsAllCount">19/19</span>
+          <span class="fs-zone-pct">100%</span>
+        </div>
+        <!-- Zone rows populated by JS -->
+        <div id="fsZoneRows"></div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Page Content -->
+  <div class="page-content">
+
+    <!-- Subheader bar -->
+    <div class="page-subheader">
+      <div class="subheader-left">
+        <button class="sb-panel-btn" id="sbPanelBtn" onclick="toggleFilterSidebar()" title="Toggle filter panel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="M15 3v18"/>
+          </svg>
+        </button>
+        <div class="sb-breadcrumb">
+          <span class="sb-bc-parent">Dealer Intelligence</span>
+          <span class="sb-bc-sep">›</span>
+          <span class="sb-bc-current">Dealer</span>
+        </div>
+      </div>
+      <div class="subheader-right">
+        <div class="page-tabs" id="pageTabs">
+          <button class="page-tab page-tab--active" onclick="switchPageTab('dealer', this)">Dealer</button>
+          <button class="page-tab" onclick="switchPageTab('crop', this)">Crop</button>
+          <button class="page-tab" onclick="switchPageTab('ops', this)">Ops</button>
+          <button class="page-tab" onclick="switchPageTab('farmer', this)">Farmer</button>
         </div>
       </div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-title">ค้นหา</div>
-      <input class="search-input" type="text" placeholder="ชื่อดีลเลอร์..."
-             id="searchInput" oninput="onSearch()">
+    <!-- Map area (primary content) -->
+    <div class="map-area" id="mapArea">
+      <div id="thailand-map"></div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-title">กรองตามเขต</div>
-      <button class="all-zones-btn" onclick="filterZone('all')">🗺️ ทุกเขตพื้นที่</button>
-      <div class="zone-filter-grid" id="zoneChips"></div>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-title">แผนที่เขต</div>
-      <div class="mini-map" id="miniMap"></div>
-    </div>
   </div>
 
-  <!-- Content -->
-  <div class="content">
-    <div class="content-header">
-      <div>
-        <div style="font-size:15px;font-weight:700" id="contentTitle">ดีลเลอร์ทั้งหมด</div>
-        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px" id="contentSub">
-          102 ราย ใน 11 เขตพื้นที่
-        </div>
-      </div>
-      <div class="view-tabs">
-        <button class="view-tab active" onclick="switchView('grid')">▦ Zone Cards</button>
-        <button class="view-tab" onclick="switchView('table')">≡ ตาราง</button>
-        <button class="view-tab" onclick="switchView('map')">🗺 แผนที่</button>
-      </div>
-    </div>
-    <div class="content-body" id="contentBody">
-      <div id="grid-view">
-        <div class="zone-cards-grid" id="zoneCardsGrid"></div>
-      </div>
-      <div id="table-view" style="display:none">
-        <div class="dealer-table-wrap">
-          <table class="dealer-table">
-            <thead>
-              <tr>
-                <th>ดีลเลอร์</th>
-                <th>เขต</th>
-                <th>จังหวัด</th>
-                <th>อำเภอ</th>
-                <th>พืชหลัก</th>
-                <th>สถานะ</th>
-              </tr>
-            </thead>
-            <tbody id="dealerTbody"></tbody>
-          </table>
-        </div>
-      </div>
-      <div id="map-view" style="display:none">
-        <div id="thailand-map"></div>
-      </div>
-    </div>
-  </div>
+  <!-- Detail Sidebar (Right) -->
+  <aside class="detail-sidebar" id="detailSidebar">
+    <div class="ds-inner">
 
-  <!-- Detail Panel -->
-  <div class="detail-panel">
-    <div class="dp-header">
-      <div class="dp-title" id="dpTitle">ข้อมูลดีลเลอร์</div>
-      <div class="dp-dealer-card">
-        <div class="dp-avatar" id="dpAvatar" style="background:#1d6fa4">N1</div>
-        <div>
-          <div class="dp-dealer-name" id="dpName">รุ่งเจริญการเกษตร</div>
-          <div class="dp-dealer-sub" id="dpSub">Zone: N1</div>
+      <!-- Header -->
+      <div class="ds-header">
+        <span class="ds-title">ข้อมูลดีลเลอร์</span>
+        <div class="ds-header-actions">
+          <button class="ds-icon-btn" title="ดูตำแหน่ง">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0"/>
+              <circle cx="12" cy="8" r="2"/>
+              <path d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712"/>
+            </svg>
+          </button>
+          <button class="ds-icon-btn" title="เปิดใน Google Maps">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h6v6"/><path d="M10 14 21 3"/>
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            </svg>
+          </button>
         </div>
       </div>
-      <div class="dp-info-grid">
-        <div class="dp-info">
-          <div class="dp-info-label">จังหวัด</div>
-          <div class="dp-info-val" id="dpProvince">ตาก</div>
-        </div>
-        <div class="dp-info">
-          <div class="dp-info-label">อำเภอ</div>
-          <div class="dp-info-val" id="dpDistrict">พบพระ</div>
-        </div>
-        <div class="dp-info">
-          <div class="dp-info-label">SKU แนะนำ</div>
-          <div class="dp-info-val" id="dpSku">8 สูตร</div>
-        </div>
-        <div class="dp-info">
-          <div class="dp-info-label">โอกาสใหม่</div>
-          <div class="dp-info-val" id="dpOpp" style="color:#f97316">3 รายการ</div>
-        </div>
-      </div>
-      <button class="map-btn">🗺️ ดูใน Google Maps</button>
-    </div>
 
-    <div class="dp-section" id="dpCropSection">
-      <div class="dp-section-title">พืชหลักในพื้นที่ (Top 3)</div>
-      <div id="dpCrops"></div>
-      <button class="ghost-btn">สูตรปุ๋ยแนะนำสำหรับพื้นที่ →</button>
-    </div>
-
-    <div class="dp-section">
-      <div class="dp-section-title">SKU ที่ควรนำเสนอ</div>
-      <div class="sku-list" id="dpSkuList">
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">14-7-35</div>
-          <div class="sku-desc">ปาล์มน้ำมัน, มันสำปะหลังโรงงาน</div>
-        </div>
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">15-5-20</div>
-          <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ข้าวโพดเลี้ยงสัตว์</div>
-        </div>
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">16-8-8</div>
-          <div class="sku-desc">ข้าวนาปรัง, ข้าวโพด, มันสำปะหลัง</div>
-        </div>
-        <div class="sku-item">
-          <div class="sku-badge" style="background:#1c1917;color:#f97316;border:1px solid rgba(249,115,22,0.3)">28-3-3</div>
-          <div class="sku-desc">ข้าวนาปรัง, ยางพารา, อ้อยโรงงาน</div>
+      <!-- Dealer card -->
+      <div class="ds-dealer-card">
+        <div class="ds-zone-badge" id="dsZoneBadge" style="background:#1a6fa5">N1</div>
+        <div class="ds-dealer-info">
+          <div class="ds-dealer-name" id="dsDealerName">รุ่งเจริญการเกษตร</div>
+          <div class="ds-dealer-sales" id="dsDealerSales">฿12.5M · เป้า ฿14M</div>
         </div>
       </div>
-    </div>
 
-    <div class="dp-section">
-      <div class="dp-section-title">โอกาสใหม่</div>
-      <div class="sku-list">
-        <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">25-7-7</div>
-          <div class="sku-desc">ข้าวนาปรัง, ข้าวนาปี, ยางพารา</div>
+      <!-- 2×2 stats -->
+      <div class="ds-stats-grid">
+        <div class="ds-stat-card">
+          <div class="ds-stat-val" id="dsStatDealers">19</div>
+          <div class="ds-stat-label">ดีลเลอร์</div>
         </div>
-        <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">18-6-6</div>
-          <div class="sku-desc">ข้าวนาปรัง, ยางพารา</div>
+        <div class="ds-stat-card">
+          <div class="ds-stat-val" id="dsStatZones">11</div>
+          <div class="ds-stat-label">เขตพื้นที่</div>
         </div>
-        <div class="sku-item opportunity-item">
-          <div class="sku-badge" style="background:var(--accent);color:var(--primary);border:1px solid rgba(249,115,22,0.3)">16-4-16</div>
-          <div class="sku-desc">มันสำปะหลัง, ปาล์มน้ำมัน</div>
+        <div class="ds-stat-card">
+          <div class="ds-stat-val" id="dsStatGaps">12</div>
+          <div class="ds-stat-label">Coverage Gaps</div>
+        </div>
+        <div class="ds-stat-card">
+          <div class="ds-stat-val ds-stat-val--primary" id="dsStatTarget">84%</div>
+          <div class="ds-stat-label">เฉลี่ยเป้า</div>
         </div>
       </div>
+
+      <!-- Info rows -->
+      <div class="ds-info-section">
+        <div class="ds-info-row">
+          <span class="ds-info-label">จังหวัด</span>
+          <span class="ds-info-val" id="dsProvince">ตาก</span>
+        </div>
+        <div class="ds-info-row">
+          <span class="ds-info-label">อำเภอ</span>
+          <span class="ds-info-val" id="dsDistrict">พบพระ</span>
+        </div>
+        <div class="ds-info-row">
+          <span class="ds-info-label">โอกาสใหม่</span>
+          <span class="ds-info-val ds-info-val--primary" id="dsOpp">3 รายการ</span>
+        </div>
+        <div class="ds-info-row">
+          <span class="ds-info-label">เกษตรกร</span>
+          <span class="ds-info-val" id="dsFarmers">45,200 ราย</span>
+        </div>
+        <div class="ds-info-row">
+          <span class="ds-info-label">พื้นที่</span>
+          <span class="ds-info-val" id="dsArea">120,000 ไร่</span>
+        </div>
+      </div>
+
+      <!-- Donut chart -->
+      <div class="ds-donut-section">
+        <div class="ds-donut-header">พืชหลักในพื้นที่ (Top 3)</div>
+        <div class="ds-donut-wrap">
+          <svg class="ds-donut-svg" id="dsDonutSvg" viewBox="0 0 100 100" width="88" height="88"></svg>
+          <div class="ds-donut-legend" id="dsDonutLegend"></div>
+        </div>
+      </div>
+
+      <!-- SKU / Ops tab bar -->
+      <div class="ds-tab-bar">
+        <button class="ds-tab ds-tab--active" id="dsTabSku" onclick="switchDsTab('sku')">SKU</button>
+        <button class="ds-tab" id="dsTabOps" onclick="switchDsTab('ops')">Ops</button>
+      </div>
+
+      <!-- SKU pane -->
+      <div class="ds-tab-pane" id="dsSkuPane">
+        <div class="ds-sku-list" id="dsSkuList"></div>
+      </div>
+
+      <!-- Ops pane -->
+      <div class="ds-tab-pane ds-tab-pane--hidden" id="dsOpsPane">
+        <div class="ds-ops-section">
+          <div class="ds-ops-header ds-ops-header--sell">สูตรที่ควรขาย</div>
+          <div id="dsOpsSell"></div>
+        </div>
+        <div class="ds-ops-section">
+          <div class="ds-ops-header ds-ops-header--reduce">Top สูตรที่ควรลด</div>
+          <div id="dsOpsReduce"></div>
+        </div>
+      </div>
+
     </div>
-  </div>
+  </aside>
 
 </div>
 
@@ -202,7 +306,7 @@
 <div class="modal-backdrop" id="addModal" onclick="closeModalOnBackdrop(event)">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">+ เพิ่มดีลเลอร์ใหม่</div>
+      <div class="modal-title">เพิ่มดีลเลอร์ใหม่</div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -219,15 +323,10 @@
           <div class="form-label">พืชหลัก *</div>
           <select class="form-select" id="f-crop">
             <option value="">-- เลือกพืช --</option>
-            <option>ข้าวนาปี</option>
-            <option>ข้าวนาปรัง</option>
-            <option>ข้าวโพดเลี้ยงสัตว์</option>
-            <option>อ้อยโรงงาน</option>
-            <option>มันสำปะหลัง</option>
-            <option>ยางพารา</option>
-            <option>ปาล์มน้ำมัน</option>
-            <option>ลำไย</option>
-            <option>ผลไม้</option>
+            <option>ข้าวนาปี</option><option>ข้าวนาปรัง</option>
+            <option>ข้าวโพดเลี้ยงสัตว์</option><option>อ้อยโรงงาน</option>
+            <option>มันสำปะหลัง</option><option>ยางพารา</option>
+            <option>ปาล์มน้ำมัน</option><option>ลำไย</option><option>ผลไม้</option>
           </select>
         </div>
       </div>
@@ -248,7 +347,7 @@
           <div class="status-opt" id="opt-inactive" onclick="setStatus(false)">● Inactive</div>
         </div>
       </div>
-      <div id="form-error" style="color:#f85149;font-size:12px;display:none"></div>
+      <div id="form-error" style="color:#ef4444;font-size:12px;display:none"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
