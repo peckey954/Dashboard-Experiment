@@ -285,21 +285,17 @@ body {
 
 .filter-sidebar {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--sidebar-shadow);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  margin: 10px 8px 10px 10px;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), margin 0.22s, opacity 0.22s;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s;
   width: 240px;
   z-index: 10;
 }
 
 .filter-sidebar.fs-collapsed {
-  margin-left: 10px;
   opacity: 0;
   pointer-events: none;
   width: 0;
@@ -526,13 +522,20 @@ body {
 
 /* ── Page Content ── */
 
-.page-content {
-  border-radius: 12px;
+/* Column right of icon-rail: subheader on top, row of panels below */
+.main-body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin: 10px 0;
   min-width: 0;
+  overflow: hidden;
+}
+
+/* Horizontal row: filter-sidebar + map + detail-sidebar */
+.main-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -540,13 +543,13 @@ body {
 
 .page-subheader {
   align-items: center;
-  background: var(--secondary);
+  background: var(--card);
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-shrink: 0;
-  height: 48px;
+  height: 46px;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 16px;
 }
 
 .subheader-left {
@@ -650,21 +653,17 @@ body {
 
 .detail-sidebar {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--sidebar-shadow);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  margin: 10px 10px 10px 8px;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), margin 0.22s, opacity 0.22s;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s;
   width: 280px;
   z-index: 10;
 }
 
 .detail-sidebar.ds-collapsed {
-  margin-right: 10px;
   opacity: 0;
   pointer-events: none;
   width: 0;

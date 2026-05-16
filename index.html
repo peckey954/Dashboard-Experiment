@@ -88,8 +88,38 @@
     </div>
   </nav>
 
-  <!-- Filter Sidebar (Left) -->
-  <aside class="filter-sidebar" id="filterSidebar">
+  <div class="main-body">
+
+    <!-- Subheader bar -->
+    <div class="page-subheader">
+      <div class="subheader-left">
+        <button class="sb-panel-btn" id="sbPanelBtn" onclick="toggleFilterSidebar()" title="Toggle filter panel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="M15 3v18"/>
+          </svg>
+        </button>
+        <div class="sb-breadcrumb">
+          <span class="sb-bc-parent">Dealer Intelligence</span>
+          <span class="sb-bc-sep">›</span>
+          <span class="sb-bc-current">Dealer</span>
+        </div>
+      </div>
+      <div class="subheader-right">
+        <div class="page-tabs" id="pageTabs">
+          <button class="page-tab page-tab--active" onclick="switchPageTab('dealer', this)">Dealer</button>
+          <button class="page-tab" onclick="switchPageTab('crop', this)">Crop</button>
+          <button class="page-tab" onclick="switchPageTab('potential', this)">Potential</button>
+          <button class="page-tab" onclick="switchPageTab('farmer', this)">Farmer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <!-- Filter Sidebar (Left) -->
+      <aside class="filter-sidebar" id="filterSidebar">
     <div class="fs-inner">
 
       <!-- Header -->
@@ -285,46 +315,15 @@
     </div>
   </aside>
 
-  <!-- Page Content -->
-  <div class="page-content">
-
-    <!-- Subheader bar -->
-    <div class="page-subheader">
-      <div class="subheader-left">
-        <button class="sb-panel-btn" id="sbPanelBtn" onclick="toggleFilterSidebar()" title="Toggle filter panel">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <path d="M9 3v18"/>
-            <path d="M15 3v18"/>
-          </svg>
-        </button>
-        <div class="sb-breadcrumb">
-          <span class="sb-bc-parent">Dealer Intelligence</span>
-          <span class="sb-bc-sep">›</span>
-          <span class="sb-bc-current">Dealer</span>
+      <!-- Map area -->
+      <div class="map-area" id="mapArea">
+        <div class="map-tab-bar" id="mapTabBar">
+          <button class="map-tab map-tab--active" onclick="switchMapView('map', this)">Map</button>
+          <button class="map-tab" onclick="switchMapView('table', this)">Table</button>
         </div>
+        <div id="thailand-map"></div>
+        <div id="mapTableView" style="display:none"></div>
       </div>
-      <div class="subheader-right">
-        <div class="page-tabs" id="pageTabs">
-          <button class="page-tab page-tab--active" onclick="switchPageTab('dealer', this)">Dealer</button>
-          <button class="page-tab" onclick="switchPageTab('crop', this)">Crop</button>
-          <button class="page-tab" onclick="switchPageTab('potential', this)">Potential</button>
-          <button class="page-tab" onclick="switchPageTab('farmer', this)">Farmer</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Map area (primary content) -->
-    <div class="map-area" id="mapArea">
-      <div class="map-tab-bar" id="mapTabBar">
-        <button class="map-tab map-tab--active" onclick="switchMapView('map', this)">Map</button>
-        <button class="map-tab" onclick="switchMapView('table', this)">Table</button>
-      </div>
-      <div id="thailand-map"></div>
-      <div id="mapTableView" style="display:none"></div>
-    </div>
-
-  </div>
 
   <!-- Detail Sidebar (Right) -->
   <aside class="detail-sidebar" id="detailSidebar">
@@ -575,7 +574,11 @@
       </div><!-- #dsFarmerContent -->
 
     </div>
-  </aside>
+      </aside>
+
+    </div><!-- /.main-content -->
+
+  </div><!-- /.main-body -->
 
 </div>
 
