@@ -145,12 +145,6 @@ body {
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
-  transition: background .12s, color .12s;
-}
-
-.header-icon-btn:hover {
-  background: var(--accent);
-  color: var(--foreground);
 }
 
 .header-avatar {
@@ -2337,11 +2331,6 @@ body {
   cursor: pointer;
   transition: background .15s, color .15s;
   white-space: nowrap;
-}
-
-.map-tab:hover {
-  background: var(--accent);
-  color: var(--foreground);
 }
 
 .map-tab--active {
