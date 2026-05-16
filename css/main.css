@@ -120,8 +120,7 @@ body {
   white-space: nowrap;
 }
 
-.nav-pill:hover { background: #f1f5f9; }
-[data-theme="dark"] .nav-pill:hover { background: #0f172a; }
+.nav-pill:hover { background: var(--muted); }
 
 .nav-pill--active {
   background: var(--card);
@@ -151,8 +150,7 @@ body {
   transition: background .12s;
 }
 
-.header-icon-btn:hover { background: #f1f5f9; }
-[data-theme="dark"] .header-icon-btn:hover { background: #0f172a; }
+.header-icon-btn:hover { background: var(--muted); }
 
 .header-avatar {
   width: 32px;
