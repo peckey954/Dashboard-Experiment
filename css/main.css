@@ -285,17 +285,20 @@ body {
 
 .filter-sidebar {
   background: var(--card);
-  border-right: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--sidebar-shadow);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s, margin 0.22s;
   width: 240px;
   z-index: 10;
 }
 
 .filter-sidebar.fs-collapsed {
+  margin-right: -16px;
   opacity: 0;
   pointer-events: none;
   width: 0;
@@ -535,8 +538,10 @@ body {
 .main-content {
   display: flex;
   flex: 1;
+  gap: 16px;
   min-height: 0;
   overflow: hidden;
+  padding: 16px;
 }
 
 /* ── Subheader bar ── */
@@ -639,6 +644,9 @@ body {
 /* ── Map Area ── */
 
 .map-area {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--sidebar-shadow);
   flex: 1;
   overflow: hidden;
   position: relative;
@@ -653,17 +661,20 @@ body {
 
 .detail-sidebar {
   background: var(--card);
-  border-left: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--sidebar-shadow);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s, margin 0.22s;
   width: 280px;
   z-index: 10;
 }
 
 .detail-sidebar.ds-collapsed {
+  margin-left: -16px;
   opacity: 0;
   pointer-events: none;
   width: 0;
