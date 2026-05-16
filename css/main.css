@@ -109,20 +109,15 @@ body {
 .nav-pill {
   padding: 7px 22px;
   border: none;
-  border-radius: 10px;
+  border-radius: 6px;
   background: transparent;
   color: var(--muted-foreground);
   font-family: 'Sarabun', sans-serif;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background .15s, color .15s, box-shadow .15s;
+  transition: color .15s, box-shadow .15s;
   white-space: nowrap;
-}
-
-.nav-pill:hover {
-  background: var(--accent);
-  color: var(--foreground);
 }
 
 .nav-pill--active {
