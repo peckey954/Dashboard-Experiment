@@ -16,26 +16,30 @@
 <div class="header">
   <div class="header-left">
     <img src="Parich.png" alt="PARICH" class="logo-img">
-    <div class="header-divider"></div>
-    <span class="header-tagline">Sales Intelligence</span>
+    <span class="header-brand">Parich Dashboard</span>
   </div>
+  <nav class="header-nav">
+    <button class="nav-pill nav-pill--active">Sale &amp; Strategy</button>
+    <button class="nav-pill">WMS factory</button>
+    <button class="nav-pill">Marketing</button>
+  </nav>
   <div class="header-actions">
-    <button class="btn btn-ghost" id="themeBtn" onclick="toggleTheme()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-      Dark
+    <button class="header-icon-btn" title="Notifications">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
     </button>
-    <button class="btn btn-ghost">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Excel
+    <button class="header-icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
     </button>
-    <button class="btn btn-ghost">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      PDF
-    </button>
-    <button class="btn btn-primary" onclick="openModal()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      เพิ่มดีลเลอร์
-    </button>
+    <div class="header-avatar">P</div>
   </div>
 </div>
 
@@ -213,6 +217,71 @@
 
       </div><!-- #fsPotentialPane -->
 
+      <!-- Farmer mode pane (hidden initially) -->
+      <div id="fsFarmerPane" style="display:none">
+
+        <!-- Filter dropdowns -->
+        <div class="fm-filter-group">
+          <div class="fm-filter-label">ดีลเลอร์</div>
+          <select class="fm-filter-select"><option>ทั้งหมด</option></select>
+        </div>
+        <div class="fm-filter-group">
+          <div class="fm-filter-label">จังหวัด</div>
+          <select class="fm-filter-select"><option>ทั้งหมด</option></select>
+        </div>
+        <div class="fm-filter-group">
+          <div class="fm-filter-label">โซน</div>
+          <select class="fm-filter-select"><option>ทั้งหมด</option></select>
+        </div>
+        <div class="fm-filter-group">
+          <div class="fm-filter-label">พืช</div>
+          <select class="fm-filter-select" onchange="filterFarmerCrop(this.value)">
+            <option value="all">ทั้งหมด</option>
+            <option value="ข้าว">ข้าว</option>
+            <option value="อ้อย">อ้อย</option>
+            <option value="ข้าวโพด">ข้าวโพด</option>
+            <option value="มันสำปะหลัง">มันสำปะหลัง</option>
+            <option value="ยางพารา">ยางพารา</option>
+          </select>
+        </div>
+
+        <!-- Heatmap density legend -->
+        <div class="fm-legend-section">
+          <div class="fm-legend-section-header">ความหนาแน่นเกษตรกร</div>
+          <div class="fm-density-row" onclick="filterFarmerDensity(4)">
+            <div class="fm-density-swatch" style="background:#64748b"></div>
+            <span class="fm-density-label">&gt; 50,000 ราย</span>
+          </div>
+          <div class="fm-density-row" onclick="filterFarmerDensity(3)">
+            <div class="fm-density-swatch" style="background:#94a3b8"></div>
+            <span class="fm-density-label">20,000–50,000</span>
+          </div>
+          <div class="fm-density-row" onclick="filterFarmerDensity(2)">
+            <div class="fm-density-swatch" style="background:#b8c4ce"></div>
+            <span class="fm-density-label">5,000–20,000</span>
+          </div>
+          <div class="fm-density-row" onclick="filterFarmerDensity(1)">
+            <div class="fm-density-swatch" style="background:#dae2ea"></div>
+            <span class="fm-density-label">&lt; 5,000</span>
+          </div>
+        </div>
+
+        <!-- Circle size legend -->
+        <div class="fm-legend-section">
+          <div class="fm-legend-section-header">ขนาดวงกลม = พื้นที่ถือครอง</div>
+          <div class="fm-legend-colors">
+            <div class="fm-legend-item"><div class="fm-legend-dot" style="background:#f97316"></div><span>ใช้ปุ๋ยเรา</span></div>
+            <div class="fm-legend-item"><div class="fm-legend-dot" style="background:#fbbf24"></div><span>ยังไม่ใช้</span></div>
+          </div>
+          <div class="fm-size-row"><div class="fm-size-dot" style="width:8px;height:8px"></div><span>&lt; 10 ไร่</span></div>
+          <div class="fm-size-row"><div class="fm-size-dot" style="width:12px;height:12px"></div><span>10–50 ไร่</span></div>
+          <div class="fm-size-row"><div class="fm-size-dot" style="width:16px;height:16px"></div><span>50–100 ไร่</span></div>
+          <div class="fm-size-row"><div class="fm-size-dot" style="width:20px;height:20px"></div><span>100–200 ไร่</span></div>
+          <div class="fm-size-row"><div class="fm-size-dot" style="width:26px;height:26px"></div><span>&gt; 200 ไร่</span></div>
+        </div>
+
+      </div><!-- #fsFarmerPane -->
+
     </div>
   </aside>
 
@@ -247,7 +316,12 @@
 
     <!-- Map area (primary content) -->
     <div class="map-area" id="mapArea">
+      <div class="map-tab-bar" id="mapTabBar">
+        <button class="map-tab map-tab--active" onclick="switchMapView('map', this)">Map</button>
+        <button class="map-tab" onclick="switchMapView('table', this)">Table</button>
+      </div>
       <div id="thailand-map"></div>
+      <div id="mapTableView" style="display:none"></div>
     </div>
 
   </div>
@@ -411,6 +485,94 @@
         </div>
 
       </div><!-- #dsPotentialPane -->
+
+      <!-- Farmer mode pane (hidden initially) -->
+      <div id="dsFarmerContent" style="display:none">
+
+        <!-- Zone header card -->
+        <div id="fmZoneCard"></div>
+
+        <!-- 2×2 KPI grid -->
+        <div class="fm-kpi-grid">
+          <div class="fm-kpi-card">
+            <div class="fm-kpi-val" id="fmStatTotal">—</div>
+            <div class="fm-kpi-lbl">เกษตรกรทั้งหมด</div>
+          </div>
+          <div class="fm-kpi-card">
+            <div class="fm-kpi-val" id="fmStatUsers">—</div>
+            <div class="fm-kpi-lbl">ใช้ปุ๋ยเรา</div>
+          </div>
+          <div class="fm-kpi-card">
+            <div class="fm-kpi-val" id="fmStatNonUsers">—</div>
+            <div class="fm-kpi-lbl">ยังไม่ใช้</div>
+          </div>
+          <div class="fm-kpi-card">
+            <div class="fm-kpi-val fm-kpi-val--accent" id="fmStatCoverage">—</div>
+            <div class="fm-kpi-lbl">Market Share</div>
+          </div>
+        </div>
+
+        <!-- Info inline row -->
+        <div class="ds-info-inline">
+          <span class="ds-info-chip" id="fmProvCount">—</span>
+          <span class="ds-info-chip-sep">·</span>
+          <span class="ds-info-chip" id="fmDistCount">—</span>
+          <span class="ds-info-chip-sep">·</span>
+          <span class="ds-info-chip ds-info-chip--primary" id="fmAreaInfo">—</span>
+        </div>
+
+        <!-- MS stats row -->
+        <div class="fm-ms-stats-row">
+          <div class="fm-ms-stat">
+            <div class="fm-ms-stat-val" id="fmMsHead">—</div>
+            <div class="fm-ms-stat-lbl">MS by Headcount</div>
+            <div class="fm-ms-stat-sub" id="fmMsHeadSub">—</div>
+          </div>
+          <div class="fm-ms-stat-divider"></div>
+          <div class="fm-ms-stat">
+            <div class="fm-ms-stat-val" id="fmMsSales">—</div>
+            <div class="fm-ms-stat-lbl">MS by Sales</div>
+            <div class="fm-ms-stat-sub" id="fmMsSalesSub">—</div>
+          </div>
+        </div>
+
+        <!-- Bar chart section -->
+        <div class="fm-chart-section">
+          <div class="fm-chart-header">
+            <span class="fm-chart-title">Market Share ตามภูมิภาค</span>
+            <div class="pt-chart-toggle">
+              <button class="pt-toggle-btn pt-toggle-btn--active" id="fmToggleProv" onclick="switchFmBarChart('province')">จังหวัด</button>
+              <button class="pt-toggle-btn" id="fmToggleZone" onclick="switchFmBarChart('zone')">เขต</button>
+            </div>
+          </div>
+          <div class="fm-bar-chart-legend">
+            <div class="fm-bcl-item"><div class="fm-bcl-sq" style="background:#f97316"></div>MS Headcount</div>
+            <div class="fm-bcl-item"><div class="fm-bcl-sq" style="background:#fb923c"></div>MS Sales</div>
+            <div class="fm-bcl-item"><div class="fm-bcl-sq fm-bcl-sq--gap"></div>Gap</div>
+          </div>
+          <div id="fmBarChart"></div>
+        </div>
+
+        <!-- Donut chart section -->
+        <div class="fm-chart-section">
+          <div class="fm-chart-header">
+            <span class="fm-chart-title">สัดส่วนพืชหลัก</span>
+          </div>
+          <div class="fm-donut-wrap">
+            <svg class="fm-donut-svg" id="fmDonutSvg" viewBox="0 0 100 100" width="80" height="80"></svg>
+            <div class="fm-donut-legend" id="fmDonutLegend"></div>
+          </div>
+        </div>
+
+        <!-- Sale VS Headcount section -->
+        <div class="fm-chart-section">
+          <div class="fm-chart-header">
+            <span class="fm-chart-title">Sale VS Headcount per Crop</span>
+          </div>
+          <div id="fmSaleVsHead"></div>
+        </div>
+
+      </div><!-- #dsFarmerContent -->
 
     </div>
   </aside>
