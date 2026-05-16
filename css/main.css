@@ -120,6 +120,10 @@ body {
   white-space: nowrap;
 }
 
+.nav-pill:hover {
+  background: #f1f5f9;
+}
+
 .nav-pill--active {
   background: var(--card);
   color: var(--foreground);
@@ -145,6 +149,11 @@ body {
   background: transparent;
   color: var(--muted-foreground);
   cursor: pointer;
+  transition: background .12s;
+}
+
+.header-icon-btn:hover {
+  background: #f1f5f9;
 }
 
 .header-avatar {
