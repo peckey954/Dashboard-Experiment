@@ -810,6 +810,7 @@ function toggleFilterSidebar() {
 function switchPageTab(tab, btn) {
   document.querySelectorAll('.page-tab').forEach((t) => t.classList.remove('page-tab--active'));
   if (btn) btn.classList.add('page-tab--active');
+  setIrActive(TAB_IR_GROUP[tab] || null);
   if (tab === 'potential') {
     if (farmerMode) exitFarmerMode();
     enterPotentialMode();
@@ -2386,10 +2387,153 @@ function renderFmSaleVsHead() {
   }).join('');
 }
 
+// ── Nav Section Switching ─────────────────────────────────────────────────
+
+const MKT_TAB_LABELS = {
+  customer:   'Customer Profile',
+  competitor: 'Competitor profiles',
+  segment:    'Customer Segmentation',
+  monitor:    'Real time sentiment monitoring',
+};
+
+function switchNavSection(section, btn) {
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('nav-pill--active'));
+  if (btn) btn.classList.add('nav-pill--active');
+
+  // Show only the active section's icon rail buttons
+  document.querySelectorAll('.ir-section').forEach(el => { el.style.display = 'none'; });
+  document.querySelectorAll(`.ir-section--${section}`).forEach(el => { el.style.display = ''; });
+
+  const pageTabs    = document.getElementById('pageTabs');
+  const pageTabsMkt = document.getElementById('pageTabsMarketing');
+  const bcParent    = document.querySelector('.sb-bc-parent');
+  const bcCurrent   = document.querySelector('.sb-bc-current');
+
+  if (section === 'sale') {
+    setIrActive('ir-popup-dealer');
+    if (pageTabs)    pageTabs.style.display    = '';
+    if (pageTabsMkt) pageTabsMkt.style.display = 'none';
+    if (bcParent)    bcParent.textContent  = 'Dealer Intelligence';
+    if (bcCurrent)   bcCurrent.textContent = 'Dealer';
+    document.querySelectorAll('#pageTabs .page-tab').forEach((t, i) => {
+      t.classList.toggle('page-tab--active', i === 0);
+    });
+  } else if (section === 'wms') {
+    setIrActive('ir-popup-wms');
+    if (pageTabs)    pageTabs.style.display    = 'none';
+    if (pageTabsMkt) pageTabsMkt.style.display = 'none';
+    if (bcParent)    bcParent.textContent  = 'WMS Factory';
+    if (bcCurrent)   bcCurrent.textContent = 'Truck queue';
+  } else if (section === 'marketing') {
+    setIrActive('ir-popup-marketing');
+    if (pageTabs)    pageTabs.style.display    = 'none';
+    if (pageTabsMkt) pageTabsMkt.style.display = '';
+    if (bcParent)    bcParent.textContent  = 'Marketing';
+    if (bcCurrent)   bcCurrent.textContent = 'Customer Profile';
+    document.querySelectorAll('#pageTabsMarketing .page-tab').forEach((t, i) => {
+      t.classList.toggle('page-tab--active', i === 0);
+    });
+  }
+}
+
+function irNavigateWms(page) {
+  document.querySelectorAll('.ir-popup').forEach(p => p.classList.remove('ir-popup--visible'));
+  const wmsPill = document.querySelector('.nav-pill[data-section="wms"]');
+  switchNavSection('wms', wmsPill);
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  if (bcCurrent) bcCurrent.textContent = page;
+}
+
+function irNavigateMarketing(tab) {
+  document.querySelectorAll('.ir-popup').forEach(p => p.classList.remove('ir-popup--visible'));
+  const mktPill = document.querySelector('.nav-pill[data-section="marketing"]');
+  switchNavSection('marketing', mktPill);
+  switchMktTab(tab, document.querySelector(`#pageTabsMarketing .page-tab[data-tab="${tab}"]`));
+}
+
+function switchMktTab(tab, btn) {
+  document.querySelectorAll('#pageTabsMarketing .page-tab').forEach(t => t.classList.remove('page-tab--active'));
+  if (btn) btn.classList.add('page-tab--active');
+  setIrActive('ir-popup-marketing');
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  if (bcCurrent) bcCurrent.textContent = MKT_TAB_LABELS[tab] || tab;
+}
+
+// ── Icon Rail Popup System ─────────────────────────────────────────────────
+
+const TAB_IR_GROUP = {
+  dealer:    'ir-popup-dealer',
+  agri:      'ir-popup-dealer',
+  potential: 'ir-popup-dealer',
+  farmer:    'ir-popup-dealer',
+  sale:      'ir-popup-sale',
+  competitor:'ir-popup-competitor',
+};
+
+function setIrActive(groupPopupId) {
+  document.querySelectorAll('.ir-btn').forEach(b => b.classList.remove('ir-btn--active'));
+  if (groupPopupId) {
+    const item = document.querySelector(`.ir-item[data-popup="${groupPopupId}"]`);
+    const btn  = item && item.querySelector('.ir-btn');
+    if (btn) btn.classList.add('ir-btn--active');
+  }
+}
+
+function irNavigate(tabId) {
+  document.querySelectorAll('.ir-popup').forEach(p => p.classList.remove('ir-popup--visible'));
+  setIrActive(TAB_IR_GROUP[tabId] || null);
+  document.querySelectorAll('.page-tab').forEach(tab => {
+    if ((tab.getAttribute('onclick') || '').includes(`'${tabId}'`)) {
+      tab.click();
+    }
+  });
+}
+
+function initIrPopups() {
+  let hideTimer = null;
+
+  document.querySelectorAll('.ir-item').forEach(item => {
+    const popupId = item.dataset.popup;
+    if (!popupId) return;
+    const popup = document.getElementById(popupId);
+    if (!popup) return;
+
+    function showPopup() {
+      clearTimeout(hideTimer);
+      document.querySelectorAll('.ir-popup').forEach(p => p.classList.remove('ir-popup--visible'));
+      const rect = item.getBoundingClientRect();
+      popup.style.left = (rect.right + 4) + 'px';
+      popup.style.top  = rect.top + 'px';
+      popup.classList.add('ir-popup--visible');
+    }
+
+    function scheduleHide() {
+      hideTimer = setTimeout(() => {
+        popup.classList.remove('ir-popup--visible');
+      }, 150);
+    }
+
+    item.addEventListener('mouseenter', showPopup);
+    item.addEventListener('mouseleave', scheduleHide);
+    popup.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+    popup.addEventListener('mouseleave', scheduleHide);
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.ir-item') && !e.target.closest('.ir-popup')) {
+      document.querySelectorAll('.ir-popup').forEach(p => p.classList.remove('ir-popup--visible'));
+    }
+  });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
   buildFsZoneRows();
   filterZone('all');
   initMap();
+  initIrPopups();
+  // Init with Sale & Strategy section active
+  const salePill = document.querySelector('.nav-pill[data-section="sale"]');
+  switchNavSection('sale', salePill);
 });

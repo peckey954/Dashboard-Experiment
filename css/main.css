@@ -267,12 +267,12 @@ body {
 }
 
 .ir-btn--active {
-  background: var(--accent);
+  background: transparent;
   color: var(--primary);
 }
 
 .ir-btn--active:hover {
-  background: var(--accent);
+  background: var(--muted);
   color: var(--primary);
 }
 
@@ -2629,4 +2629,86 @@ body {
   font-weight: 700;
   min-width: 28px;
   text-align: right;
+}
+
+/* ── Icon Rail Popup System ── */
+
+.ir-item {
+  position: relative;
+}
+
+.ir-popup {
+  display: none;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+}
+
+.ir-popup.ir-popup--visible {
+  display: block;
+  pointer-events: auto;
+}
+
+.ir-tooltip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,.1), 0 2px 4px rgba(0,0,0,.06);
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.ir-flyout {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,.1), 0 2px 4px rgba(0,0,0,.06);
+  min-width: 220px;
+  padding: 8px;
+}
+
+.ir-flyout-title {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  padding: 2px 6px 8px;
+  text-transform: capitalize;
+}
+
+.ir-flyout-item {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 13px;
+  gap: 10px;
+  padding: 6px 8px;
+  text-align: left;
+  transition: background .12s;
+  width: 100%;
+}
+
+.ir-flyout-item:hover {
+  background: var(--muted);
+}
+
+.ir-flyout-icon {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  display: flex;
+  flex-shrink: 0;
+  height: 26px;
+  justify-content: center;
+  width: 26px;
 }
