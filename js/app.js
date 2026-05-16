@@ -568,6 +568,7 @@ let selectedDealerIdx = -1;
 
 /** @type {boolean} Whether the filter sidebar is open. */
 let filterSidebarOpen = true;
+let panelCycleState = 0; // 0=both open, 1=both closed, 2=left closed, 3=right closed
 
 /** @type {?string} Active coverage overlay: 'dealer' | 'gap' | 'overlap' | null. */
 let coverageMode = null;
@@ -776,14 +777,26 @@ function clearFilters() {
 }
 
 /**
- * Toggles the filter sidebar open/closed.
+ * Cycles panel visibility through 4 states:
+ *   0 → 1: both open  → both closed
+ *   1 → 2: both closed → left closed, right open
+ *   2 → 3: left closed → left open, right closed
+ *   3 → 0: right closed → both open
  */
 function toggleFilterSidebar() {
-  filterSidebarOpen = !filterSidebarOpen;
-  const sb = document.getElementById('filterSidebar');
-  const btn = document.getElementById('sbPanelBtn');
-  if (sb) sb.classList.toggle('fs-collapsed', !filterSidebarOpen);
-  if (btn) btn.classList.toggle('active', !filterSidebarOpen);
+  panelCycleState = (panelCycleState + 1) % 4;
+
+  const leftSb  = document.getElementById('filterSidebar');
+  const rightSb = document.getElementById('detailSidebar');
+
+  // state: [leftOpen, rightOpen]
+  const states = [[true, true], [false, false], [false, true], [true, false]];
+  const [leftOpen, rightOpen] = states[panelCycleState];
+
+  filterSidebarOpen = leftOpen;
+  if (leftSb)  leftSb.classList.toggle('fs-collapsed', !leftOpen);
+  if (rightSb) rightSb.classList.toggle('ds-collapsed', !rightOpen);
+
   if (mapInitialized && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 250);
 }
 
