@@ -3208,3 +3208,337 @@ body {
   text-align: right;
   width: 32px;
 }
+
+/* ── Potential Detail Sidebar (pds) — Figma 213:4775 ── */
+
+#dsPotentialPane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+/* Header */
+.pds-header {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+}
+.pds-zone-badge {
+  align-items: center;
+  background: #f97316;
+  border-radius: 6px;
+  color: #fff;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 800;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+.pds-zone-name {
+  color: var(--foreground);
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pds-share-btn {
+  align-items: center;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+.pds-share-btn:hover { background: var(--muted); }
+
+/* Stats block */
+.pds-stats-block {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.pds-info-grid {
+  display: flex;
+  gap: 12px;
+}
+.pds-info-cell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.pds-info-label {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pds-info-val {
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pds-info-sub {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pds-sep {
+  background: var(--border);
+  flex-shrink: 0;
+  height: 1px;
+}
+
+/* Chart block */
+.pds-chart-block {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6px;
+}
+.pds-chart-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.pds-chart-title {
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pds-chart-toggle {
+  background: #f4f4f5;
+  border-radius: 5px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+}
+.pds-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: #71717a;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+}
+.pds-toggle-btn--active {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  color: #09090b;
+}
+.pds-chart-legend {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+.pds-legend-item {
+  align-items: center;
+  color: #667085;
+  display: flex;
+  font-size: 10px;
+  gap: 3px;
+}
+.pds-legend-dot {
+  border-radius: 2px;
+  flex-shrink: 0;
+  height: 7px;
+  width: 7px;
+}
+.pds-legend-dot--gap {
+  background: transparent;
+  border: 1px dashed #fb923c;
+}
+
+/* Bar chart */
+.pds-bar-canvas {
+  align-items: flex-end;
+  display: flex;
+  gap: 4px;
+}
+.pds-y-axis {
+  color: #667085;
+  display: flex;
+  flex-direction: column;
+  font-size: 9px;
+  gap: 0;
+  justify-content: space-between;
+  text-align: right;
+  width: 26px;
+}
+.pds-y-unit {
+  color: var(--muted-foreground);
+  font-size: 9px;
+  text-align: right;
+}
+.pds-bars-area {
+  align-items: flex-end;
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  position: relative;
+}
+.pds-bar-group {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+.pds-bar-track {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100px;
+  justify-content: flex-end;
+  width: 100%;
+}
+.pds-bar-market {
+  background: #fed7aa;
+  border-radius: 3px 3px 0 0;
+  max-width: 8px;
+  position: relative;
+  width: 100%;
+}
+.pds-bar-sales {
+  background: #f97316;
+  border-radius: 3px 3px 0 0;
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+.pds-bar-name {
+  color: #667085;
+  font-size: 9px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+/* SKU / Ops tabs */
+.pds-tabs {
+  background: var(--secondary, #f1f5f9);
+  border-radius: 8px;
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+}
+.pds-tab {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 8px;
+}
+.pds-tab--active {
+  background: var(--background);
+  box-shadow: 0 1px 1px rgba(0,0,0,.05);
+  color: var(--foreground);
+}
+
+/* Opportunity cards */
+.pds-opp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pds-opp-card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 12px;
+}
+.pds-opp-meta {
+  align-items: center;
+  color: #a1a1aa;
+  display: flex;
+  font-size: 11px;
+  justify-content: space-between;
+}
+.pds-opp-meta-right { font-weight: 500; }
+.pds-opp-title-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.pds-opp-province {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+.pds-opp-zone {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+.pds-opp-sep {
+  background: var(--border);
+  height: 1px;
+}
+.pds-opp-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pds-opp-issue-row {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  padding: 1px 0;
+}
+.pds-overlay-badge {
+  align-items: center;
+  border-radius: 4px;
+  display: flex;
+  flex-shrink: 0;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+.pds-overlay-badge--red  { background: #ef4444; border: 1px solid #fef2f2; }
+.pds-overlay-badge--yellow { background: #facc15; border: 1px solid #fffbeb; }
+.pds-overlay-label {
+  color: #3f3f46;
+  flex: 1;
+  font-size: 11px;
+}
+.pds-sku-pane {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 12px;
+  justify-content: center;
+  padding: 24px;
+}

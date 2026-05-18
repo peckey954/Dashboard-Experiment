@@ -567,62 +567,77 @@
       <!-- Potential mode pane (hidden initially) -->
       <div id="dsPotentialPane" style="display:none">
 
-        <!-- Summary -->
-        <div class="pt-summary-section">
-          <div class="pt-summary-kpi">
-            <span class="pt-kpi-val" id="ptKpiVal">—</span>
-            <span class="pt-kpi-sub" id="ptKpiSub">มูลค่าตลาดประเมิน</span>
-          </div>
-          <div class="pt-summary-inline">
-            <span class="ds-info-chip" id="ptProvCount">— จังหวัด</span>
-            <span class="ds-info-chip-sep">·</span>
-            <span class="ds-info-chip" id="ptDistCount">— เขต</span>
-            <span class="ds-info-chip-sep">·</span>
-            <span class="ds-info-chip ds-info-chip--primary" id="ptOppCount">— โอกาส</span>
-          </div>
-          <div class="pt-summary-rows">
-            <div class="ds-info-row">
-              <span class="ds-info-label">เกษตรกรเข้าถึง</span>
-              <span class="ds-info-val" id="ptFarmers">—</span>
+        <!-- Header: zone badge + name + share -->
+        <div class="pds-header">
+          <div class="pds-zone-badge" id="pdsZoneBadge">ALL</div>
+          <span class="pds-zone-name" id="pdsZoneName">รวมทุกเขต</span>
+          <button class="pds-share-btn" title="แชร์">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Stats block -->
+        <div class="pds-stats-block">
+          <div class="pds-info-grid">
+            <div class="pds-info-cell">
+              <span class="pds-info-label">จังหวัด</span>
+              <span class="pds-info-val" id="pdsInfoProv">—</span>
             </div>
-            <div class="ds-info-row">
-              <span class="ds-info-label">พื้นที่ถือครอง</span>
-              <span class="ds-info-val" id="ptArea">—</span>
+            <div class="pds-info-cell">
+              <span class="pds-info-label">อำเภอ</span>
+              <span class="pds-info-val" id="pdsInfoDist">—</span>
+            </div>
+            <div class="pds-info-cell">
+              <span class="pds-info-label">พื้นที่ถือครอง</span>
+              <span class="pds-info-val" id="pdsInfoArea">—</span>
+            </div>
+          </div>
+          <div class="pds-sep"></div>
+          <div class="pds-info-grid">
+            <div class="pds-info-cell">
+              <span class="pds-info-label">MS Headcount</span>
+              <span class="pds-info-val" id="pdsInfoHCPct">—</span>
+              <span class="pds-info-sub" id="pdsInfoHCSub">—</span>
+            </div>
+            <div class="pds-info-cell">
+              <span class="pds-info-label">MS Sales</span>
+              <span class="pds-info-val" id="pdsInfoSalesPct">—</span>
+              <span class="pds-info-sub" id="pdsInfoSalesSub">—</span>
             </div>
           </div>
         </div>
 
         <!-- Bar chart -->
-        <div class="pt-chart-section">
-          <div class="pt-chart-header">
-            <span class="pt-chart-title">ศักยภาพตลาด (ลบ.)</span>
-            <div class="pt-chart-toggle">
-              <button class="pt-toggle-btn pt-toggle-btn--active" id="ptToggleProv" onclick="switchPotentialChart('province')">จังหวัด</button>
-              <button class="pt-toggle-btn" id="ptToggleZone" onclick="switchPotentialChart('zone')">เขต</button>
+        <div class="pds-chart-block">
+          <div class="pds-chart-header">
+            <span class="pds-chart-title">ยอดขาย vs ศักยภาพ</span>
+            <div class="pds-chart-toggle">
+              <button class="pds-toggle-btn pds-toggle-btn--active" id="pdsToggleProv" onclick="switchPotentialChart('province')">จังหวัด</button>
+              <button class="pds-toggle-btn" id="pdsToggleZone" onclick="switchPotentialChart('zone')">โซน</button>
             </div>
           </div>
-          <div class="pt-chart-legend">
-            <div class="pt-chart-legend-item"><div class="pt-legend-sq" style="background:#fed7aa"></div>ตลาด</div>
-            <div class="pt-chart-legend-item"><div class="pt-legend-sq" style="background:#f97316"></div>ขายได้</div>
-            <div class="pt-chart-legend-item"><div class="pt-legend-sq pt-legend-sq--gap"></div>โอกาส</div>
+          <div class="pds-chart-legend">
+            <div class="pds-legend-item"><div class="pds-legend-dot" style="background:#fed7aa"></div>ตลาด</div>
+            <div class="pds-legend-item"><div class="pds-legend-dot" style="background:#f97316"></div>ยอดขาย</div>
+            <div class="pds-legend-item"><div class="pds-legend-dot pds-legend-dot--gap"></div>โอกาส</div>
           </div>
-          <div class="pt-bar-chart" id="ptBarChart"></div>
+          <div class="pds-bar-chart" id="pdsBarChart"></div>
         </div>
 
-        <!-- Opportunity cards -->
-        <div class="pt-opp-section">
-          <div class="pt-opp-header">โอกาส</div>
-          <div class="pt-opp-list" id="ptOppList"></div>
+        <!-- SKU / Ops tabs -->
+        <div class="pds-tabs">
+          <button class="pds-tab" id="pdsTabSku" onclick="switchPdsTab('sku')">SKU</button>
+          <button class="pds-tab pds-tab--active" id="pdsTabOps" onclick="switchPdsTab('ops')">Ops</button>
         </div>
 
-        <!-- CTA -->
-        <div class="pt-cta-section">
-          <button class="pt-cta-btn" onclick="createCampaign()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
-            สร้างแคมเปญโฆษณา
-          </button>
+        <!-- Ops pane: opportunity cards (scrollable) -->
+        <div class="pds-opp-list" id="pdsOppList"></div>
+
+        <!-- SKU pane: placeholder -->
+        <div class="pds-sku-pane" id="pdsSkuPane" style="display:none">
+          <span>SKU analytics coming soon</span>
         </div>
 
       </div><!-- #dsPotentialPane -->

@@ -1260,6 +1260,8 @@ function enterPotentialMode() {
   if (fsHeader) fsHeader.style.display = 'none';
   const fsInner = document.querySelector('.fs-inner');
   if (fsInner) fsInner.style.overflowY = 'hidden';
+  const dsHeader = document.querySelector('.ds-header');
+  if (dsHeader) dsHeader.style.display = 'none';
 
   const dealerPane = document.getElementById('fsDealerPane');
   const ptPane     = document.getElementById('fsPotentialPane');
@@ -1309,6 +1311,8 @@ function exitPotentialMode() {
   if (fsHeader) fsHeader.style.display = '';
   const fsInner = document.querySelector('.fs-inner');
   if (fsInner) fsInner.style.overflowY = '';
+  const dsHeader = document.querySelector('.ds-header');
+  if (dsHeader) dsHeader.style.display = '';
 
   const dealerPane = document.getElementById('fsDealerPane');
   const ptPane     = document.getElementById('fsPotentialPane');
@@ -1404,97 +1408,121 @@ function filterPotentialLevel(level) {
 
 /** Renders all right-sidebar potential content. */
 function renderPtRightSidebar() {
-  // Aggregate stats
-  const allData = Object.values(PROVINCE_POTENTIAL);
-  const totalMarket = allData.reduce((s, d) => s + d.market, 0);
-  const totalSales  = allData.reduce((s, d) => s + d.sales,  0);
-  const gap         = totalMarket - totalSales;
-  const provCount   = allData.length;
+  // Header: zone badge and name
+  const badgeEl = document.getElementById('pdsZoneBadge');
+  const nameEl  = document.getElementById('pdsZoneName');
+  if (currentZone === 'all') {
+    if (badgeEl) badgeEl.textContent = 'ALL';
+    if (nameEl)  nameEl.textContent  = 'รวมทุกเขต';
+  } else {
+    const z = ZONES.find((z) => z.id === currentZone);
+    if (badgeEl) badgeEl.textContent = currentZone;
+    if (nameEl)  nameEl.textContent  = z ? z.name : currentZone;
+  }
 
-  const kpiValEl = document.getElementById('ptKpiVal');
-  if (kpiValEl) kpiValEl.textContent = (totalMarket / 1000).toFixed(1) + 'K ลบ.';
+  // Filter province data to current zone
+  const allEntries = Object.entries(PROVINCE_POTENTIAL).filter(([, d]) => d && d.market);
+  const filtered   = currentZone === 'all'
+    ? allEntries
+    : allEntries.filter(([name]) => getZoneForProvince(name) === currentZone);
 
-  const provEl = document.getElementById('ptProvCount');
-  if (provEl) provEl.textContent = `${provCount} จังหวัด`;
+  const provCount  = filtered.length;
+  const distCount  = Math.round(provCount * 4.8);
 
-  const distEl = document.getElementById('ptDistCount');
-  if (distEl) distEl.textContent = `${ZONES.length} เขต`;
+  // Sum actual area from PROVINCE_FARMER_STATS for the filtered provinces
+  const filteredNames = new Set(filtered.map(([name]) => name));
+  const statsEntries  = Object.entries(PROVINCE_FARMER_STATS).filter(([k]) => filteredNames.has(k));
+  const totalArea     = statsEntries.reduce((s, [, d]) => s + (d.area || 0), 0);
+  const usedArea      = statsEntries.reduce((s, [, d]) => s + (d.users || 0) * 0.8, 0); // approx
+  const areaFmt       = (v) => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : Math.round(v / 1000) + 'K';
 
-  const oppEl = document.getElementById('ptOppCount');
-  if (oppEl) oppEl.textContent = `${Math.round(gap / 10)} โอกาส`;
+  const el1 = document.getElementById('pdsInfoProv');
+  const el2 = document.getElementById('pdsInfoDist');
+  const el3 = document.getElementById('pdsInfoArea');
+  if (el1) el1.textContent = provCount;
+  if (el2) el2.textContent = distCount;
+  if (el3) el3.textContent = areaFmt(usedArea) + '/' + areaFmt(totalArea) + ' ไร่';
 
-  const farmEl = document.getElementById('ptFarmers');
-  if (farmEl) farmEl.textContent = (DEALERS.length * 2800).toLocaleString() + ' ราย';
+  // MS Headcount & MS Sales
+  const farmerStats   = Object.values(PROVINCE_FARMER_STATS);
+  const totalFarmers  = farmerStats.reduce((s, d) => s + (d.farmers || 0), 0);
+  const reachedF      = farmerStats.reduce((s, d) => s + (d.users || 0), 0);
+  const totalMarket   = filtered.reduce((s, [, d]) => s + d.market, 0);
+  const totalSales    = filtered.reduce((s, [, d]) => s + d.sales,  0);
+  const hcPct         = totalFarmers ? Math.round(reachedF / totalFarmers * 100) : 0;
+  const salesPct      = totalMarket  ? Math.round(totalSales / totalMarket * 100) : 0;
 
-  const areaEl = document.getElementById('ptArea');
-  if (areaEl) areaEl.textContent = (DEALERS.length * 8500).toLocaleString() + ' ไร่';
+  const el4 = document.getElementById('pdsInfoHCPct');
+  const el5 = document.getElementById('pdsInfoHCSub');
+  const el6 = document.getElementById('pdsInfoSalesPct');
+  const el7 = document.getElementById('pdsInfoSalesSub');
+  if (el4) el4.textContent = hcPct + '%';
+  if (el5) el5.textContent = reachedF.toLocaleString() + '/' + totalFarmers.toLocaleString() + ' ราย';
+  if (el6) el6.textContent = salesPct + '%';
+  if (el7) el7.textContent = Math.round(totalSales).toLocaleString() + '/' + Math.round(totalMarket).toLocaleString() + ' ลบ.';
 
   renderPtBarChart();
-  renderPtOppCards();
+  renderPdsOppCards();
 }
 
 /** Switches the bar chart between province and zone grouping. */
 function switchPotentialChart(mode) {
   potentialChartMode = mode;
-  document.getElementById('ptToggleProv').classList.toggle('pt-toggle-btn--active', mode === 'province');
-  document.getElementById('ptToggleZone').classList.toggle('pt-toggle-btn--active', mode === 'zone');
+  const pBtn = document.getElementById('pdsToggleProv');
+  const zBtn = document.getElementById('pdsToggleZone');
+  if (pBtn) pBtn.classList.toggle('pds-toggle-btn--active', mode === 'province');
+  if (zBtn) zBtn.classList.toggle('pds-toggle-btn--active', mode === 'zone');
   renderPtBarChart();
 }
 
-/** Renders the grouped bar chart (Figma orange-tone style) in the right sidebar. */
+/** Renders the bar chart (sales vs market) in the right sidebar. */
 function renderPtBarChart() {
-  const el = document.getElementById('ptBarChart');
+  const el = document.getElementById('pdsBarChart');
   if (!el) return;
 
-  const CHART_H = 160; // px height of the bar area
+  const CHART_H = 100;
 
   let groups;
   if (potentialChartMode === 'province') {
     groups = Object.entries(PROVINCE_POTENTIAL)
       .filter(([, d]) => d && d.market)
-      .map(([name, d]) => ({name, market: d.market, sales: d.sales, gap: d.market - d.sales}))
-      .sort((a, b) => b.market - a.market).slice(0, 5);
+      .map(([name, d]) => ({name, market: d.market, sales: d.sales}))
+      .sort((a, b) => b.market - a.market).slice(0, 4);
   } else {
     groups = ZONES.map((z) => {
       const provs = z.provinces.map((p) => PROVINCE_POTENTIAL[p]).filter((d) => d && d.market);
       const market = provs.reduce((s, d) => s + d.market, 0);
       const sales  = provs.reduce((s, d) => s + d.sales,  0);
-      return {name: z.id, market, sales, gap: market - sales};
-    }).sort((a, b) => b.market - a.market).slice(0, 5);
+      return {name: z.id, market, sales};
+    }).filter((g) => g.market > 0).sort((a, b) => b.market - a.market).slice(0, 5);
   }
 
   const rawMax = Math.max(...groups.map((g) => g.market));
-  const yMax = Math.ceil(rawMax / 500) * 500;
-  const fmtK = (v) => v >= 1000 ? (v % 1000 === 0 ? v / 1000 + 'k' : (v / 1000).toFixed(1) + 'k') : String(v);
+  const yMax   = Math.ceil(rawMax / 500) * 500;
+  const fmtK   = (v) => v >= 1000 ? Math.round(v / 1000) + 'K' : String(v);
 
-  // Y-axis gridlines (0, 25%, 50%, 75%, 100%)
-  const glHtml = [0, 0.25, 0.5, 0.75, 1].map((frac) => {
-    const b = (frac * CHART_H).toFixed(1);
-    return `<div class="pt-gl" style="bottom:${b}px"><span class="pt-gl-label">${fmtK(Math.round(yMax * frac))}</span></div>`;
-  }).join('');
+  const yLabels = [1, 0.75, 0.5, 0.25, 0]
+    .map((f) => `<span>${fmtK(Math.round(yMax * f))}</span>`).join('');
 
-  // Bar groups
   const barsHtml = groups.map((g) => {
-    const hM = Math.max(2, (g.market / yMax) * CHART_H).toFixed(1);
-    const hS = Math.max(2, (g.sales  / yMax) * CHART_H).toFixed(1);
-    const hG = Math.max(2, (g.gap    / yMax) * CHART_H).toFixed(1);
-    const nm = g.name.length > 5 ? g.name.slice(0, 4) + '…' : g.name;
+    const mH  = Math.max(4, (g.market / yMax) * CHART_H);
+    const sH  = Math.max(0, (g.sales  / yMax) * CHART_H);
+    const nm  = g.name.length > 4 ? g.name.slice(0, 4) + '…' : g.name;
     return `
-      <div class="pt-bar-group">
-        <div class="pt-bar-top-label" style="bottom:${(+hM + 3).toFixed(0)}px">${fmtK(Math.round(g.market))}</div>
-        <div class="pt-bar-trio">
-          <div class="ptb" style="height:${hM}px;background:#fed7aa" title="ตลาด ${g.market} ลบ."></div>
-          <div class="ptb" style="height:${hS}px;background:#f97316" title="ขาย ${g.sales} ลบ."></div>
-          <div class="ptb ptb--gap" style="height:${hG}px" title="โอกาส ${g.gap} ลบ."></div>
+      <div class="pds-bar-group">
+        <div class="pds-bar-track">
+          <div class="pds-bar-market" style="height:${mH.toFixed(1)}px" title="ตลาด ${g.market} ลบ.">
+            <div class="pds-bar-sales" style="height:${sH.toFixed(1)}px" title="ขาย ${g.sales} ลบ."></div>
+          </div>
         </div>
-        <div class="pt-bar-name">${nm}</div>
+        <div class="pds-bar-name">${nm}</div>
       </div>`;
   }).join('');
 
   el.innerHTML = `
-    <div class="pt-chart-canvas" style="height:${CHART_H}px">
-      <div class="pt-chart-gls">${glHtml}</div>
-      <div class="pt-chart-bars">${barsHtml}</div>
+    <div class="pds-bar-canvas">
+      <div class="pds-y-axis">${yLabels}<span class="pds-y-unit">ลบ.</span></div>
+      <div class="pds-bars-area" style="height:${CHART_H}px">${barsHtml}</div>
     </div>`;
 }
 
@@ -1511,82 +1539,67 @@ const CROP_FORMULAS = {
   'ลำไย':                [{code:'14-7-35', desc:'ก่อนออกดอก'}, {code:'8-24-24', desc:'ติดผล'}],
 };
 
-/** Renders opportunity cards in the right sidebar. */
-function renderPtOppCards() {
-  const el = document.getElementById('ptOppList');
+/** Renders opportunity cards (Figma 213:4775 style) in the right potential sidebar. */
+function renderPdsOppCards() {
+  const el = document.getElementById('pdsOppList');
   if (!el) return;
 
-  const cropFilter = potentialCrop === 'all' ? null : potentialCrop;
-  const allProvs = Object.entries(PROVINCE_POTENTIAL);
+  // Top provinces by gap
+  const topProvs = Object.entries(PROVINCE_POTENTIAL)
+    .filter(([, d]) => d && d.market)
+    .map(([name, d]) => ({name, gap: d.market - d.sales, zoneId: getZoneForProvince(name)}))
+    .sort((a, b) => b.gap - a.gap)
+    .slice(0, 3);
 
-  // Aggregate gap by crop
-  const cropGap = {};
-  allProvs.forEach(([, d]) => {
-    d.crops.forEach((crop) => {
-      if (!cropFilter || crop === cropFilter) {
-        cropGap[crop] = (cropGap[crop] || 0) + (d.market - d.sales) / d.crops.length;
-      }
+  el.innerHTML = topProvs.map((prov, i) => {
+    // Find active overlay issues for this province
+    const issues = [];
+    OVERLAY_CONFIG.forEach((cfg) => {
+      const match = cfg.provinces.find((p) => p.name === prov.name);
+      if (match) issues.push({label: cfg.label, iconSvg: cfg.iconSvg, severity: match.severity});
     });
-  });
+    issues.sort((a, b) => (a.severity === 'high' ? -1 : 1));
+    const topIssues = issues.slice(0, 2);
 
-  const topCrops = Object.entries(cropGap)
-    .sort((a, b) => b[1] - a[1]).slice(0, 2);
-
-  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const now = new Date();
-  const seasonStart = months[now.getMonth()];
-  const seasonEnd   = months[(now.getMonth() + 2) % 12];
-
-  el.innerHTML = topCrops.map(([crop, gapVal]) => {
-    const cropInfo = PT_CROPS.find((c) => c.id === crop) || {color:'#94a3b8', pct:50};
-    const formulas = CROP_FORMULAS[crop] || [{code:'15-15-15', desc:'บำรุงทั่วไป'}];
-    const oppPct   = Math.min(99, Math.round(cropInfo.pct * 0.85));
-    const provCount = allProvs.filter(([, d]) => d.crops.includes(crop)).length;
+    const issuesHtml = topIssues.length > 0
+      ? topIssues.map((issue) => {
+          const cls = issue.severity === 'high' ? 'pds-overlay-badge--red' : 'pds-overlay-badge--yellow';
+          return `
+            <div class="pds-opp-issue-row">
+              <div class="pds-overlay-badge ${cls}">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${issue.iconSvg}</svg>
+              </div>
+              <span class="pds-overlay-label">${issue.label}</span>
+            </div>`;
+        }).join('')
+      : `<span class="pds-overlay-label" style="color:var(--muted-foreground)">ไม่มีปัญหาพิเศษ</span>`;
 
     return `
-      <div class="pt-opp-card">
-        <div class="pt-opp-card-header">
-          <div class="pt-opp-crop-dot" style="background:${cropInfo.color}"></div>
-          <span class="pt-opp-crop-name">${crop}</span>
-          <span class="pt-opp-pct" style="color:${cropInfo.color}">${oppPct}% โอกาส</span>
+      <div class="pds-opp-card">
+        <div class="pds-opp-meta">
+          <span>Top ${i + 1}</span>
+          <span class="pds-opp-meta-right">โอกาส ${(prov.gap / 100).toFixed(1)} ลบ.</span>
         </div>
-        <div class="pt-opp-progress-wrap">
-          <div class="pt-opp-progress-fill" style="width:${oppPct}%;background:${cropInfo.color}"></div>
+        <div class="pds-opp-title-row">
+          <span class="pds-opp-province">${prov.name}</span>
+          <span class="pds-opp-zone">${prov.zoneId || '—'}</span>
         </div>
-        <div class="pt-opp-body">
-          <div class="pt-opp-body-row">
-            <span class="pt-opp-body-label">โอกาสเพิ่มยอดขาย</span>
-            <span class="pt-opp-body-val" style="color:${cropInfo.color}">${Math.round(gapVal).toLocaleString()} ลบ.</span>
-          </div>
-          ${formulas.map((f) => `
-            <div class="pt-opp-formula-row">
-              <span class="pt-product-badge">${f.code}</span>
-              <span class="pt-opp-formula-desc">${f.desc}</span>
-            </div>
-          `).join('')}
-        </div>
-        <div class="pt-opp-stats">
-          <div class="ds-info-row">
-            <span class="ds-info-label">พื้นที่เป้าหมาย</span>
-            <span class="ds-info-val">${provCount} จังหวัด</span>
-          </div>
-          <div class="ds-info-row">
-            <span class="ds-info-label">เกษตรกรเข้าถึง</span>
-            <span class="ds-info-val">${(provCount * 3200).toLocaleString()} ราย</span>
-          </div>
-          <div class="ds-info-row">
-            <span class="ds-info-label">ช่วงแนะนำ</span>
-            <span class="ds-info-val pt-opp-season">${seasonStart} – ${seasonEnd} ${now.getFullYear() + 543}</span>
-          </div>
-        </div>
-      </div>
-    `;
+        <div class="pds-opp-sep"></div>
+        <div class="pds-opp-issues">${issuesHtml}</div>
+      </div>`;
   }).join('');
 }
 
-/** Placeholder for campaign creation flow. */
-function createCampaign() {
-  alert('เปิดระบบสร้างแคมเปญโฆษณา\n(ฟีเจอร์นี้จะเชื่อมต่อกับ Ad Platform)');
+/** Switches the potential sidebar SKU/Ops tab. */
+function switchPdsTab(tab) {
+  const skuBtn  = document.getElementById('pdsTabSku');
+  const opsBtn  = document.getElementById('pdsTabOps');
+  const oppList = document.getElementById('pdsOppList');
+  const skuPane = document.getElementById('pdsSkuPane');
+  if (skuBtn) skuBtn.classList.toggle('pds-tab--active', tab === 'sku');
+  if (opsBtn) opsBtn.classList.toggle('pds-tab--active', tab === 'ops');
+  if (oppList) oppList.style.display = tab === 'ops' ? '' : 'none';
+  if (skuPane) skuPane.style.display = tab === 'sku' ? '' : 'none';
 }
 
 // ── Right Detail Sidebar ──────────────────────────────────────────────────
