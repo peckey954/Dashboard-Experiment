@@ -578,6 +578,7 @@ let potentialMode = false;
 
 /** @type {string} Active crop filter in potential mode. */
 let potentialCrop = 'all';
+let currentPotentialProvince = '';
 
 /** @type {?number} Active potential level filter (0-5), null = all. */
 let potentialLevel = null;
@@ -633,11 +634,76 @@ let worldOverlayLayer = null;
 /** @type {boolean} Whether the Leaflet map has been initialized. */
 let mapInitialized = false;
 
+/** @type {!Set<string>} Currently active overlay IDs (max 2). */
+let activeOverlays = new Set();
+
+/** @type {!Array<string>} Insertion-order queue for FIFO eviction of overlays. */
+let overlayQueue = [];
+
+/** @type {boolean} Gap list sort ascending flag. */
+let ptGapSortAsc = false;
+let ptGapViewMode = 'gap'; // 'gap' | 'share'
+
+/** @type {?Object} Leaflet overlay markers layer group. */
+let overlayMarkersLayer = null;
+
 /** @const {!Object<string, string>} Tile URLs by theme. */
 const TILE_URLS = {
   dark:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
   light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
 };
+
+/** Overlay definitions. provinces have severity: 'high'→red, 'medium'→yellow. */
+const OVERLAY_CONFIG = [
+  { id: 'dealer-gap',    label: 'Dealer Gap',
+    iconSvg: `<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/>`,
+    provinces: [
+      {name:'ตาก',severity:'high'},{name:'กาญจนบุรี',severity:'high'},
+      {name:'เพชรบูรณ์',severity:'medium'},{name:'แพร่',severity:'medium'},
+      {name:'ลำพูน',severity:'medium'},{name:'สุโขทัย',severity:'medium'},
+    ]},
+  { id: 'farmer-low',    label: 'Farmer Low',
+    iconSvg: `<path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="M22 19H16"/>`,
+    provinces: [
+      {name:'สมุทรสาคร',severity:'high'},{name:'สมุทรสงคราม',severity:'high'},
+      {name:'อ่างทอง',severity:'medium'},{name:'สิงห์บุรี',severity:'medium'},
+      {name:'ชัยนาท',severity:'medium'},{name:'นครนายก',severity:'medium'},
+    ]},
+  { id: 'concentration', label: 'Concentration Risk',
+    iconSvg: `<line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><circle cx="12" cy="12" r="7"/>`,
+    provinces: [
+      {name:'ขอนแก่น',severity:'high'},{name:'นครราชสีมา',severity:'high'},
+      {name:'อุดรธานี',severity:'medium'},{name:'กรุงเทพมหานคร',severity:'medium'},
+    ]},
+  { id: 'activity-low',  label: 'Activity Low',
+    iconSvg: `<path d="M21 13V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><line x1="16" x2="22" y1="19" y2="19"/>`,
+    provinces: [
+      {name:'น่าน',severity:'high'},{name:'แม่ฮ่องสอน',severity:'high'},
+      {name:'อุตรดิตถ์',severity:'medium'},{name:'บึงกาฬ',severity:'medium'},
+      {name:'ตราด',severity:'medium'},{name:'พังงา',severity:'medium'},
+    ]},
+  { id: 'sku-mismatch',  label: 'SKU Mismatch',
+    iconSvg: `<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>`,
+    provinces: [
+      {name:'สุพรรณบุรี',severity:'high'},{name:'กาฬสินธุ์',severity:'high'},
+      {name:'ยโสธร',severity:'medium'},{name:'มุกดาหาร',severity:'medium'},
+      {name:'นครนายก',severity:'medium'},
+    ]},
+  { id: 'stock-low',     label: 'Stock Low',
+    iconSvg: `<path d="M16 16H10"/><path d="m7.5 4.27 9 5.15"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/><path d="M21 10.5V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0L17.5 19"/>`,
+    provinces: [
+      {name:'เชียงใหม่',severity:'high'},{name:'นครราชสีมา',severity:'high'},
+      {name:'สุราษฎร์ธานี',severity:'medium'},{name:'ชลบุรี',severity:'medium'},
+      {name:'เชียงราย',severity:'medium'},
+    ]},
+  { id: 'price-gap',     label: 'Price Gap',
+    iconSvg: `<path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/>`,
+    provinces: [
+      {name:'พิษณุโลก',severity:'high'},{name:'ลพบุรี',severity:'high'},
+      {name:'ร้อยเอ็ด',severity:'medium'},{name:'สงขลา',severity:'medium'},
+      {name:'นครศรีธรรมราช',severity:'medium'},
+    ]},
+];
 
 /**
  * Returns the color for a given zone ID.
@@ -811,7 +877,10 @@ function switchPageTab(tab, btn) {
   document.querySelectorAll('.page-tab').forEach((t) => t.classList.remove('page-tab--active'));
   if (btn) btn.classList.add('page-tab--active');
   setIrActive(TAB_IR_GROUP[tab] || null);
-  if (tab === 'potential') {
+  const TAB_LABELS = { ops: 'Opportunity map', sale: 'Sale', crop: 'Crop', dealer: 'Dealer', farmer: 'Farmer' };
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  if (bcCurrent && TAB_LABELS[tab]) bcCurrent.textContent = TAB_LABELS[tab];
+  if (tab === 'ops') {
     if (farmerMode) exitFarmerMode();
     enterPotentialMode();
   } else if (tab === 'farmer') {
@@ -821,6 +890,324 @@ function switchPageTab(tab, btn) {
     if (potentialMode) exitPotentialMode();
     if (farmerMode) exitFarmerMode();
   }
+}
+
+// ── Overlay System ────────────────────────────────────────────────────────────
+
+/** Toggles an overlay on/off; auto-evicts oldest via FIFO when max=2 is exceeded. */
+function toggleOverlay(id) {
+  if (activeOverlays.has(id)) {
+    activeOverlays.delete(id);
+    overlayQueue = overlayQueue.filter((x) => x !== id);
+  } else {
+    if (activeOverlays.size >= 2) {
+      const oldest = overlayQueue.shift();
+      activeOverlays.delete(oldest);
+    }
+    activeOverlays.add(id);
+    overlayQueue.push(id);
+  }
+  updateOverlayUI();
+  renderOverlayMarkers();
+}
+
+/** Clears all active overlays. */
+function resetOverlays() {
+  activeOverlays.clear();
+  overlayQueue = [];
+  updateOverlayUI();
+  renderOverlayMarkers();
+}
+
+/** Syncs toggle-switch states and count label to `activeOverlays`. */
+function updateOverlayUI() {
+  document.querySelectorAll('.ops-toggle input[data-ov]').forEach((input) => {
+    input.checked = activeOverlays.has(input.dataset.ov);
+  });
+  const label = document.getElementById('ovCountLabel');
+  if (label) label.textContent = `Overlay (${activeOverlays.size} / 2)`;
+  updateMasterToggle();
+}
+
+/** Sets master toggle: indeterminate when any active, off when none. Never fully checked. */
+function updateMasterToggle() {
+  const input = document.getElementById('ovMasterToggle');
+  if (!input) return;
+  const n = activeOverlays.size;
+  if (n === 0) {
+    input.checked = false;
+    input.indeterminate = false;
+  } else {
+    input.checked = false;
+    input.indeterminate = true;
+  }
+}
+
+/** Activates the two default overlays (Dealer Gap + Farmer Low). */
+function setDefaultOverlays() {
+  activeOverlays.clear();
+  overlayQueue = [];
+  ['dealer-gap', 'farmer-low'].forEach((id) => {
+    activeOverlays.add(id);
+    overlayQueue.push(id);
+  });
+}
+
+/** Master toggle: restore default 2 overlays if none active, otherwise clear all. */
+function toggleAllOverlays() {
+  if (activeOverlays.size > 0) {
+    activeOverlays.clear();
+    overlayQueue = [];
+  } else {
+    setDefaultOverlays();
+  }
+  updateOverlayUI();
+  renderOverlayMarkers();
+}
+
+/** Places/refreshes severity-colored icon-badge markers for all active overlays. */
+function renderOverlayMarkers() {
+  if (!leafletMap) return;
+  if (!overlayMarkersLayer) {
+    overlayMarkersLayer = L.layerGroup().addTo(leafletMap);
+  } else {
+    overlayMarkersLayer.clearLayers();
+  }
+  activeOverlays.forEach((ovId) => {
+    const cfg = OVERLAY_CONFIG.find((c) => c.id === ovId);
+    if (!cfg) return;
+    cfg.provinces.forEach((prov) => {
+      const coords = PROVINCE_COORDS[prov.name];
+      if (!coords) return;
+      const bg = prov.severity === 'high' ? '#ef4444' : '#f59e0b';
+      const border = prov.severity === 'high' ? '#fca5a5' : '#fde68a';
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="ov-marker" style="background:${bg};border-color:${border}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${cfg.iconSvg}</svg></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      });
+      L.marker(coords, { icon, interactive: false }).addTo(overlayMarkersLayer);
+    });
+  });
+}
+
+/**
+ * Builds the HTML for the glass tooltip shown on province hover in Ops mode.
+ * @param {string} thaiName Thai province name.
+ * @param {?string} zoneId Zone ID or null.
+ * @return {string} HTML string.
+ */
+function buildOpsTooltip(thaiName, zoneId) {
+  const zone   = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
+  const pot    = getProvPotential(thaiName);
+  const market = pot ? pot.market : null;
+  const color  = zone ? zone.color : '#f97316';
+
+  const badgesHtml = [...activeOverlays].map((ovId) => {
+    const cfg = OVERLAY_CONFIG.find((c) => c.id === ovId);
+    return cfg
+      ? `<span class="ops-tt-badge" style="background:${cfg.color}20;color:${cfg.color};border-color:${cfg.color}40">${cfg.label}</span>`
+      : '';
+  }).join('');
+
+  return `<div class="ops-tt-inner">
+    <div class="ops-tt-header">
+      <span class="ops-tt-name">${thaiName}</span>
+      ${zone ? `<span class="ops-tt-zone" style="background:${color}20;color:${color};border:1px solid ${color}40">${zoneId}</span>` : ''}
+    </div>
+    ${market != null
+      ? `<div class="ops-tt-market">ตลาด <strong>${market >= 1000 ? (market / 1000).toFixed(1) + 'B' : market + 'M'}</strong> ลบ.</div>`
+      : '<div class="ops-tt-market ops-tt-market--nodata">ไม่มีข้อมูล</div>'}
+    ${badgesHtml ? `<div class="ops-tt-badges">${badgesHtml}</div>` : ''}
+  </div>`;
+}
+
+// ── Top Potential by Gap ─────────────────────────────────────────────────────
+
+/**
+ * Aggregates market gap percentage per crop from PROVINCE_POTENTIAL.
+ * Returns array sorted by gapPct desc, with 'all' pinned first.
+ */
+function computeGapData() {
+  // Aggregate market size per crop from PROVINCE_POTENTIAL for market share view
+  const totals = {};
+  let grandMarket = 0;
+
+  Object.values(PROVINCE_POTENTIAL).forEach((prov) => {
+    if (!prov.market) return;
+    grandMarket += prov.market;
+    if (!prov.crops || !prov.crops.length) return;
+    const share = 1 / prov.crops.length;
+    prov.crops.forEach((cropName) => {
+      totals[cropName] = (totals[cropName] || 0) + prov.market * share;
+    });
+  });
+
+  const totalCropMkt = Object.values(totals).reduce((s, v) => s + v, 0) || 1;
+
+  const rows = PT_CROPS.filter((c) => c.id !== 'all').map((c) => {
+    const mkt = totals[c.id] || 0;
+    const marketShare = Math.round(mkt / totalCropMkt * 100);
+    return {id: c.id, name: c.name, color: c.color, gapPct: c.pct, marketShare};
+  });
+  rows.sort((a, b) => b.gapPct - a.gapPct);
+
+  const allGapPct = Math.round(
+    PT_CROPS.filter((c) => c.id !== 'all').reduce((s, c) => s + c.pct, 0) /
+    PT_CROPS.filter((c) => c.id !== 'all').length
+  );
+  return [{id:'all', name:'ทั้งหมด', color:'#f97316', gapPct: allGapPct, marketShare: 100}, ...rows];
+}
+
+/** Renders the Top potential by gap / market share crop list in the left sidebar. */
+function renderPtGapList() {
+  const el = document.getElementById('ptGapList');
+  if (!el) return;
+
+  const search = (document.getElementById('ptGapSearch')?.value || '').trim().toLowerCase();
+  let data = computeGapData();
+
+  if (search) data = data.filter((c) => c.id === 'all' || c.name.includes(search));
+
+  const allRow = data.find((c) => c.id === 'all');
+  let rest = data.filter((c) => c.id !== 'all');
+  if (ptGapSortAsc) rest.sort((a, b) =>
+    ptGapViewMode === 'share' ? a.marketShare - b.marketShare : a.gapPct - b.gapPct
+  );
+  data = allRow ? [allRow, ...rest] : rest;
+
+  const isShare  = ptGapViewMode === 'share';
+  const hasSpecificCrop = potentialCrop !== 'all';
+
+  el.innerHTML = data.map((c) => {
+    const isAll    = c.id === 'all';
+    const isActive = potentialCrop === c.id;
+
+    // Color logic: when a specific crop is selected, only that crop gets color
+    const showColor = !hasSpecificCrop ? (isAll) : isActive;
+    const dotColor  = showColor ? c.color : '#a1a1aa';
+    const nameColor = showColor ? c.color : '';
+    const barColor  = showColor ? c.color : '#a1a1aa';
+
+    // Border: active crop uses its own color, others use default border
+    const borderStyle = isActive ? `border-color:${c.color}` : (isAll && !hasSpecificCrop ? 'border-color:#f97316' : '');
+
+    // Bar rendering
+    let barHtml;
+    if (isShare) {
+      // Market share: single bar, % of total
+      const w = isAll ? 100 : c.marketShare;
+      barHtml = `<div class="ops-gap-bar-bg"><div class="ops-gap-bar-fill" style="width:${w}%;background:${barColor}"></div></div>`;
+    } else {
+      // Gap view: two-segment [gap colored | sold gray]
+      const gapW  = c.gapPct;
+      const soldW = 100 - gapW;
+      barHtml = `<div class="ops-gap-bar-bg ops-gap-bar-bg--split">
+        <div class="ops-gap-bar-fill" style="width:${gapW}%;background:${barColor}"></div>
+        <div class="ops-gap-bar-fill" style="width:${soldW}%;background:#71717a;opacity:.35"></div>
+      </div>`;
+    }
+
+    const pct = isShare ? (isAll ? 100 : c.marketShare) : c.gapPct;
+
+    return `<div class="ops-gap-row${isActive || (isAll && !hasSpecificCrop) ? ' ops-gap-row--active' : ''}"
+              style="${borderStyle}"
+              onclick="filterPotentialCrop('${c.id}')">
+      <div class="ops-gap-row-left">
+        <span class="ops-gap-dot" style="background:${dotColor}"></span>
+        <span class="ops-gap-name" style="color:${nameColor}">${c.name}</span>
+      </div>
+      <div class="ops-gap-bar-wrap">
+        ${barHtml}
+        <span class="ops-gap-pct">${pct}%</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update button icon to reflect current mode
+  const btn = document.getElementById('ptViewModeBtn');
+  if (btn) {
+    btn.title = isShare ? 'ดู Gap %' : 'ดู Market Share';
+    btn.querySelector('svg').innerHTML = isShare
+      ? '<path d="m18 15-6-6-6 6"/>'  // chevron up = back to gap
+      : '<path d="m6 9 6 6 6-6"/>';   // chevron down = switch to share
+  }
+}
+
+/** Toggles the gap list view mode between gap% and market share. */
+function toggleGapViewMode() {
+  ptGapViewMode = ptGapViewMode === 'gap' ? 'share' : 'gap';
+  renderPtGapList();
+}
+
+/** Toggles gap list sort direction. */
+function sortPtGap() {
+  ptGapSortAsc = !ptGapSortAsc;
+  renderPtGapList();
+}
+
+/** Populates Zone/Dealer/Province filter dropdowns on first render. */
+function populatePtFilterDropdowns() {
+  const zoneEl = document.getElementById('ptFilterZone');
+  if (zoneEl && zoneEl.options.length <= 1) {
+    ZONES.forEach((z) => {
+      const o = document.createElement('option');
+      o.value = z.id;
+      o.textContent = `${z.id} · ${z.name}`;
+      zoneEl.appendChild(o);
+    });
+  }
+  const dealerEl = document.getElementById('ptFilterDealer');
+  if (dealerEl && dealerEl.options.length <= 1) {
+    [...new Set(DEALERS.map((d) => d.name))].sort().forEach((name) => {
+      const o = document.createElement('option');
+      o.value = o.textContent = name;
+      dealerEl.appendChild(o);
+    });
+  }
+  const provEl = document.getElementById('ptFilterProvince');
+  if (provEl && provEl.options.length <= 1) {
+    [...new Set(DEALERS.map((d) => d.province))].sort().forEach((p) => {
+      const o = document.createElement('option');
+      o.value = o.textContent = p;
+      provEl.appendChild(o);
+    });
+  }
+}
+
+function filterPotentialZone(val) {
+  currentPotentialProvince = ''; // clear province filter when zone changes
+  const provEl = document.getElementById('ptFilterProvince');
+  if (provEl) provEl.value = '';
+  if (val) filterZone(val);
+  else filterZone('all');
+}
+function filterPotentialDealer(val) { /* future: highlight dealer provinces */ }
+function filterPotentialProvince(val) {
+  currentPotentialProvince = val;
+  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+}
+
+/** Resets all Ops filter dropdowns. */
+function resetPotentialFilters() {
+  // Reset filter dropdowns
+  ['ptFilterZone', 'ptFilterDealer', 'ptFilterProvince'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Reset crop, province, and view mode
+  potentialCrop = 'all';
+  currentPotentialProvince = '';
+  ptGapViewMode = 'gap';
+  document.getElementById('ptGapSearch') && (document.getElementById('ptGapSearch').value = '');
+  // Reset overlays to default
+  setDefaultOverlays();
+  updateOverlayUI();
+  renderOverlayMarkers();
+  // Re-render map and list (filterZone('all') resets currentZone + repaints)
+  filterZone('all');
+  renderPtGapList();
 }
 
 // ── Potential Mode ────────────────────────────────────────────────────────────
@@ -869,6 +1256,11 @@ function enterPotentialMode() {
   potentialMode = true;
   potentialLevel = null;
 
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = 'none';
+  const fsInner = document.querySelector('.fs-inner');
+  if (fsInner) fsInner.style.overflowY = 'hidden';
+
   const dealerPane = document.getElementById('fsDealerPane');
   const ptPane     = document.getElementById('fsPotentialPane');
   if (dealerPane) dealerPane.style.display = 'none';
@@ -879,10 +1271,31 @@ function enterPotentialMode() {
   if (dealerContent) dealerContent.style.display = 'none';
   if (ptContent)     ptContent.style.display     = '';
 
-  renderPtCropList();
+  const legend = document.getElementById('opsMapLegend');
+  if (legend) legend.style.display = '';
+
+  // Set default overlays (Dealer Gap + Farmer Low) if none are active yet
+  if (activeOverlays.size === 0) setDefaultOverlays();
+  updateOverlayUI();
+
+  populatePtFilterDropdowns();
+  renderPtGapList();
   renderPtRightSidebar();
 
-  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+  if (mapInitialized && provinceLayer) {
+    provinceLayer.setStyle(styleProvince);
+    provinceLayer.eachLayer((layer) => {
+      if (!layer._thaiName) return;
+      layer.unbindTooltip();
+      layer.bindTooltip(() => buildOpsTooltip(layer._thaiName, layer._zoneId), {
+        permanent: false,
+        sticky: true,
+        direction: 'auto',
+        className: 'ops-glass-tooltip',
+      });
+    });
+    renderOverlayMarkers();
+  }
 }
 
 /** Deactivates the Potential heatmap mode and restores dealer view. */
@@ -890,6 +1303,12 @@ function exitPotentialMode() {
   potentialMode = false;
   potentialCrop  = 'all';
   potentialLevel = null;
+  currentPotentialProvince = '';
+
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = '';
+  const fsInner = document.querySelector('.fs-inner');
+  if (fsInner) fsInner.style.overflowY = '';
 
   const dealerPane = document.getElementById('fsDealerPane');
   const ptPane     = document.getElementById('fsPotentialPane');
@@ -901,7 +1320,23 @@ function exitPotentialMode() {
   if (dealerContent) dealerContent.style.display = '';
   if (ptContent)     ptContent.style.display     = 'none';
 
-  if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
+  const legend = document.getElementById('opsMapLegend');
+  if (legend) legend.style.display = 'none';
+
+  if (overlayMarkersLayer) overlayMarkersLayer.clearLayers();
+
+  if (mapInitialized && provinceLayer) {
+    provinceLayer.setStyle(styleProvince);
+    provinceLayer.eachLayer((layer) => {
+      if (!layer._thaiName) return;
+      layer.unbindTooltip();
+      layer.bindTooltip(layer._thaiName, {
+        permanent: true,
+        direction: 'center',
+        className: 'province-label',
+      });
+    });
+  }
 }
 
 /** Renders the crop filter list in the left sidebar. */
@@ -940,7 +1375,7 @@ function renderPtCropList() {
 function filterPotentialCrop(cropId) {
   potentialCrop = cropId;
   potentialLevel = null;
-  renderPtCropList();
+  renderPtGapList();
   renderPtRightSidebar();
   if (mapInitialized && provinceLayer) provinceLayer.setStyle(styleProvince);
 }
@@ -1011,7 +1446,7 @@ function renderPtBarChart() {
   const el = document.getElementById('ptBarChart');
   if (!el) return;
 
-  const CHART_H = 120; // px height of the bar area
+  const CHART_H = 160; // px height of the bar area
 
   let groups;
   if (potentialChartMode === 'province') {
@@ -1520,6 +1955,13 @@ function styleProvince(feature) {
   if (potentialMode) {
     const ptData = getProvPotential(provName);
     const marketVal = ptData ? ptData.market : null;
+    const thaiName = EN_TO_TH_PROVINCE[provName] || provName;
+
+    // Zone filter: dim provinces outside selected zone
+    const zoneMatch = currentZone === 'all' || zoneId === currentZone;
+
+    // Province filter: dim all except selected province
+    const provMatch = !currentPotentialProvince || thaiName === currentPotentialProvince;
 
     // Crop filter: dim provinces not growing the selected crop
     let cropMatch = true;
@@ -1533,9 +1975,10 @@ function styleProvince(feature) {
       levelMatch = getPotentialLevel(marketVal) === potentialLevel;
     }
 
-    const show = cropMatch && levelMatch && ptData;
+    const inFocus = zoneMatch && provMatch;
+    const show = inFocus && cropMatch && levelMatch && ptData;
     const color = potentialColor(show ? marketVal : null);
-    const opacity = show ? 0.88 : 0.18;
+    const opacity = show ? 0.88 : (inFocus ? 0.18 : 0.08);
     const strokeColor = isDark ? '#1c1917' : '#d6d3d1';
 
     return {fillColor: color, fillOpacity: opacity, color: strokeColor, weight: 0.7, opacity: 0.8};
@@ -1622,6 +2065,9 @@ function onEachProvince(feature, layer) {
   const thaiName = EN_TO_TH_PROVINCE[engName] || engName;
   const zoneId = getZoneForProvince(engName);
   const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
+
+  layer._thaiName = thaiName;
+  layer._zoneId   = zoneId;
 
   layer.on({
     mouseover(e) {
@@ -1751,6 +2197,20 @@ function initMap() {
         }).addTo(leafletMap);
         renderDealerMarkers();
         updateLabelVisibility();
+        // If Ops mode was activated before GeoJSON loaded, switch to glass tooltips now
+        if (potentialMode) {
+          provinceLayer.eachLayer((layer) => {
+            if (!layer._thaiName) return;
+            layer.unbindTooltip();
+            layer.bindTooltip(() => buildOpsTooltip(layer._thaiName, layer._zoneId), {
+              permanent: false,
+              sticky: true,
+              direction: 'auto',
+              className: 'ops-glass-tooltip',
+            });
+          });
+          renderOverlayMarkers();
+        }
       })
       .catch((err) => console.error('Failed to load Thailand GeoJSON:', err));
 }
@@ -2227,7 +2687,7 @@ function renderFmBarChart() {
   const el = document.getElementById('fmBarChart');
   if (!el) return;
 
-  const CHART_H = 110;
+  const CHART_H = 155;
   let groups;
 
   if (farmerBarChartMode === 'province') {
@@ -2413,11 +2873,14 @@ function switchNavSection(section, btn) {
     setIrActive('ir-popup-dealer');
     if (pageTabs)    pageTabs.style.display    = '';
     if (pageTabsMkt) pageTabsMkt.style.display = 'none';
-    if (bcParent)    bcParent.textContent  = 'Dealer Intelligence';
-    if (bcCurrent)   bcCurrent.textContent = 'Dealer';
+    if (bcParent)    bcParent.textContent  = 'Map Intelligence';
+    if (bcCurrent)   bcCurrent.textContent = 'Ops';
     document.querySelectorAll('#pageTabs .page-tab').forEach((t, i) => {
       t.classList.toggle('page-tab--active', i === 0);
     });
+    // Activate Ops mode when returning to Sale section
+    const firstTab = document.querySelector('#pageTabs .page-tab');
+    if (firstTab) switchPageTab('ops', firstTab);
   } else if (section === 'wms') {
     setIrActive('ir-popup-wms');
     if (pageTabs)    pageTabs.style.display    = 'none';
@@ -2462,12 +2925,11 @@ function switchMktTab(tab, btn) {
 // ── Icon Rail Popup System ─────────────────────────────────────────────────
 
 const TAB_IR_GROUP = {
-  dealer:    'ir-popup-dealer',
-  agri:      'ir-popup-dealer',
-  potential: 'ir-popup-dealer',
-  farmer:    'ir-popup-dealer',
-  sale:      'ir-popup-sale',
-  competitor:'ir-popup-competitor',
+  ops:        'ir-popup-dealer',
+  sale:       'ir-popup-dealer',
+  crop:       'ir-popup-dealer',
+  dealer:     'ir-popup-dealer',
+  farmer:     'ir-popup-dealer',
 };
 
 function setIrActive(groupPopupId) {
@@ -2481,8 +2943,12 @@ function setIrActive(groupPopupId) {
 
 function irNavigate(tabId) {
   document.querySelectorAll('.ir-popup').forEach(p => p.classList.remove('ir-popup--visible'));
-  setIrActive(TAB_IR_GROUP[tabId] || null);
-  document.querySelectorAll('.page-tab').forEach(tab => {
+  // Ensure Sale & Strategy section is active (Map Intelligence flyout is in that section)
+  const salePill = document.querySelector('.nav-pill[data-section="sale"]');
+  if (salePill && !salePill.classList.contains('nav-pill--active')) {
+    switchNavSection('sale', salePill);
+  }
+  document.querySelectorAll('#pageTabs .page-tab').forEach((tab) => {
     if ((tab.getAttribute('onclick') || '').includes(`'${tabId}'`)) {
       tab.click();
     }

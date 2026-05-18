@@ -134,16 +134,17 @@
           </svg>
         </button>
         <div class="sb-breadcrumb">
-          <span class="sb-bc-parent">Dealer Intelligence</span>
+          <span class="sb-bc-parent">Map Intelligence</span>
           <span class="sb-bc-sep">›</span>
-          <span class="sb-bc-current">Dealer</span>
+          <span class="sb-bc-current">Opportunity map</span>
         </div>
       </div>
       <div class="subheader-right">
         <div class="page-tabs" id="pageTabs">
-          <button class="page-tab page-tab--active" onclick="switchPageTab('dealer', this)">Dealer</button>
-          <button class="page-tab" onclick="switchPageTab('agri', this)">Agri</button>
-          <button class="page-tab" onclick="switchPageTab('potential', this)">Potential</button>
+          <button class="page-tab page-tab--active" onclick="switchPageTab('ops', this)">Ops</button>
+          <button class="page-tab" onclick="switchPageTab('sale', this)">Sale</button>
+          <button class="page-tab" onclick="switchPageTab('crop', this)">Crop</button>
+          <button class="page-tab" onclick="switchPageTab('dealer', this)">Dealer</button>
           <button class="page-tab" onclick="switchPageTab('farmer', this)">Farmer</button>
         </div>
         <div class="page-tabs" id="pageTabsMarketing" style="display:none">
@@ -230,58 +231,143 @@
       <!-- Potential mode pane (hidden initially) -->
       <div id="fsPotentialPane" style="display:none">
 
-        <!-- Sort toggle -->
-        <div class="fs-pt-sort-bar">
-          <button class="fs-pt-sort-btn fs-pt-sort-btn--active" id="ptSortOpp" onclick="sortPotential('opportunity')">Top โอกาส</button>
-          <button class="fs-pt-sort-btn" id="ptSortGap" onclick="sortPotential('gap')">Top Gap</button>
-        </div>
-
-        <!-- Crop list -->
-        <div class="fs-pt-crop-list" id="fsPtCropList">
-          <!-- populated by JS -->
+        <!-- Overlay section -->
+        <div class="ops-ov-section">
+          <div class="ops-ov-header">
+            <span class="ops-ov-title" id="ovCountLabel">Overlay (0 / 2)</span>
+            <label class="ops-toggle" title="เปิด/ปิดทั้งหมด">
+              <input type="checkbox" id="ovMasterToggle" onchange="toggleAllOverlays()">
+              <span class="ops-toggle-track"></span>
+            </label>
+          </div>
+          <div class="ops-ov-list">
+            <!-- Dealer Gap -->
+            <div class="ops-ov-row">
+              <div class="ops-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M20 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+                  <line x1="9" y1="7" x2="15" y2="13"/><line x1="15" y1="7" x2="9" y2="13"/>
+                </svg>
+              </div>
+              <span class="ops-ov-name">Dealer Gap</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="dealer-gap" onchange="toggleOverlay('dealer-gap')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Farmer Low -->
+            <div class="ops-ov-row">
+              <div class="ops-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <circle cx="10" cy="7" r="4"/>
+                  <path d="M10.3 15H7a5 5 0 0 0-5 5v1h11"/>
+                  <line x1="22" y1="19" x2="16" y2="19"/>
+                </svg>
+              </div>
+              <span class="ops-ov-name">Farmer Low</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="farmer-low" onchange="toggleOverlay('farmer-low')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Concentration Risk -->
+            <div class="ops-ov-row">
+              <div class="ops-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                </svg>
+              </div>
+              <span class="ops-ov-name">Concentration Risk</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="concentration" onchange="toggleOverlay('concentration')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Activity Low -->
+            <div class="ops-ov-row">
+              <div class="ops-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/>
+                </svg>
+              </div>
+              <span class="ops-ov-name">Activity Low</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="activity-low" onchange="toggleOverlay('activity-low')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- SKU Mismatch -->
+            <div class="ops-ov-row">
+              <div class="ops-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><path d="M12 17h.01"/>
+                </svg>
+              </div>
+              <span class="ops-ov-name">SKU Mismatch</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="sku-mismatch" onchange="toggleOverlay('sku-mismatch')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Stock Low -->
+            <div class="ops-ov-row">
+              <div class="ops-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2.5-1.43"/>
+                  <line x1="12" y1="22" x2="12" y2="12"/>
+                  <path d="m3.3 7 8.7 5 8.7-5"/>
+                  <line x1="17" y1="19" x2="23" y2="19"/>
+                </svg>
+              </div>
+              <span class="ops-ov-name">Stock Low</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="stock-low" onchange="toggleOverlay('stock-low')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Price Gap -->
+            <div class="ops-ov-row">
+              <div class="ops-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/>
+                  <circle cx="7" cy="9" r="1" fill="currentColor" stroke="none"/>
+                </svg>
+              </div>
+              <span class="ops-ov-name">Price Gap</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="price-gap" onchange="toggleOverlay('price-gap')"><span class="ops-toggle-track"></span></label>
+            </div>
+          </div>
         </div>
 
         <!-- Separator -->
-        <div class="fs-pt-separator"></div>
+        <div class="ops-sep"></div>
 
-        <!-- Heatmap legend -->
-        <div class="fs-pt-legend-wrap">
-          <div class="fs-pt-legend-header">
-            <span>ศักยภาพตลาด</span>
-            <span class="fs-pt-legend-unit">ล้านบาท</span>
+        <!-- Filter section -->
+        <div class="ops-filter-section">
+          <div class="ops-filter-header">
+            <span class="ops-filter-title">ตัวกรอง</span>
+            <button class="ops-filter-reset" onclick="resetPotentialFilters()" title="รีเซ็ตค่าเริ่มต้น">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
+              </svg>
+            </button>
           </div>
-          <div class="fs-pt-legend-list">
-            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(5)" style="cursor:pointer">
-              <div class="fs-pt-legend-dot" style="background:#f97316"></div>
-              <span class="fs-pt-legend-range">&ge; 600</span>
-              <span class="fs-pt-legend-label">มากที่สุด</span>
-            </div>
-            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(4)" style="cursor:pointer">
-              <div class="fs-pt-legend-dot" style="background:#fb923c"></div>
-              <span class="fs-pt-legend-range">300 – 599</span>
-              <span class="fs-pt-legend-label">มาก</span>
-            </div>
-            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(3)" style="cursor:pointer">
-              <div class="fs-pt-legend-dot" style="background:#fdba74"></div>
-              <span class="fs-pt-legend-range">150 – 299</span>
-              <span class="fs-pt-legend-label">ปานกลาง</span>
-            </div>
-            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(2)" style="cursor:pointer">
-              <div class="fs-pt-legend-dot" style="background:#fed7aa"></div>
-              <span class="fs-pt-legend-range">50 – 149</span>
-              <span class="fs-pt-legend-label">น้อย</span>
-            </div>
-            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(1)" style="cursor:pointer">
-              <div class="fs-pt-legend-dot" style="background:#fff7ed;border:1px solid #fed7aa"></div>
-              <span class="fs-pt-legend-range">&lt; 50</span>
-              <span class="fs-pt-legend-label">น้อยมาก</span>
-            </div>
-            <div class="fs-pt-legend-row" onclick="filterPotentialLevel(0)" style="cursor:pointer">
-              <div class="fs-pt-legend-dot" style="background:#94a3b8"></div>
-              <span class="fs-pt-legend-range">—</span>
-              <span class="fs-pt-legend-label">ไม่มีข้อมูล</span>
-            </div>
+          <select class="ops-filter-select" id="ptFilterZone" onchange="filterPotentialZone(this.value)">
+            <option value="">โซน...</option>
+          </select>
+          <select class="ops-filter-select" id="ptFilterDealer" onchange="filterPotentialDealer(this.value)">
+            <option value="">ดีลเลอร์...</option>
+          </select>
+          <select class="ops-filter-select" id="ptFilterProvince" onchange="filterPotentialProvince(this.value)">
+            <option value="">จังหวัด...</option>
+          </select>
+        </div>
+
+        <!-- Separator -->
+        <div class="ops-sep"></div>
+
+        <!-- Top potential by gap -->
+        <div class="ops-gap-section">
+          <div class="ops-gap-search-wrap">
+            <svg class="ops-gap-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="ops-gap-search" type="text" placeholder="ค้นหาพืช..." id="ptGapSearch" oninput="renderPtGapList()">
           </div>
+          <div class="ops-gap-header">
+            <span class="ops-gap-title">Top potential by gap</span>
+            <button class="ops-gap-sort-btn" id="ptViewModeBtn" onclick="toggleGapViewMode()" title="สลับมุมมอง">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </button>
+          </div>
+          <div class="ops-gap-list" id="ptGapList"></div>
         </div>
 
       </div><!-- #fsPotentialPane -->
@@ -362,6 +448,23 @@
         </div>
         <div id="thailand-map"></div>
         <div id="mapTableView" style="display:none"></div>
+        <!-- Floating Ops legend -->
+        <div class="ops-map-legend" id="opsMapLegend" style="display:none">
+          <div class="ops-legend-title">ศักยภาพตลาด (ลบ.)</div>
+          <div class="ops-legend-gradient">
+            <div class="ops-legend-bar"></div>
+            <div class="ops-legend-labels">
+              <span>&lt;50</span>
+              <span>150</span>
+              <span>300</span>
+              <span>600+</span>
+            </div>
+          </div>
+          <div class="ops-legend-no-data">
+            <div class="ops-legend-no-data-dot"></div>
+            <span>ไม่มีข้อมูล</span>
+          </div>
+        </div>
       </div>
 
   <!-- Detail Sidebar (Right) -->
@@ -588,7 +691,7 @@
             <div class="fm-bcl-item"><div class="fm-bcl-sq" style="background:#fb923c"></div>MS Sales</div>
             <div class="fm-bcl-item"><div class="fm-bcl-sq fm-bcl-sq--gap"></div>Gap</div>
           </div>
-          <div id="fmBarChart"></div>
+          <div id="fmBarChart" class="fm-bar-chart"></div>
         </div>
 
         <!-- Donut chart section -->
@@ -680,18 +783,18 @@
 <div class="ir-popup ir-tooltip" id="ir-popup-settings">Settings</div>
 
 <div class="ir-popup ir-flyout" id="ir-popup-dealer">
-  <div class="ir-flyout-title">Dealer Intelligence</div>
+  <div class="ir-flyout-title">Map Intelligence</div>
+  <button class="ir-flyout-item" onclick="irNavigate('ops')">Opportunity Map</button>
+  <button class="ir-flyout-item" onclick="irNavigate('sale')">Sale Map</button>
+  <button class="ir-flyout-item" onclick="irNavigate('crop')">Agriculture Map</button>
   <button class="ir-flyout-item" onclick="irNavigate('dealer')">Dealer Map</button>
-  <button class="ir-flyout-item" onclick="irNavigate('agri')">Agriculture Map</button>
-  <button class="ir-flyout-item" onclick="irNavigate('potential')">Potential Map</button>
   <button class="ir-flyout-item" onclick="irNavigate('farmer')">Farmer Map</button>
-  <button class="ir-flyout-item">Dealer Performance</button>
 </div>
 
 <div class="ir-popup ir-flyout" id="ir-popup-sale">
   <div class="ir-flyout-title">Sale Intelligence</div>
-  <button class="ir-flyout-item">Sales Activity</button>
-  <button class="ir-flyout-item">Sales Opportunity</button>
+  <button class="ir-flyout-item">Sales Performance</button>
+  <button class="ir-flyout-item">Dealer Performance</button>
   <button class="ir-flyout-item">Budgeting Recommendation</button>
 </div>
 
