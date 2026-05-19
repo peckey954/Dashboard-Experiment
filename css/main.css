@@ -579,6 +579,26 @@ body {
   color: var(--foreground);
 }
 
+.sb-layout-btn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+  width: 30px;
+}
+
+.sb-layout-btn:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
 .sb-breadcrumb {
   align-items: center;
   display: flex;
@@ -604,6 +624,7 @@ body {
 .subheader-right {
   align-items: center;
   display: flex;
+  gap: 8px;
 }
 
 /* Pill tabs */
