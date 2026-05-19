@@ -448,19 +448,19 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
+  gap: 12px;
   padding: 6px;
 }
 
 .fs-zone-row {
   align-items: center;
-  border: 1.5px solid transparent;
+  border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
   display: grid;
   gap: 6px;
-  grid-template-columns: 10px 1fr 60px 36px 30px;
-  margin-bottom: 2px;
-  padding: 7px 10px;
+  grid-template-columns: 10px auto 1fr 36px 30px;
+  padding: 8px 10px;
   transition: background 0.12s, border-color 0.12s;
 }
 

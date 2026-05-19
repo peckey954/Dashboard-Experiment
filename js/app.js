@@ -758,7 +758,7 @@ function buildFsZoneRows() {
     return `
       <div class="fs-zone-row" id="zone-row-${z.id}" onclick="filterZone('${z.id}')">
         <div class="fs-zone-dot" style="background:${z.color};border-radius:2px"></div>
-        <span class="fs-zone-name" style="color:${z.color}">${z.id} ${z.name}</span>
+        <span class="fs-zone-name" style="color:${z.color}">${z.id}</span>
         <div class="fs-zone-bar-wrap">
           <div class="fs-zone-bar" style="width:${barW}%;background:${z.color}"></div>
         </div>
