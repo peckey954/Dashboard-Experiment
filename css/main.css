@@ -1347,6 +1347,18 @@ body {
   font-family: 'Sarabun', sans-serif;
 }
 
+/* Remove browser focus outline from clicked map paths/markers (provinces, dealer dots, etc.) */
+.leaflet-container path,
+.leaflet-container svg,
+.leaflet-container .leaflet-interactive,
+.leaflet-interactive:focus,
+.leaflet-interactive:focus-visible,
+.leaflet-marker-icon:focus,
+.leaflet-marker-icon:focus-visible {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .leaflet-popup-content-wrapper {
   background: var(--card);
   border: 1px solid var(--border);
