@@ -231,6 +231,52 @@
       <!-- Potential mode pane (hidden initially) -->
       <div id="fsPotentialPane" style="display:none">
 
+        <!-- Filter section -->
+        <div class="ops-filter-section">
+          <div class="ops-filter-header">
+            <span class="ops-filter-title">ตัวกรอง</span>
+            <button class="ops-filter-reset" onclick="resetPotentialFilters()" title="รีเซ็ตค่าเริ่มต้น">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
+              </svg>
+            </button>
+          </div>
+          <select class="ops-filter-select" id="ptFilterZone" onchange="filterPotentialZone(this.value)">
+            <option value="">โซน...</option>
+          </select>
+          <select class="ops-filter-select" id="ptFilterDealer" onchange="filterPotentialDealer(this.value)">
+            <option value="">ดีลเลอร์...</option>
+          </select>
+          <select class="ops-filter-select" id="ptFilterProvince" onchange="filterPotentialProvince(this.value)">
+            <option value="">จังหวัด...</option>
+          </select>
+        </div>
+
+        <!-- Separator -->
+        <div class="ops-sep"></div>
+
+        <!-- Top potential by gap -->
+        <div class="ops-gap-section">
+          <div class="ops-gap-search-wrap">
+            <svg class="ops-gap-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="ops-gap-search" type="text" placeholder="ค้นหาพืช..." id="ptGapSearch" oninput="renderPtGapList()">
+          </div>
+          <div class="ops-gap-header">
+            <span class="ops-gap-title">Top potential by gap</span>
+            <button class="ops-gap-sort-btn" id="ptViewModeBtn" onclick="toggleGapViewMode()" title="สลับมุมมอง">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </button>
+          </div>
+          <div class="ops-gap-list" id="ptGapList"></div>
+        </div>
+
+        <!-- Separator -->
+        <div class="ops-sep"></div>
+
         <!-- Overlay section -->
         <div class="ops-ov-section">
           <div class="ops-ov-header">
@@ -322,52 +368,6 @@
               <label class="ops-toggle"><input type="checkbox" data-ov="price-gap" onchange="toggleOverlay('price-gap')"><span class="ops-toggle-track"></span></label>
             </div>
           </div>
-        </div>
-
-        <!-- Separator -->
-        <div class="ops-sep"></div>
-
-        <!-- Filter section -->
-        <div class="ops-filter-section">
-          <div class="ops-filter-header">
-            <span class="ops-filter-title">ตัวกรอง</span>
-            <button class="ops-filter-reset" onclick="resetPotentialFilters()" title="รีเซ็ตค่าเริ่มต้น">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
-              </svg>
-            </button>
-          </div>
-          <select class="ops-filter-select" id="ptFilterZone" onchange="filterPotentialZone(this.value)">
-            <option value="">โซน...</option>
-          </select>
-          <select class="ops-filter-select" id="ptFilterDealer" onchange="filterPotentialDealer(this.value)">
-            <option value="">ดีลเลอร์...</option>
-          </select>
-          <select class="ops-filter-select" id="ptFilterProvince" onchange="filterPotentialProvince(this.value)">
-            <option value="">จังหวัด...</option>
-          </select>
-        </div>
-
-        <!-- Separator -->
-        <div class="ops-sep"></div>
-
-        <!-- Top potential by gap -->
-        <div class="ops-gap-section">
-          <div class="ops-gap-search-wrap">
-            <svg class="ops-gap-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-            </svg>
-            <input class="ops-gap-search" type="text" placeholder="ค้นหาพืช..." id="ptGapSearch" oninput="renderPtGapList()">
-          </div>
-          <div class="ops-gap-header">
-            <span class="ops-gap-title">Top potential by gap</span>
-            <button class="ops-gap-sort-btn" id="ptViewModeBtn" onclick="toggleGapViewMode()" title="สลับมุมมอง">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m6 9 6 6 6-6"/>
-              </svg>
-            </button>
-          </div>
-          <div class="ops-gap-list" id="ptGapList"></div>
         </div>
 
       </div><!-- #fsPotentialPane -->
