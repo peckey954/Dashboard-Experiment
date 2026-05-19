@@ -2864,6 +2864,138 @@ body {
   padding: 1px 5px;
 }
 
+/* ── Dealer-tab Glass Tooltip ── */
+.dealer-glass-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.dealer-glass-tooltip::before { display: none !important; }
+
+.dt-inner {
+  backdrop-filter: blur(14px) saturate(1.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Sarabun', sans-serif;
+  gap: 10px;
+  min-width: 200px;
+  padding: 12px 14px;
+}
+[data-theme="dark"] .dt-inner {
+  background: rgba(15, 15, 20, 0.72);
+  border-color: rgba(255,255,255,.12);
+  color: #f1f5f9;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+
+.dt-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.dt-name {
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+}
+[data-theme="dark"] .dt-name { color: #f1f5f9; }
+
+.dt-star-btn {
+  align-items: center;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 6px;
+  box-shadow: 0 1px 1.5px rgba(0,0,0,.1);
+  color: #f97316;
+  display: flex;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.dt-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.dt-loc {
+  color: #000;
+  font-size: 12px;
+  font-weight: 500;
+}
+[data-theme="dark"] .dt-loc { color: #f1f5f9; }
+
+.dt-zone {
+  align-items: center;
+  color: #000;
+  display: flex;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 4px;
+}
+[data-theme="dark"] .dt-zone { color: #f1f5f9; }
+
+.dt-zone-dot {
+  border-radius: 50%;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+}
+
+.dt-cols {
+  display: flex;
+  gap: 12px;
+}
+.dt-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.dt-col-label {
+  color: #a1a1aa;
+  font-size: 10px;
+}
+.dt-col-val {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+}
+[data-theme="dark"] .dt-col-val { color: #f1f5f9; }
+
+.dt-col-sub {
+  color: #0f172a;
+  font-size: 10px;
+}
+[data-theme="dark"] .dt-col-sub { color: #cbd5e1; }
+
+.dt-stat-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dt-stat-label {
+  color: #a1a1aa;
+  font-size: 10px;
+}
+.dt-stat-val {
+  color: #0f172a;
+  font-size: 10px;
+}
+[data-theme="dark"] .dt-stat-val { color: #f1f5f9; }
+
+.dt-stat-val strong { font-weight: 700; }
+.dt-stat-empty { color: #a1a1aa; font-style: italic; }
+
 /* ── Overlay Markers ── */
 .ov-marker {
   align-items: center;

@@ -598,6 +598,9 @@ let provinceLayer = null;
 /** @type {?Object} Leaflet dealer markers layer group. */
 let dealerMarkersLayer = null;
 
+/** @type {string} Active page tab id (ops, sale, crop, dealer, farmer, marketing tabs). */
+let currentPageTab = 'ops';
+
 /** @type {?Object} Leaflet farmer circle markers layer group. */
 let farmerMarkersLayer = null;
 
@@ -880,6 +883,10 @@ function switchPageTab(tab, btn) {
   const TAB_LABELS = { ops: 'Opportunity map', sale: 'Sale', crop: 'Crop', dealer: 'Dealer', farmer: 'Farmer' };
   const bcCurrent = document.querySelector('.sb-bc-current');
   if (bcCurrent && TAB_LABELS[tab]) bcCurrent.textContent = TAB_LABELS[tab];
+
+  if (currentPageTab === 'dealer' && tab !== 'dealer') exitDealerHoverMode();
+  currentPageTab = tab;
+
   if (tab === 'ops') {
     if (farmerMode) exitFarmerMode();
     enterPotentialMode();
@@ -890,6 +897,8 @@ function switchPageTab(tab, btn) {
     if (potentialMode) exitPotentialMode();
     if (farmerMode) exitFarmerMode();
   }
+
+  if (tab === 'dealer') enterDealerHoverMode();
 }
 
 // ── Overlay System ────────────────────────────────────────────────────────────
@@ -1021,6 +1030,145 @@ function buildOpsTooltip(thaiName, zoneId) {
       : '<div class="ops-tt-market ops-tt-market--nodata">ไม่มีข้อมูล</div>'}
     ${badgesHtml ? `<div class="ops-tt-badges">${badgesHtml}</div>` : ''}
   </div>`;
+}
+
+// ── Dealer-tab Hover Tooltips ────────────────────────────────────────────────
+
+/** Deterministic mock sales/target per dealer (so values don't change between renders). */
+function getDealerMockSales(dealer) {
+  let h = 0;
+  const key = dealer.name + dealer.province;
+  for (let i = 0; i < key.length; i++) {
+    h = ((h << 5) - h) + key.charCodeAt(i);
+    h |= 0;
+  }
+  const sales = 5 + (Math.abs(h) % 200) / 10;          // 5.0–25.0 ลบ.
+  const pct   = 60 + (Math.abs(h >> 4) % 36);          // 60–95 %
+  const target = sales / (pct / 100);
+  return {sales, target, pct};
+}
+
+/** Tooltip shown on hovering a dealer dot in the Dealer tab. */
+function buildDealerHoverTooltip(dealer) {
+  const color = zoneColor(dealer.zone);
+  const m = getDealerMockSales(dealer);
+  return `<div class="dt-inner">
+    <div class="dt-header">
+      <span class="dt-name">${dealer.name}</span>
+      <span class="dt-star-btn" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </span>
+    </div>
+    <div class="dt-row">
+      <span class="dt-loc">${dealer.province} / ${dealer.district}</span>
+      <span class="dt-zone">Zone ${dealer.zone} <span class="dt-zone-dot" style="background:${color}"></span></span>
+    </div>
+    <div class="dt-stat-block">
+      <span class="dt-stat-label">Sales VS Target</span>
+      <span class="dt-stat-val">${m.sales.toFixed(1)} ลบ. | <strong>${m.pct}%</strong></span>
+    </div>
+  </div>`;
+}
+
+/** Tooltip shown on hovering a province in the Dealer tab. */
+function buildDealerProvinceTooltip(thaiName, zoneId) {
+  const color = zoneId ? zoneColor(zoneId) : '#94a3b8';
+  const pot   = getProvPotential(thaiName);
+  const farm  = PROVINCE_FARMER_STATS[thaiName] || null;
+
+  const msSalesPct = pot && pot.market ? Math.round(pot.sales / pot.market * 100) : 0;
+  const msSalesSub = pot ? `${pot.sales.toLocaleString()}/${pot.market.toLocaleString()} ลบ.` : '—';
+
+  const msHCPct = farm && farm.farmers ? Math.round(farm.users / farm.farmers * 100) : 0;
+  const msHCSub = farm ? `${farm.users.toLocaleString()}/${farm.farmers.toLocaleString()} ราย` : '—';
+
+  // Aggregate mock dealer sales/target for this province
+  const provDealers = DEALERS.filter((d) => d.province === thaiName);
+  let totalSales = 0;
+  let totalTarget = 0;
+  provDealers.forEach((d) => {
+    const m = getDealerMockSales(d);
+    totalSales  += m.sales;
+    totalTarget += m.target;
+  });
+  const svtPct = totalTarget ? Math.round(totalSales / totalTarget * 100) : 0;
+  const svtTxt = totalSales > 0
+    ? `${totalSales.toFixed(1)} ลบ. | <strong>${svtPct}%</strong>`
+    : '<span class="dt-stat-empty">ไม่มีดีลเลอร์</span>';
+
+  return `<div class="dt-inner">
+    <div class="dt-header">
+      <span class="dt-name">${thaiName}</span>
+      <span class="dt-zone">Zone ${zoneId || '—'} <span class="dt-zone-dot" style="background:${color}"></span></span>
+    </div>
+    <div class="dt-cols">
+      <div class="dt-col">
+        <span class="dt-col-label">MS Sales</span>
+        <span class="dt-col-val">${msSalesPct}%</span>
+        <span class="dt-col-sub">${msSalesSub}</span>
+      </div>
+      <div class="dt-col">
+        <span class="dt-col-label">MS HC Farmer</span>
+        <span class="dt-col-val">${msHCPct}%</span>
+        <span class="dt-col-sub">${msHCSub}</span>
+      </div>
+    </div>
+    <div class="dt-stat-block">
+      <span class="dt-stat-label">Sales VS Target</span>
+      <span class="dt-stat-val">${svtTxt}</span>
+    </div>
+  </div>`;
+}
+
+/** Activates dealer-tab hover tooltips on markers + provinces. */
+function enterDealerHoverMode() {
+  if (!leafletMap) return;
+  if (dealerMarkersLayer) {
+    dealerMarkersLayer.eachLayer((marker) => {
+      const d = marker._dealer;
+      if (!d) return;
+      marker.unbindTooltip();
+      marker.bindTooltip(() => buildDealerHoverTooltip(d), {
+        permanent: false,
+        sticky: true,
+        direction: 'auto',
+        className: 'dealer-glass-tooltip',
+      });
+    });
+  }
+  if (provinceLayer) {
+    provinceLayer.eachLayer((layer) => {
+      if (!layer._thaiName) return;
+      layer.unbindTooltip();
+      layer.bindTooltip(() => buildDealerProvinceTooltip(layer._thaiName, layer._zoneId), {
+        permanent: false,
+        sticky: true,
+        direction: 'auto',
+        className: 'dealer-glass-tooltip',
+      });
+    });
+  }
+}
+
+/** Deactivates dealer-tab hover tooltips; restores default province labels. */
+function exitDealerHoverMode() {
+  if (!leafletMap) return;
+  if (dealerMarkersLayer) {
+    dealerMarkersLayer.eachLayer((marker) => marker.unbindTooltip());
+  }
+  if (provinceLayer) {
+    provinceLayer.eachLayer((layer) => {
+      if (!layer._thaiName) return;
+      layer.unbindTooltip();
+      layer.bindTooltip(layer._thaiName, {
+        permanent: true,
+        direction: 'center',
+        className: 'province-label',
+      });
+    });
+  }
 }
 
 // ── Top Potential by Gap ─────────────────────────────────────────────────────
@@ -2133,7 +2281,9 @@ function renderDealerMarkers() {
       color: '#fff',
       weight: 1.5,
       fillOpacity: 0.92,
+      pane: 'dealerDotsPane',
     });
+    marker._dealer = dealer;
 
     marker.bindPopup(`
       <div style="font-family:'Sarabun',sans-serif;min-width:170px">
@@ -2150,6 +2300,15 @@ function renderDealerMarkers() {
         </div>
       </div>
     `);
+
+    if (currentPageTab === 'dealer') {
+      marker.bindTooltip(() => buildDealerHoverTooltip(dealer), {
+        permanent: false,
+        sticky: true,
+        direction: 'auto',
+        className: 'dealer-glass-tooltip',
+      });
+    }
 
     marker.on('click', () => selectDealer(dealer._idx));
     dealerMarkersLayer.addLayer(marker);
@@ -2174,6 +2333,10 @@ function initMap() {
   leafletMap.createPane('labelsPane');
   leafletMap.getPane('labelsPane').style.zIndex = 300;
   leafletMap.getPane('labelsPane').style.pointerEvents = 'none';
+
+  // Keeps dealer dots above provinces & overlay markers so they receive hover first
+  leafletMap.createPane('dealerDotsPane');
+  leafletMap.getPane('dealerDotsPane').style.zIndex = 650;
 
   const isInitLight = document.documentElement.dataset.theme !== 'dark';
   const theme = isInitLight ? 'light' : 'dark';
