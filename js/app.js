@@ -1125,16 +1125,17 @@ function buildDealerProvinceTooltip(thaiName, zoneId) {
 /** Activates dealer-tab hover tooltips on markers + provinces. */
 function enterDealerHoverMode() {
   if (!leafletMap) return;
+  // Dealer dots: tooltip shows on CLICK (not hover) — use bindPopup for click-to-open behaviour
   if (dealerMarkersLayer) {
     dealerMarkersLayer.eachLayer((marker) => {
       const d = marker._dealer;
       if (!d) return;
       marker.unbindTooltip();
-      marker.bindTooltip(() => buildDealerHoverTooltip(d), {
-        permanent: false,
-        sticky: true,
-        direction: 'auto',
+      marker.unbindPopup();
+      marker.bindPopup(() => buildDealerHoverTooltip(d), {
         className: 'dealer-glass-tooltip',
+        closeButton: false,
+        autoPan: false,
       });
     });
   }
@@ -1152,11 +1153,17 @@ function enterDealerHoverMode() {
   }
 }
 
-/** Deactivates dealer-tab hover tooltips; restores default province labels. */
+/** Deactivates dealer-tab tooltips; restores default province labels + simple popups. */
 function exitDealerHoverMode() {
   if (!leafletMap) return;
   if (dealerMarkersLayer) {
-    dealerMarkersLayer.eachLayer((marker) => marker.unbindTooltip());
+    dealerMarkersLayer.eachLayer((marker) => {
+      marker.unbindTooltip();
+      const d = marker._dealer;
+      if (!d) return;
+      marker.unbindPopup();
+      marker.bindPopup(buildDefaultDealerPopup(d));
+    });
   }
   if (provinceLayer) {
     provinceLayer.eachLayer((layer) => {
@@ -1169,6 +1176,26 @@ function exitDealerHoverMode() {
       });
     });
   }
+}
+
+/** Builds the default (non-dealer-tab) popup content for a dealer marker. */
+function buildDefaultDealerPopup(dealer) {
+  const color = zoneColor(dealer.zone);
+  return `
+    <div style="font-family:'Sarabun',sans-serif;min-width:170px">
+      <div class="map-popup-name">${dealer.name}</div>
+      <div class="map-popup-row">
+        เขต: <span class="map-popup-zone" style="color:${color}">${dealer.zone}</span>
+      </div>
+      <div class="map-popup-row">${dealer.province} · ${dealer.district}</div>
+      <div class="map-popup-row">พืชหลัก: ${dealer.crop}</div>
+      <div class="map-popup-row" style="margin-top:6px">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
+          background:${dealer.active ? '#3fb950' : '#f85149'};margin-right:4px"></span>
+        ${dealer.active ? 'Active' : 'Inactive'}
+      </div>
+    </div>
+  `;
 }
 
 // ── Top Potential by Gap ─────────────────────────────────────────────────────
@@ -2285,29 +2312,14 @@ function renderDealerMarkers() {
     });
     marker._dealer = dealer;
 
-    marker.bindPopup(`
-      <div style="font-family:'Sarabun',sans-serif;min-width:170px">
-        <div class="map-popup-name">${dealer.name}</div>
-        <div class="map-popup-row">
-          เขต: <span class="map-popup-zone" style="color:${color}">${dealer.zone}</span>
-        </div>
-        <div class="map-popup-row">${dealer.province} · ${dealer.district}</div>
-        <div class="map-popup-row">พืชหลัก: ${dealer.crop}</div>
-        <div class="map-popup-row" style="margin-top:6px">
-          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;
-            background:${dealer.active ? '#3fb950' : '#f85149'};margin-right:4px"></span>
-          ${dealer.active ? 'Active' : 'Inactive'}
-        </div>
-      </div>
-    `);
-
     if (currentPageTab === 'dealer') {
-      marker.bindTooltip(() => buildDealerHoverTooltip(dealer), {
-        permanent: false,
-        sticky: true,
-        direction: 'auto',
+      marker.bindPopup(() => buildDealerHoverTooltip(dealer), {
         className: 'dealer-glass-tooltip',
+        closeButton: false,
+        autoPan: false,
       });
+    } else {
+      marker.bindPopup(buildDefaultDealerPopup(dealer));
     }
 
     marker.on('click', () => selectDealer(dealer._idx));
