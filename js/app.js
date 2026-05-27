@@ -1473,6 +1473,22 @@ function enterPotentialMode() {
     });
     renderOverlayMarkers();
   }
+
+  // Dealer dots: hover shows tooltip; click skips popup and updates right sidebar
+  if (dealerMarkersLayer) {
+    dealerMarkersLayer.eachLayer((marker) => {
+      const d = marker._dealer;
+      if (!d) return;
+      marker.unbindPopup();
+      marker.unbindTooltip();
+      marker.bindTooltip(() => buildDealerHoverTooltip(d), {
+        permanent: false,
+        sticky: true,
+        direction: 'auto',
+        className: 'dealer-glass-tooltip',
+      });
+    });
+  }
 }
 
 /** Deactivates the Potential heatmap mode and restores dealer view. */
@@ -1514,6 +1530,17 @@ function exitPotentialMode() {
         direction: 'center',
         className: 'province-label',
       });
+    });
+  }
+
+  // Restore default popup on dealer markers (clears Ops-mode hover tooltip)
+  if (dealerMarkersLayer) {
+    dealerMarkersLayer.eachLayer((marker) => {
+      marker.unbindTooltip();
+      const d = marker._dealer;
+      if (!d) return;
+      marker.unbindPopup();
+      marker.bindPopup(buildDefaultDealerPopup(d));
     });
   }
 }
@@ -1805,6 +1832,14 @@ function selectDealer(idx) {
   selectedDealerIdx = idx;
   const d = DEALERS[idx];
   const color = zoneColor(d.zone);
+
+  // In Ops mode, swap right sidebar from analytics pane to dealer detail
+  if (potentialMode) {
+    const dealerContent = document.getElementById('dsDealerContent');
+    const ptContent     = document.getElementById('dsPotentialPane');
+    if (dealerContent) dealerContent.style.display = '';
+    if (ptContent)     ptContent.style.display     = 'none';
+  }
 
   const badge = document.getElementById('dsZoneBadge');
   if (badge) { badge.textContent = d.zone; badge.style.background = color; }
