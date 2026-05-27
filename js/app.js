@@ -1833,14 +1833,6 @@ function selectDealer(idx) {
   const d = DEALERS[idx];
   const color = zoneColor(d.zone);
 
-  // In Ops mode, swap right sidebar from analytics pane to dealer detail
-  if (potentialMode) {
-    const dealerContent = document.getElementById('dsDealerContent');
-    const ptContent     = document.getElementById('dsPotentialPane');
-    if (dealerContent) dealerContent.style.display = '';
-    if (ptContent)     ptContent.style.display     = 'none';
-  }
-
   const badge = document.getElementById('dsZoneBadge');
   if (badge) { badge.textContent = d.zone; badge.style.background = color; }
 
@@ -2347,7 +2339,15 @@ function renderDealerMarkers() {
     });
     marker._dealer = dealer;
 
-    if (currentPageTab === 'dealer') {
+    if (potentialMode) {
+      // Ops tab: hover tooltip, no popup, click is a no-op
+      marker.bindTooltip(() => buildDealerHoverTooltip(dealer), {
+        permanent: false,
+        sticky: true,
+        direction: 'auto',
+        className: 'dealer-glass-tooltip',
+      });
+    } else if (currentPageTab === 'dealer') {
       marker.bindPopup(() => buildDealerHoverTooltip(dealer), {
         className: 'dealer-glass-tooltip',
         closeButton: false,
@@ -2357,7 +2357,13 @@ function renderDealerMarkers() {
       marker.bindPopup(buildDefaultDealerPopup(dealer));
     }
 
-    marker.on('click', () => selectDealer(dealer._idx));
+    marker.on('click', (e) => {
+      // Stop propagation so province click handler (filterZone) doesn't also fire
+      L.DomEvent.stopPropagation(e);
+      // In Ops mode, click does nothing (per design — only hover reveals info)
+      if (potentialMode) return;
+      selectDealer(dealer._idx);
+    });
     dealerMarkersLayer.addLayer(marker);
   });
 }
