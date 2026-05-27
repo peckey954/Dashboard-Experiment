@@ -2937,18 +2937,45 @@ body {
 }
 [data-theme="dark"] .dt-name { color: #f1f5f9; }
 
-.dt-star-btn {
-  align-items: center;
-  background: #fff7ed;
-  border: 1px solid #fdba74;
-  border-radius: 6px;
-  box-shadow: 0 1px 1.5px rgba(0,0,0,.1);
-  color: #f97316;
-  display: flex;
-  height: 24px;
-  justify-content: center;
-  width: 24px;
+.dt-status {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  padding: 2px 10px;
 }
+
+.dt-zone-plain {
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+}
+[data-theme="dark"] .dt-zone-plain { color: #f1f5f9; }
+
+.dt-sep {
+  background: #e4e4e7;
+  height: 1px;
+  margin: 0;
+  width: 100%;
+}
+[data-theme="dark"] .dt-sep { background: rgba(255,255,255,.1); }
+
+.dt-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dt-issue-row {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+.dt-issue-label {
+  color: #3f3f46;
+  font-size: 12px;
+}
+[data-theme="dark"] .dt-issue-label { color: #cbd5e1; }
 
 .dt-row {
   align-items: center;

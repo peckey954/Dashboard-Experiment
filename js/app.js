@@ -1032,7 +1032,7 @@ function buildOpsTooltip(thaiName, zoneId) {
   </div>`;
 }
 
-// ── Dealer-tab Hover Tooltips ────────────────────────────────────────────────
+// ── Map Hover Tooltips ───────────────────────────────────────────────────────
 
 /** Deterministic mock sales/target per dealer (so values don't change between renders). */
 function getDealerMockSales(dealer) {
@@ -1042,67 +1042,94 @@ function getDealerMockSales(dealer) {
     h = ((h << 5) - h) + key.charCodeAt(i);
     h |= 0;
   }
-  const sales = 5 + (Math.abs(h) % 200) / 10;          // 5.0–25.0 ลบ.
+  const sales = 5 + (Math.abs(h) % 200) / 10;          // 5.0–25.0 M
   const pct   = 60 + (Math.abs(h >> 4) % 36);          // 60–95 %
   const target = sales / (pct / 100);
   return {sales, target, pct};
 }
 
-/** Tooltip shown on hovering a dealer dot in the Dealer tab. */
+/** Status color palette for dealer/sub-dealer badges. */
+const DEALER_STATUS_COLORS = {
+  'Risk':      '#ef4444',
+  'Develop':   '#3b82f6',
+  'Potential': '#22c55e',
+  'Star':      '#f97316',
+};
+
+/** Deterministic dealer type (D = Dealer, S = Sub-dealer) + status from name hash. */
+function getDealerMeta(dealer) {
+  let h = 0;
+  for (let i = 0; i < dealer.name.length; i++) {
+    h = ((h << 5) - h) + dealer.name.charCodeAt(i);
+    h |= 0;
+  }
+  // 70% Dealer, 30% Sub-dealer
+  const type = (Math.abs(h) % 10) < 7 ? 'D' : 'S';
+  const statuses = ['Risk', 'Develop', 'Potential', 'Star'];
+  const status = statuses[Math.abs(h >> 3) % statuses.length];
+  return {type, status};
+}
+
+/** Tooltip for a dealer dot — title "D - name" or "S - name", status badge, location, Sales vs Target. */
 function buildDealerHoverTooltip(dealer) {
-  const color = zoneColor(dealer.zone);
   const m = getDealerMockSales(dealer);
+  const {type, status} = getDealerMeta(dealer);
+  const sc = DEALER_STATUS_COLORS[status];
   return `<div class="dt-inner">
     <div class="dt-header">
-      <span class="dt-name">${dealer.name}</span>
-      <span class="dt-star-btn" aria-hidden="true">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-      </span>
+      <span class="dt-name">${type} - ${dealer.name}</span>
+      <span class="dt-status" style="color:${sc};border-color:${sc}">${status}</span>
     </div>
+    <div class="dt-sep"></div>
     <div class="dt-row">
       <span class="dt-loc">${dealer.province} / ${dealer.district}</span>
-      <span class="dt-zone">Zone ${dealer.zone} <span class="dt-zone-dot" style="background:${color}"></span></span>
+      <span class="dt-zone-plain">${dealer.zone}</span>
     </div>
     <div class="dt-stat-block">
       <span class="dt-stat-label">Sales VS Target</span>
-      <span class="dt-stat-val">${m.sales.toFixed(1)} ลบ. | <strong>${m.pct}%</strong></span>
+      <span class="dt-stat-val"><strong>${m.pct}%</strong> | ${m.sales.toFixed(1)}/${m.target.toFixed(0)} M</span>
     </div>
   </div>`;
 }
 
-/** Tooltip shown on hovering a province in the Dealer tab. */
+/** Tooltip for a province — title + zone, MS Sales / MS HC Farmer, overlay issue rows. */
 function buildDealerProvinceTooltip(thaiName, zoneId) {
-  const color = zoneId ? zoneColor(zoneId) : '#94a3b8';
   const pot   = getProvPotential(thaiName);
   const farm  = PROVINCE_FARMER_STATS[thaiName] || null;
 
   const msSalesPct = pot && pot.market ? Math.round(pot.sales / pot.market * 100) : 0;
-  const msSalesSub = pot ? `${pot.sales.toLocaleString()}/${pot.market.toLocaleString()} ลบ.` : '—';
+  const msSalesSub = pot ? `${pot.sales.toLocaleString()}/${pot.market.toLocaleString()} M` : '—';
 
   const msHCPct = farm && farm.farmers ? Math.round(farm.users / farm.farmers * 100) : 0;
   const msHCSub = farm ? `${farm.users.toLocaleString()}/${farm.farmers.toLocaleString()} ราย` : '—';
 
-  // Aggregate mock dealer sales/target for this province
-  const provDealers = DEALERS.filter((d) => d.province === thaiName);
-  let totalSales = 0;
-  let totalTarget = 0;
-  provDealers.forEach((d) => {
-    const m = getDealerMockSales(d);
-    totalSales  += m.sales;
-    totalTarget += m.target;
+  // Find overlay issues that include this province
+  const issues = [];
+  OVERLAY_CONFIG.forEach((cfg) => {
+    const match = cfg.provinces.find((p) => p.name === thaiName);
+    if (match) issues.push({label: cfg.label, iconSvg: cfg.iconSvg, severity: match.severity});
   });
-  const svtPct = totalTarget ? Math.round(totalSales / totalTarget * 100) : 0;
-  const svtTxt = totalSales > 0
-    ? `${totalSales.toFixed(1)} ลบ. | <strong>${svtPct}%</strong>`
-    : '<span class="dt-stat-empty">ไม่มีดีลเลอร์</span>';
+  issues.sort((a, b) => (a.severity === 'high' ? -1 : 1));
+  const topIssues = issues.slice(0, 3);
+  const issuesHtml = topIssues.length > 0
+    ? `<div class="dt-sep"></div>
+       <div class="dt-issues">${topIssues.map((issue) => {
+        const cls = issue.severity === 'high' ? 'pds-overlay-badge--red' : 'pds-overlay-badge--yellow';
+        return `<div class="dt-issue-row">
+          <div class="pds-overlay-badge ${cls}">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${issue.iconSvg}</svg>
+          </div>
+          <span class="dt-issue-label">${issue.label}</span>
+        </div>`;
+      }).join('')}</div>`
+    : '';
 
   return `<div class="dt-inner">
     <div class="dt-header">
       <span class="dt-name">${thaiName}</span>
-      <span class="dt-zone">Zone ${zoneId || '—'} <span class="dt-zone-dot" style="background:${color}"></span></span>
+      <span class="dt-zone-plain">${zoneId || '—'}</span>
     </div>
+    <div class="dt-sep"></div>
     <div class="dt-cols">
       <div class="dt-col">
         <span class="dt-col-label">MS Sales</span>
@@ -1115,10 +1142,7 @@ function buildDealerProvinceTooltip(thaiName, zoneId) {
         <span class="dt-col-sub">${msHCSub}</span>
       </div>
     </div>
-    <div class="dt-stat-block">
-      <span class="dt-stat-label">Sales VS Target</span>
-      <span class="dt-stat-val">${svtTxt}</span>
-    </div>
+    ${issuesHtml}
   </div>`;
 }
 
@@ -1464,11 +1488,11 @@ function enterPotentialMode() {
     provinceLayer.eachLayer((layer) => {
       if (!layer._thaiName) return;
       layer.unbindTooltip();
-      layer.bindTooltip(() => buildOpsTooltip(layer._thaiName, layer._zoneId), {
+      layer.bindTooltip(() => buildDealerProvinceTooltip(layer._thaiName, layer._zoneId), {
         permanent: false,
         sticky: true,
         direction: 'auto',
-        className: 'ops-glass-tooltip',
+        className: 'dealer-glass-tooltip',
       });
     });
     renderOverlayMarkers();
@@ -2431,11 +2455,11 @@ function initMap() {
           provinceLayer.eachLayer((layer) => {
             if (!layer._thaiName) return;
             layer.unbindTooltip();
-            layer.bindTooltip(() => buildOpsTooltip(layer._thaiName, layer._zoneId), {
+            layer.bindTooltip(() => buildDealerProvinceTooltip(layer._thaiName, layer._zoneId), {
               permanent: false,
               sticky: true,
               direction: 'auto',
-              className: 'ops-glass-tooltip',
+              className: 'dealer-glass-tooltip',
             });
           });
           renderOverlayMarkers();
