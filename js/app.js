@@ -877,6 +877,7 @@ function toggleFilterSidebar() {
  * @param {!Element} btn The clicked button element.
  */
 function switchPageTab(tab, btn) {
+  if (dealerSegmentMode) exitDealerSegmentation();
   document.querySelectorAll('.page-tab').forEach((t) => t.classList.remove('page-tab--active'));
   if (btn) btn.classList.add('page-tab--active');
   setIrActive(TAB_IR_GROUP[tab] || null);
@@ -1068,6 +1069,527 @@ function getDealerMeta(dealer) {
   const statuses = ['Risk', 'Develop', 'Potential', 'Star'];
   const status = statuses[Math.abs(h >> 3) % statuses.length];
   return {type, status};
+}
+
+// ── Dealer Segmentation: config + helpers ────────────────────────────────────
+
+/** Nine RFM × LI segments shown in the bubble map. */
+const SEGMENT_CONFIG = [
+  {id:'champion',  label:'แชมเปี้ยน',     color:'#22c55e'},
+  {id:'loyal',     label:'ลูกค้าประจำ',   color:'#3b82f6'},
+  {id:'mustkeep',  label:'ห้ามเสียไปได้', color:'#8b5cf6'},
+  {id:'highpot',   label:'มีศักยภาพสูง',  color:'#0ea5e9'},
+  {id:'dormant',   label:'ซบเซา',          color:'#0f766e'},
+  {id:'atrisk',    label:'มีความเสี่ยง',   color:'#dc2626'},
+  {id:'promising', label:'มีแนวโน้มดี',    color:'#f97316'},
+  {id:'leaving',   label:'ใกล้หายไป',       color:'#ea580c'},
+  {id:'lost',      label:'สูญหาย',          color:'#94a3b8'},
+];
+
+/** Quick lookup map id → config entry. */
+const SEGMENT_BY_ID = SEGMENT_CONFIG.reduce((m, s) => (m[s.id] = s, m), {});
+
+/** Deterministic LI / RFM / SR / visits / trend scores from name + active date range. */
+function getDealerScores(dealer, range) {
+  const r = range || dsegDateRange || {start: '2026-01-01', end: '2026-12-31'};
+  let h = 0;
+  const key = dealer.name + '|' + dealer.province + '|' + r.start + '|' + r.end;
+  for (let i = 0; i < key.length; i++) {
+    h = ((h << 5) - h) + key.charCodeAt(i);
+    h |= 0;
+  }
+  const a = Math.abs(h);
+  const li      = a % 101;                      // 0–100
+  const rfm     = (Math.abs(h >> 4)  % 101);    // 0–100
+  const sr      = 60 + (Math.abs(h >> 8)  % 41); // 60–100
+  const visits  = 1 + (Math.abs(h >> 12) % 12);  // 1–12
+  const tRaw    = (Math.abs(h >> 16) % 61) - 30; // −30..+30
+  return {li, rfm, sr, visits, trend: tRaw};
+}
+
+/** Map (li, rfm) → segment id via a 3×3 grid (thresholds 33 / 66). */
+function getDealerSegment(scores) {
+  const li  = scores.li;
+  const rfm = scores.rfm;
+  const liBand  = li  > 66 ? 'H' : (li  > 33 ? 'M' : 'L');
+  const rfmBand = rfm > 66 ? 'H' : (rfm > 33 ? 'M' : 'L');
+  // Rows = LI band (H/M/L), Cols = RFM band (L/M/H)
+  const grid = {
+    'H': {'L':'promising', 'M':'highpot',  'H':'champion'},
+    'M': {'L':'leaving',   'M':'dormant',  'H':'loyal'},
+    'L': {'L':'lost',      'M':'atrisk',   'H':'mustkeep'},
+  };
+  return grid[liBand][rfmBand];
+}
+
+// ── Dealer Segmentation: state ───────────────────────────────────────────────
+
+/** True when the Dealer-Segmentation page is the active view. */
+let dealerSegmentMode = false;
+
+/** Active filter state. */
+const _dsegDefaultStart = (() => {const d = new Date(); d.setDate(d.getDate() - 90); return d.toISOString().slice(0, 10);})();
+const _dsegDefaultEnd   = new Date().toISOString().slice(0, 10);
+let dsegDateRange = {start: _dsegDefaultStart, end: _dsegDefaultEnd};
+let dsegZoneFilter = 'all';
+let dsegSearch = '';
+let dsegActiveSegments = new Set(SEGMENT_CONFIG.map((s) => s.id));
+let dsegSelectedDealerIdx = null;
+let dsegDsTab = 'dealers';
+
+/** Pan / zoom state. */
+let dsegZoom = 1;
+let dsegPanX = 0;
+let dsegPanY = 0;
+
+// ── Dealer Segmentation: enter / exit ────────────────────────────────────────
+
+/** Activates the Dealer Segmentation page (Sale Intelligence flyout). */
+function openDealerSegmentation() {
+  // Close any open flyouts
+  document.querySelectorAll('.ir-popup').forEach((p) => p.classList.remove('ir-popup--visible'));
+
+  // Activate Sale section in the icon rail (keeps the side nav consistent)
+  const salePill = document.querySelector('.nav-pill[data-section="sale"]');
+  if (salePill && !salePill.classList.contains('nav-pill--active')) {
+    switchNavSection('sale', salePill);
+  }
+
+  // Highlight the Sale Intelligence flyout icon
+  setIrActive('ir-popup-sale');
+
+  // Breadcrumb
+  const bcParent  = document.querySelector('.sb-bc-parent');
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  if (bcParent)  bcParent.textContent  = 'Sale Intelligence';
+  if (bcCurrent) bcCurrent.textContent = 'Dealer Segmentation';
+
+  // Hide Sale-strategy page-tab bar (Ops/Sale/Crop/Dealer/Farmer don't apply here)
+  const pageTabs = document.getElementById('pageTabs');
+  if (pageTabs) pageTabs.style.display = 'none';
+
+  // Tear down any map-page mode
+  if (potentialMode) exitPotentialMode();
+  if (farmerMode)    exitFarmerMode();
+  if (currentPageTab === 'dealer') exitDealerHoverMode();
+
+  // Hide the map + map-tab bar + map-table view + ops legend; show our view
+  const mapEl    = document.getElementById('thailand-map');
+  const tableEl  = document.getElementById('mapTableView');
+  const mapTabs  = document.getElementById('mapTabBar');
+  const opsLeg   = document.getElementById('opsMapLegend');
+  const dsegView = document.getElementById('dealer-segment-view');
+  if (mapEl)    mapEl.style.display    = 'none';
+  if (tableEl)  tableEl.style.display  = 'none';
+  if (mapTabs)  mapTabs.style.display  = 'none';
+  if (opsLeg)   opsLeg.style.display   = 'none';
+  if (dsegView) dsegView.style.display = '';
+
+  // Swap left sidebar panes — hide all others, show ours
+  const fsDealer    = document.getElementById('fsDealerPane');
+  const fsPotential = document.getElementById('fsPotentialPane');
+  const fsFarmer    = document.getElementById('fsFarmerPane');
+  const fsDseg      = document.getElementById('fsDealerSegPane');
+  if (fsDealer)    fsDealer.style.display    = 'none';
+  if (fsPotential) fsPotential.style.display = 'none';
+  if (fsFarmer)    fsFarmer.style.display    = 'none';
+  if (fsDseg)      fsDseg.style.display      = '';
+
+  // Hide the global left "ตัวกรอง" header + lock-scroll handling
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = 'none';
+  const fsInner = document.querySelector('.fs-inner');
+  if (fsInner)  fsInner.style.overflowY = '';
+
+  // Swap right sidebar panes
+  const dsDealer    = document.getElementById('dsDealerContent');
+  const dsPotential = document.getElementById('dsPotentialPane');
+  const dsFarmer    = document.getElementById('dsFarmerContent');
+  const dsDseg      = document.getElementById('dsDealerSegPane');
+  if (dsDealer)    dsDealer.style.display    = 'none';
+  if (dsPotential) dsPotential.style.display = 'none';
+  if (dsFarmer)    dsFarmer.style.display    = 'none';
+  if (dsDseg)      dsDseg.style.display      = '';
+
+  // Hide right-sidebar header (its own tabs serve as the header here)
+  const dsHeader = document.querySelector('.ds-header');
+  if (dsHeader) dsHeader.style.display = 'none';
+
+  dealerSegmentMode = true;
+  populateDsegFilters();
+  renderDsegAll();
+  initDsegInteractions();
+}
+
+/** Reverses openDealerSegmentation. Called automatically by other nav actions. */
+function exitDealerSegmentation() {
+  if (!dealerSegmentMode) return;
+  dealerSegmentMode = false;
+
+  const mapEl    = document.getElementById('thailand-map');
+  const mapTabs  = document.getElementById('mapTabBar');
+  const dsegView = document.getElementById('dealer-segment-view');
+  if (mapEl)    mapEl.style.display    = '';
+  if (mapTabs)  mapTabs.style.display  = '';
+  if (dsegView) dsegView.style.display = 'none';
+
+  const pageTabs = document.getElementById('pageTabs');
+  if (pageTabs) pageTabs.style.display = '';
+
+  const fsDealer = document.getElementById('fsDealerPane');
+  const fsDseg   = document.getElementById('fsDealerSegPane');
+  if (fsDseg)   fsDseg.style.display   = 'none';
+  if (fsDealer) fsDealer.style.display = '';
+
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = '';
+
+  const dsDealer = document.getElementById('dsDealerContent');
+  const dsDseg   = document.getElementById('dsDealerSegPane');
+  if (dsDseg)   dsDseg.style.display   = 'none';
+  if (dsDealer) dsDealer.style.display = '';
+
+  const dsHeader = document.querySelector('.ds-header');
+  if (dsHeader) dsHeader.style.display = '';
+}
+
+// ── Dealer Segmentation: filter callbacks ────────────────────────────────────
+
+function populateDsegFilters() {
+  // Date inputs default
+  const ds = document.getElementById('dsegDateStart');
+  const de = document.getElementById('dsegDateEnd');
+  if (ds && !ds.value) ds.value = dsegDateRange.start;
+  if (de && !de.value) de.value = dsegDateRange.end;
+
+  // Zone dropdown
+  const zoneSel = document.getElementById('dsegZone');
+  if (zoneSel && zoneSel.options.length <= 1) {
+    ZONES.forEach((z) => {
+      const opt = document.createElement('option');
+      opt.value = z.id;
+      opt.textContent = `${z.id} · ${z.name}`;
+      zoneSel.appendChild(opt);
+    });
+  }
+  if (zoneSel) zoneSel.value = dsegZoneFilter;
+
+  const searchEl = document.getElementById('dsegSearch');
+  if (searchEl) searchEl.value = dsegSearch;
+}
+
+function onDsegDateChange() {
+  const ds = document.getElementById('dsegDateStart');
+  const de = document.getElementById('dsegDateEnd');
+  if (ds && ds.value) dsegDateRange.start = ds.value;
+  if (de && de.value) dsegDateRange.end   = de.value;
+  renderDsegAll();
+}
+
+function onDsegZoneChange(val) {
+  dsegZoneFilter = val || 'all';
+  renderDsegAll();
+}
+
+function onDsegSearchChange(val) {
+  dsegSearch = (val || '').trim().toLowerCase();
+  renderDsegAll();
+}
+
+function toggleDsegSegment(id) {
+  if (dsegActiveSegments.has(id)) dsegActiveSegments.delete(id);
+  else dsegActiveSegments.add(id);
+  renderDsegAll();
+}
+
+function resetDsegFilters() {
+  dsegDateRange = {start: _dsegDefaultStart, end: _dsegDefaultEnd};
+  dsegZoneFilter = 'all';
+  dsegSearch = '';
+  dsegActiveSegments = new Set(SEGMENT_CONFIG.map((s) => s.id));
+  dsegSelectedDealerIdx = null;
+  const ds = document.getElementById('dsegDateStart'); if (ds) ds.value = dsegDateRange.start;
+  const de = document.getElementById('dsegDateEnd');   if (de) de.value = dsegDateRange.end;
+  const zs = document.getElementById('dsegZone');      if (zs) zs.value = 'all';
+  const se = document.getElementById('dsegSearch');    if (se) se.value = '';
+  dsegResetView();
+  renderDsegAll();
+}
+
+// ── Dealer Segmentation: data shaping ────────────────────────────────────────
+
+/** Returns dealers filtered by zone + search (segment filter applied at render time). */
+function getDsegBaseDealers() {
+  return DEALERS.map((d, i) => ({...d, _idx: i})).filter((d) => {
+    if (dsegZoneFilter !== 'all' && d.zone !== dsegZoneFilter) return false;
+    if (dsegSearch && !d.name.toLowerCase().includes(dsegSearch)) return false;
+    return true;
+  });
+}
+
+/** Returns dealers also matching active segment toggles. */
+function getDsegFilteredDealers() {
+  return getDsegBaseDealers().filter((d) => {
+    const scores = getDealerScores(d);
+    const segId  = getDealerSegment(scores);
+    return dsegActiveSegments.has(segId);
+  });
+}
+
+// ── Dealer Segmentation: render ──────────────────────────────────────────────
+
+function renderDsegAll() {
+  if (!dealerSegmentMode) return;
+  renderDsegSegList();
+  renderDsegChart();
+  renderDsegDealerList();
+}
+
+/** Renders the 9-row segment toggle list in the left sidebar. */
+function renderDsegSegList() {
+  const el = document.getElementById('dsegSegList');
+  if (!el) return;
+  const base = getDsegBaseDealers();
+  // Count dealers per segment (ignoring segment toggle filter)
+  const counts = {};
+  base.forEach((d) => {
+    const sid = getDealerSegment(getDealerScores(d));
+    counts[sid] = (counts[sid] || 0) + 1;
+  });
+
+  el.innerHTML = SEGMENT_CONFIG.map((seg) => {
+    const on  = dsegActiveSegments.has(seg.id);
+    const n   = counts[seg.id] || 0;
+    return `
+      <label class="dseg-seg-row${on ? ' dseg-seg-row--active' : ''}" style="--seg-color:${seg.color}">
+        <span class="dseg-seg-dot" style="background:${seg.color}"></span>
+        <span class="dseg-seg-name">${seg.label}</span>
+        <span class="dseg-seg-count">${n}</span>
+        <span class="ops-toggle">
+          <input type="checkbox" ${on ? 'checked' : ''} onchange="toggleDsegSegment('${seg.id}')">
+          <span class="ops-toggle-track"></span>
+        </span>
+      </label>`;
+  }).join('');
+}
+
+/** Renders the bubble chart: 9 segment zones + thresholds + dots. */
+function renderDsegChart() {
+  const canvas = document.getElementById('dsegChartCanvas');
+  if (!canvas) return;
+
+  // Segment zones — fixed grid by LI/RFM thresholds, painted at low alpha.
+  // x ranges (LI):  L = 0–33, M = 33–66, H = 66–100
+  // y ranges (RFM): L = 0–33, M = 33–66, H = 66–100  (bottom = 0)
+  const zoneRects = [
+    {id:'lost',      x:0,  w:33, y:0,  h:33}, {id:'atrisk',    x:33, w:33, y:0,  h:33}, {id:'mustkeep',  x:66, w:34, y:0,  h:33},
+    {id:'leaving',   x:0,  w:33, y:33, h:33}, {id:'dormant',   x:33, w:33, y:33, h:33}, {id:'loyal',     x:66, w:34, y:33, h:33},
+    {id:'promising', x:0,  w:33, y:66, h:34}, {id:'highpot',   x:33, w:33, y:66, h:34}, {id:'champion',  x:66, w:34, y:66, h:34},
+  ];
+
+  const zoneCounts = {};
+  getDsegBaseDealers().forEach((d) => {
+    const sid = getDealerSegment(getDealerScores(d));
+    zoneCounts[sid] = (zoneCounts[sid] || 0) + 1;
+  });
+
+  const zonesHtml = zoneRects.map((r) => {
+    const seg = SEGMENT_BY_ID[r.id];
+    return `<div class="dseg-zone" style="left:${r.x}%;bottom:${r.y}%;width:${r.w}%;height:${r.h}%;--seg-color:${seg.color}">
+      <div class="dseg-zone-label">${seg.label}<br><span class="dseg-zone-n">n=${zoneCounts[r.id] || 0}</span></div>
+    </div>`;
+  }).join('');
+
+  // Threshold gridlines at 33% and 66% on each axis
+  const gridHtml = `
+    <div class="dseg-threshold dseg-threshold--v" style="left:33%"></div>
+    <div class="dseg-threshold dseg-threshold--v" style="left:66%"></div>
+    <div class="dseg-threshold dseg-threshold--h" style="bottom:33%"></div>
+    <div class="dseg-threshold dseg-threshold--h" style="bottom:66%"></div>`;
+
+  // Dots
+  const filtered = getDsegFilteredDealers();
+  const maxSales = filtered.reduce((m, d) => Math.max(m, getDealerMockSales(d).sales), 1);
+  const dotsHtml = filtered.map((d) => {
+    const scores = getDealerScores(d);
+    const segId  = getDealerSegment(scores);
+    const seg    = SEGMENT_BY_ID[segId];
+    const sales  = getDealerMockSales(d).sales;
+    const size   = Math.max(12, Math.min(44, 12 + (sales / maxSales) * 32));
+    const isSel  = dsegSelectedDealerIdx === d._idx;
+    const shortName = d.name.length > 12 ? d.name.slice(0, 11) + '…' : d.name;
+    return `<div class="dseg-dot${isSel ? ' dseg-dot--selected' : ''}"
+      style="left:${scores.li}%;bottom:${scores.rfm}%;width:${size}px;height:${size}px;background:${seg.color}"
+      data-idx="${d._idx}" title="${d.name}" onclick="selectDsegDealer(${d._idx})">
+      <span class="dseg-dot-label">${shortName}</span>
+    </div>`;
+  }).join('');
+
+  canvas.innerHTML = zonesHtml + gridHtml + dotsHtml;
+  applyDsegTransform();
+}
+
+/** Renders the right-sidebar list of dealers with trend arrows. */
+function renderDsegDealerList() {
+  const body = document.getElementById('dsegDsBody');
+  if (!body) return;
+
+  if (dsegDsTab === 'actions') {
+    body.innerHTML = `<div class="dseg-stub-inner">เร็วๆ นี้ — แนวทางการดำเนินการต่อเซกเมนต์</div>`;
+    return;
+  }
+  if (dsegDsTab === 'method') {
+    body.innerHTML = `<div class="dseg-stub-inner">เร็วๆ นี้ — รายละเอียดวิธีคิดคะแนน LI / RFM</div>`;
+    return;
+  }
+
+  const list = getDsegFilteredDealers();
+  if (list.length === 0) {
+    body.innerHTML = `<div class="dseg-stub-inner">ไม่พบดีลเลอร์ที่ตรงเงื่อนไข</div>`;
+    return;
+  }
+
+  // Sort by sales desc
+  list.sort((a, b) => getDealerMockSales(b).sales - getDealerMockSales(a).sales);
+
+  body.innerHTML = list.map((d) => {
+    const scores = getDealerScores(d);
+    const segId  = getDealerSegment(scores);
+    const seg    = SEGMENT_BY_ID[segId];
+    const m      = getDealerMockSales(d);
+    const trendUp   = scores.trend >= 0;
+    const trendCol  = trendUp ? '#22c55e' : '#ef4444';
+    const trendArrow = trendUp
+      ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>'
+      : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+    const isSel = dsegSelectedDealerIdx === d._idx;
+    return `
+      <div class="dseg-dcard${isSel ? ' dseg-dcard--selected' : ''}" onclick="selectDsegDealer(${d._idx})">
+        <div class="dseg-dcard-head">
+          <span class="dseg-dcard-name">${d.name}</span>
+          <span class="dseg-dcard-trend" style="color:${trendCol}">${trendArrow}<span>${trendUp ? '+' : ''}${scores.trend}%</span></span>
+        </div>
+        <div class="dseg-dcard-meta">
+          <span class="dseg-dcard-zone">${d.zone}</span>
+          <span>${scores.visits} visits</span>
+          <span>฿${m.sales.toFixed(1)}M</span>
+        </div>
+        <div class="dseg-dcard-seg" style="background:${seg.color}1a;color:${seg.color};border-color:${seg.color}55">${seg.label}</div>
+        <div class="dseg-dcard-scores">
+          <div class="dseg-dcard-score"><span class="dseg-dcard-score-k">LI</span><span class="dseg-dcard-score-v">${scores.li.toFixed(1)}</span></div>
+          <div class="dseg-dcard-score"><span class="dseg-dcard-score-k">RFM</span><span class="dseg-dcard-score-v">${scores.rfm.toFixed(1)}</span></div>
+          <div class="dseg-dcard-score"><span class="dseg-dcard-score-k">SR</span><span class="dseg-dcard-score-v">${scores.sr}%</span></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/** Selects a dealer; re-renders so chart + right list highlight match. */
+function selectDsegDealer(idx) {
+  dsegSelectedDealerIdx = (dsegSelectedDealerIdx === idx) ? null : idx;
+  renderDsegChart();
+  renderDsegDealerList();
+}
+
+/** Right-sidebar tab switch (Dealers / Actions / Method). */
+function switchDsegDsTab(tab) {
+  dsegDsTab = tab;
+  document.querySelectorAll('.dseg-ds-tab').forEach((btn) => {
+    btn.classList.toggle('dseg-ds-tab--active', btn.dataset.dsegTab === tab);
+  });
+  renderDsegDealerList();
+}
+
+/** Top-toolbar tab switch (Map / RFM / LI / Trend). MVP: only map is implemented. */
+function switchDsegPageTab(tab) {
+  document.querySelectorAll('.dseg-page-tab').forEach((btn) => {
+    btn.classList.toggle('dseg-page-tab--active', btn.dataset.dsegPage === tab);
+  });
+  const mapPage  = document.getElementById('dsegPageMap');
+  const stubPage = document.getElementById('dsegPageStub');
+  const stubLbl  = document.getElementById('dsegStubLabel');
+  if (tab === 'map') {
+    if (mapPage)  mapPage.style.display  = '';
+    if (stubPage) stubPage.style.display = 'none';
+  } else {
+    const labels = {rfm:'RFM ย้อนหลัง', li:'ตัวชี้วัดล่วงหน้า', trend:'ความเคลื่อนไหวรายเดือน'};
+    if (mapPage)  mapPage.style.display  = 'none';
+    if (stubPage) stubPage.style.display = '';
+    if (stubLbl)  stubLbl.textContent    = labels[tab] || '';
+  }
+}
+
+// ── Dealer Segmentation: zoom & pan ──────────────────────────────────────────
+
+function applyDsegTransform() {
+  const canvas = document.getElementById('dsegChartCanvas');
+  if (!canvas) return;
+  canvas.style.transform = `translate(${dsegPanX}px, ${dsegPanY}px) scale(${dsegZoom})`;
+  canvas.parentElement.classList.toggle('dseg-zoomed', dsegZoom > 1.4);
+}
+
+function dsegZoomBy(factor, anchorX, anchorY) {
+  const viewport = document.getElementById('dsegChartViewport');
+  if (!viewport) return;
+  const rect = viewport.getBoundingClientRect();
+  const ax = (typeof anchorX === 'number') ? anchorX : rect.width / 2;
+  const ay = (typeof anchorY === 'number') ? anchorY : rect.height / 2;
+  const newZoom = Math.max(0.5, Math.min(6, dsegZoom * factor));
+  if (newZoom === dsegZoom) return;
+  // Adjust pan so anchor point stays put
+  const scaleRatio = newZoom / dsegZoom;
+  dsegPanX = ax - (ax - dsegPanX) * scaleRatio;
+  dsegPanY = ay - (ay - dsegPanY) * scaleRatio;
+  dsegZoom = newZoom;
+  applyDsegTransform();
+}
+
+function dsegResetView() {
+  dsegZoom = 1;
+  dsegPanX = 0;
+  dsegPanY = 0;
+  applyDsegTransform();
+}
+
+/** Wires wheel + drag handlers on the chart viewport — called once after DOM ready. */
+function initDsegInteractions() {
+  const viewport = document.getElementById('dsegChartViewport');
+  if (!viewport || viewport._dsegWired) return;
+  viewport._dsegWired = true;
+
+  viewport.addEventListener('wheel', (e) => {
+    if (!dealerSegmentMode) return;
+    e.preventDefault();
+    const rect = viewport.getBoundingClientRect();
+    const ax = e.clientX - rect.left;
+    const ay = e.clientY - rect.top;
+    const factor = e.deltaY < 0 ? 1.12 : (1 / 1.12);
+    dsegZoomBy(factor, ax, ay);
+  }, {passive: false});
+
+  let dragging = false;
+  let lastX = 0, lastY = 0;
+  viewport.addEventListener('mousedown', (e) => {
+    if (!dealerSegmentMode) return;
+    if (e.target.closest('.dseg-dot')) return; // let dot clicks pass through
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    viewport.classList.add('dseg-dragging');
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    dsegPanX += (e.clientX - lastX);
+    dsegPanY += (e.clientY - lastY);
+    lastX = e.clientX;
+    lastY = e.clientY;
+    applyDsegTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    viewport.classList.remove('dseg-dragging');
+  });
 }
 
 /** Tooltip for a dealer dot — title "D - name" or "S - name", status badge, location, Sales vs Target. */
@@ -3110,6 +3632,7 @@ const MKT_TAB_LABELS = {
 };
 
 function switchNavSection(section, btn) {
+  if (dealerSegmentMode) exitDealerSegmentation();
   document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('nav-pill--active'));
   if (btn) btn.classList.add('nav-pill--active');
 

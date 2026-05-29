@@ -437,6 +437,51 @@
 
       </div><!-- #fsFarmerPane -->
 
+      <!-- Dealer Segmentation mode pane (hidden initially) -->
+      <div id="fsDealerSegPane" style="display:none">
+
+        <!-- Date range -->
+        <div class="dseg-fs-section">
+          <div class="dseg-fs-section-title">ช่วงวันที่</div>
+          <div class="dseg-date-row">
+            <input type="date" id="dsegDateStart" class="dseg-date-input" onchange="onDsegDateChange()">
+            <span class="dseg-date-sep">–</span>
+            <input type="date" id="dsegDateEnd" class="dseg-date-input" onchange="onDsegDateChange()">
+          </div>
+        </div>
+
+        <div class="dseg-sep"></div>
+
+        <!-- Zone + search -->
+        <div class="dseg-fs-section">
+          <select class="ops-filter-select dseg-zone-select" id="dsegZone" onchange="onDsegZoneChange(this.value)">
+            <option value="all">ทุกโซน</option>
+          </select>
+          <div class="dseg-search-wrap">
+            <svg class="dseg-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="dseg-search" type="text" placeholder="ค้นหาชื่อร้าน…" id="dsegSearch" oninput="onDsegSearchChange(this.value)">
+          </div>
+        </div>
+
+        <div class="dseg-sep"></div>
+
+        <!-- Segments list -->
+        <div class="dseg-fs-section dseg-fs-section--grow">
+          <div class="dseg-fs-header">
+            <span class="dseg-fs-section-title">เซกเมนต์</span>
+            <button class="dseg-fs-reset" onclick="resetDsegFilters()" title="รีเซ็ตค่าเริ่มต้น">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
+              </svg>
+            </button>
+          </div>
+          <div class="dseg-seg-list" id="dsegSegList"></div>
+        </div>
+
+      </div><!-- #fsDealerSegPane -->
+
     </div>
   </aside>
 
@@ -465,6 +510,54 @@
             <span>ไม่มีข้อมูล</span>
           </div>
         </div>
+
+        <!-- Dealer Segmentation view (hidden initially) -->
+        <div id="dealer-segment-view" style="display:none">
+          <div class="dseg-toolbar">
+            <div class="dseg-page-tabs">
+              <button class="dseg-page-tab dseg-page-tab--active" data-dseg-page="map" onclick="switchDsegPageTab('map')">แผนที่ดีลเลอร์</button>
+              <button class="dseg-page-tab" data-dseg-page="rfm" onclick="switchDsegPageTab('rfm')">RFM ย้อนหลัง</button>
+              <button class="dseg-page-tab" data-dseg-page="li" onclick="switchDsegPageTab('li')">ตัวชี้วัดล่วงหน้า</button>
+              <button class="dseg-page-tab" data-dseg-page="trend" onclick="switchDsegPageTab('trend')">ความเคลื่อนไหวรายเดือน</button>
+            </div>
+            <div class="dseg-zoom-tools">
+              <button onclick="dsegZoomBy(0.8)" title="ซูมออก" aria-label="zoom out">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg>
+              </button>
+              <button onclick="dsegResetView()" title="รีเซ็ตมุมมอง" aria-label="reset">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.78 1 6.43 2.57L21 8"/><path d="M21 3v5h-5"/>
+                </svg>
+              </button>
+              <button onclick="dsegZoomBy(1.25)" title="ซูมเข้า" aria-label="zoom in">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Map page -->
+          <div class="dseg-page-content" id="dsegPageMap">
+            <div class="dseg-chart-frame">
+              <div class="dseg-chart-yaxis-label">← ตัวชี้วัดย้อนหลัง (คะแนน RFM) →</div>
+              <div class="dseg-chart-viewport" id="dsegChartViewport">
+                <div class="dseg-chart-canvas" id="dsegChartCanvas">
+                  <!-- segment zones, gridlines, dots injected by JS -->
+                </div>
+                <div class="dseg-chart-hint">เลื่อนล้อ=ซูม · ลาก=เลื่อนแผนที่ · คลิก=เลือกดีลเลอร์</div>
+              </div>
+              <div class="dseg-chart-xaxis-label">← ตัวชี้วัดล่วงหน้า (คะแนน LI) →</div>
+            </div>
+          </div>
+
+          <!-- Stub for other tabs -->
+          <div class="dseg-page-content dseg-page-stub" id="dsegPageStub" style="display:none">
+            <div class="dseg-stub-card">
+              <div class="dseg-stub-title">เร็วๆ นี้</div>
+              <div class="dseg-stub-sub" id="dsegStubLabel"></div>
+            </div>
+          </div>
+        </div><!-- #dealer-segment-view -->
+
       </div>
 
   <!-- Detail Sidebar (Right) -->
@@ -730,6 +823,16 @@
 
       </div><!-- #dsFarmerContent -->
 
+      <!-- Dealer Segmentation mode pane (hidden initially) -->
+      <div id="dsDealerSegPane" style="display:none">
+        <div class="dseg-ds-tabs">
+          <button class="dseg-ds-tab dseg-ds-tab--active" data-dseg-tab="dealers" onclick="switchDsegDsTab('dealers')">ดีลเลอร์</button>
+          <button class="dseg-ds-tab" data-dseg-tab="actions" onclick="switchDsegDsTab('actions')">แนวทางการดำเนินการ</button>
+          <button class="dseg-ds-tab" data-dseg-tab="method" onclick="switchDsegDsTab('method')">วิธีคิดคะแนน</button>
+        </div>
+        <div class="dseg-ds-body" id="dsegDsBody"></div>
+      </div><!-- #dsDealerSegPane -->
+
     </div>
       </aside>
 
@@ -809,7 +912,7 @@
 <div class="ir-popup ir-flyout" id="ir-popup-sale">
   <div class="ir-flyout-title">Sale Intelligence</div>
   <button class="ir-flyout-item">Sales Performance</button>
-  <button class="ir-flyout-item">Dealer Performance</button>
+  <button class="ir-flyout-item" onclick="openDealerSegmentation()">Dealer Segmentation</button>
   <button class="ir-flyout-item">Budgeting Recommendation</button>
 </div>
 

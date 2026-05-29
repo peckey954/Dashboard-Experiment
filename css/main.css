@@ -3758,3 +3758,555 @@ body {
   justify-content: center;
   padding: 24px;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Dealer Segmentation Page  (.dseg-*)
+   All colors use design tokens so dark mode "just works".
+   ─────────────────────────────────────────────────────────────────────────── */
+
+#dealer-segment-view {
+  background: var(--background);
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+/* Toolbar (top) — page tabs + zoom buttons */
+.dseg-toolbar {
+  align-items: center;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 8px 14px;
+}
+.dseg-page-tabs {
+  background: var(--secondary);
+  border-radius: 8px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+}
+.dseg-page-tab {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  transition: background 0.15s, color 0.15s;
+}
+.dseg-page-tab:hover { color: var(--foreground); }
+.dseg-page-tab--active {
+  background: var(--background);
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  color: var(--foreground);
+}
+.dseg-zoom-tools {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+.dseg-zoom-tools button {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  height: 28px;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+  width: 28px;
+}
+.dseg-zoom-tools button:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* Page content (flex:1 fills below toolbar) */
+.dseg-page-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Chart frame: axis labels + viewport */
+.dseg-chart-frame {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  grid-template-columns: 24px 1fr;
+  grid-template-rows: 1fr 24px;
+  min-height: 0;
+  padding: 8px 12px 6px;
+}
+.dseg-chart-yaxis-label {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 11px;
+  grid-column: 1;
+  grid-row: 1;
+  justify-content: center;
+  letter-spacing: .02em;
+  writing-mode: vertical-rl;
+}
+.dseg-chart-xaxis-label {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 11px;
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: center;
+  letter-spacing: .02em;
+}
+
+/* Viewport: clipped pan/zoom container */
+.dseg-chart-viewport {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: grab;
+  grid-column: 2;
+  grid-row: 1;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+.dseg-chart-viewport.dseg-dragging { cursor: grabbing; }
+
+.dseg-chart-hint {
+  background: rgba(0,0,0,0.55);
+  border-radius: 4px;
+  bottom: 6px;
+  color: #fafafa;
+  font-size: 10px;
+  padding: 3px 8px;
+  pointer-events: none;
+  position: absolute;
+  right: 6px;
+  z-index: 5;
+}
+[data-theme="dark"] .dseg-chart-hint {
+  background: rgba(255,255,255,0.08);
+}
+
+/* Canvas — gets transform: translate scale */
+.dseg-chart-canvas {
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  transition: transform 0.05s linear;
+  width: 100%;
+}
+
+/* 9 segment background panels */
+.dseg-zone {
+  background: color-mix(in srgb, var(--seg-color) 8%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--seg-color) 38%, transparent);
+  border-radius: 2px;
+  box-sizing: border-box;
+  pointer-events: none;
+  position: absolute;
+  transition: background 0.15s;
+}
+.dseg-zone-label {
+  color: color-mix(in srgb, var(--seg-color) 80%, var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 600;
+  left: 8px;
+  letter-spacing: .01em;
+  line-height: 1.35;
+  position: absolute;
+  top: 8px;
+}
+.dseg-zone-n {
+  color: var(--muted-foreground);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+/* Threshold gridlines */
+.dseg-threshold {
+  background: transparent;
+  border: 0 dashed var(--border);
+  pointer-events: none;
+  position: absolute;
+}
+.dseg-threshold--v {
+  border-left-width: 1px;
+  bottom: 0;
+  top: 0;
+  width: 0;
+}
+.dseg-threshold--h {
+  border-top-width: 1px;
+  left: 0;
+  right: 0;
+  height: 0;
+}
+
+/* Bubble dots */
+.dseg-dot {
+  border: 2px solid var(--card);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: pointer;
+  position: absolute;
+  transform: translate(-50%, 50%);
+  transition: transform 0.12s, box-shadow 0.12s;
+  z-index: 2;
+}
+.dseg-dot:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transform: translate(-50%, 50%) scale(1.25);
+  z-index: 6;
+}
+.dseg-dot--selected {
+  box-shadow: 0 0 0 3px var(--ring), 0 4px 12px rgba(0,0,0,0.4);
+  z-index: 7;
+}
+
+/* Dot label — only visible when zoomed in */
+.dseg-dot-label {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  bottom: calc(100% + 4px);
+  color: var(--foreground);
+  display: none;
+  font-size: 10px;
+  font-weight: 500;
+  left: 50%;
+  padding: 1px 6px;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.dseg-zoomed .dseg-dot-label { display: block; }
+
+/* Stub for not-yet-implemented top tabs */
+.dseg-page-stub {
+  align-items: center;
+  background: var(--background);
+  color: var(--muted-foreground);
+  display: flex;
+  justify-content: center;
+}
+.dseg-stub-card {
+  align-items: center;
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px 36px;
+  text-align: center;
+}
+.dseg-stub-title {
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 700;
+}
+.dseg-stub-sub {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.dseg-stub-inner {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+/* ── Left sidebar pane ── */
+#fsDealerSegPane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+}
+#fsDealerSegPane::-webkit-scrollbar { width: 4px; }
+#fsDealerSegPane::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.dseg-fs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dseg-fs-section--grow {
+  flex: 1;
+  min-height: 0;
+}
+.dseg-fs-section-title {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.dseg-fs-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.dseg-fs-reset {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  display: flex;
+  height: 24px;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+  width: 24px;
+}
+.dseg-fs-reset:hover { background: var(--muted); color: var(--foreground); }
+
+.dseg-date-row {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+.dseg-date-input {
+  background: var(--background);
+  border: 1px solid var(--input);
+  border-radius: 6px;
+  color: var(--foreground);
+  flex: 1;
+  font-family: inherit;
+  font-size: 12px;
+  min-width: 0;
+  padding: 5px 8px;
+}
+.dseg-date-input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+.dseg-date-sep { color: var(--muted-foreground); font-size: 12px; }
+
+.dseg-zone-select { width: 100%; }
+
+.dseg-search-wrap {
+  align-items: center;
+  background: var(--background);
+  border: 1px solid var(--input);
+  border-radius: 6px;
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+}
+.dseg-search-icon { color: var(--muted-foreground); flex-shrink: 0; }
+.dseg-search {
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  flex: 1;
+  font-family: inherit;
+  font-size: 12px;
+  min-width: 0;
+  outline: none;
+}
+.dseg-search::placeholder { color: var(--muted-foreground); }
+
+.dseg-sep {
+  background: var(--border);
+  height: 1px;
+  margin: 12px 0;
+}
+
+.dseg-seg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dseg-seg-row {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 12px 1fr auto auto;
+  padding: 8px 10px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.dseg-seg-row:hover { background: var(--muted); }
+.dseg-seg-row--active { border-color: color-mix(in srgb, var(--seg-color) 60%, var(--border)); }
+.dseg-seg-dot {
+  border-radius: 50%;
+  height: 10px;
+  width: 10px;
+}
+.dseg-seg-name {
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dseg-seg-count {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── Right sidebar pane ── */
+#dsDealerSegPane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+}
+.dseg-ds-tabs {
+  background: var(--secondary);
+  border-radius: 8px;
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding: 3px;
+}
+.dseg-ds-tab {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  flex: 1;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 8px;
+  transition: background 0.15s, color 0.15s;
+}
+.dseg-ds-tab:hover { color: var(--foreground); }
+.dseg-ds-tab--active {
+  background: var(--background);
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  color: var(--foreground);
+}
+.dseg-ds-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.dseg-ds-body::-webkit-scrollbar { width: 4px; }
+.dseg-ds-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Dealer cards */
+.dseg-dcard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 10px 12px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.dseg-dcard:hover { border-color: color-mix(in srgb, var(--foreground) 25%, var(--border)); }
+.dseg-dcard--selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.dseg-dcard-head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.dseg-dcard-name {
+  color: var(--foreground);
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dseg-dcard-trend {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 2px;
+}
+.dseg-dcard-meta {
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 11px;
+  gap: 8px;
+}
+.dseg-dcard-zone {
+  background: var(--muted);
+  border-radius: 3px;
+  color: var(--foreground);
+  font-weight: 600;
+  padding: 1px 6px;
+}
+.dseg-dcard-seg {
+  align-self: flex-start;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+.dseg-dcard-scores {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 2px;
+}
+.dseg-dcard-score {
+  background: var(--secondary);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 6px;
+}
+.dseg-dcard-score-k {
+  color: var(--muted-foreground);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .04em;
+}
+.dseg-dcard-score-v {
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 700;
+}
