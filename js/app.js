@@ -3014,6 +3014,11 @@ function initMap() {
           style: styleProvince,
           onEachFeature: onEachProvince,
         }).addTo(leafletMap);
+        // Zoom-to-fit Thailand so it occupies ~90% of the map viewport.
+        // padding leaves a small breathing margin on every edge.
+        try {
+          leafletMap.fitBounds(provinceLayer.getBounds(), {padding: [16, 16], animate: false});
+        } catch (e) { /* ignore — fall back to default center/zoom */ }
         renderDealerMarkers();
         updateLabelVisibility();
         // If Ops mode was activated before GeoJSON loaded, switch to glass tooltips now
