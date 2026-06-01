@@ -437,6 +437,118 @@
 
       </div><!-- #fsFarmerPane -->
 
+      <!-- Dealer LI Score mode pane (hidden initially) -->
+      <div id="fsDealerLiPane" style="display:none">
+
+        <!-- Legend at top -->
+        <div class="dli-fs-section">
+          <div class="dli-fs-section-title">คะแนน LI</div>
+          <div class="dli-legend-list">
+            <div class="dli-legend-row"><span class="dli-legend-swatch" style="background:#22c55e"></span>สูง (≥ 75)</div>
+            <div class="dli-legend-row"><span class="dli-legend-swatch" style="background:#eab308"></span>ปานกลาง (50–74)</div>
+            <div class="dli-legend-row"><span class="dli-legend-swatch" style="background:#f97316"></span>ต่ำ (25–49)</div>
+            <div class="dli-legend-row"><span class="dli-legend-swatch" style="background:#ef4444"></span>เสี่ยง (&lt; 25)</div>
+            <div class="dli-legend-row"><span class="dli-legend-swatch dli-legend-swatch--nd"></span>ไม่มีดีลเลอร์</div>
+          </div>
+        </div>
+
+        <div class="dli-sep"></div>
+
+        <!-- Overlay toggles -->
+        <div class="dli-fs-section">
+          <div class="dli-fs-header">
+            <span class="dli-fs-section-title" id="dliOvCountLabel">Overlay (0 / 2)</span>
+            <label class="ops-toggle" title="เปิด/ปิดทั้งหมด">
+              <input type="checkbox" id="dliOvMasterToggle" onchange="toggleAllOverlays()">
+              <span class="ops-toggle-track"></span>
+            </label>
+          </div>
+          <div class="dli-ov-list">
+            <!-- Dealer Gap -->
+            <div class="dli-ov-row">
+              <div class="dli-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M20 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+                  <line x1="9" y1="7" x2="15" y2="13"/><line x1="15" y1="7" x2="9" y2="13"/>
+                </svg>
+              </div>
+              <span class="dli-ov-name">Dealer Gap</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="dealer-gap" onchange="toggleOverlay('dealer-gap')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Farmer Low -->
+            <div class="dli-ov-row">
+              <div class="dli-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <circle cx="10" cy="7" r="4"/>
+                  <path d="M10.3 15H7a5 5 0 0 0-5 5v1h11"/>
+                  <line x1="22" y1="19" x2="16" y2="19"/>
+                </svg>
+              </div>
+              <span class="dli-ov-name">Farmer Low</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="farmer-low" onchange="toggleOverlay('farmer-low')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Concentration Risk -->
+            <div class="dli-ov-row">
+              <div class="dli-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                </svg>
+              </div>
+              <span class="dli-ov-name">Concentration Risk</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="concentration" onchange="toggleOverlay('concentration')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Activity Low -->
+            <div class="dli-ov-row">
+              <div class="dli-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/>
+                </svg>
+              </div>
+              <span class="dli-ov-name">Activity Low</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="activity-low" onchange="toggleOverlay('activity-low')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- SKU Mismatch -->
+            <div class="dli-ov-row">
+              <div class="dli-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><path d="M12 17h.01"/>
+                </svg>
+              </div>
+              <span class="dli-ov-name">SKU Mismatch</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="sku-mismatch" onchange="toggleOverlay('sku-mismatch')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Stock Low -->
+            <div class="dli-ov-row">
+              <div class="dli-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2.5-1.43"/>
+                  <line x1="12" y1="22" x2="12" y2="12"/>
+                  <path d="m3.3 7 8.7 5 8.7-5"/>
+                  <line x1="17" y1="19" x2="23" y2="19"/>
+                </svg>
+              </div>
+              <span class="dli-ov-name">Stock Low</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="stock-low" onchange="toggleOverlay('stock-low')"><span class="ops-toggle-track"></span></label>
+            </div>
+            <!-- Price Gap -->
+            <div class="dli-ov-row">
+              <div class="dli-ov-icon-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                  <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/>
+                  <circle cx="7" cy="9" r="1" fill="currentColor" stroke="none"/>
+                </svg>
+              </div>
+              <span class="dli-ov-name">Price Gap</span>
+              <label class="ops-toggle"><input type="checkbox" data-ov="price-gap" onchange="toggleOverlay('price-gap')"><span class="ops-toggle-track"></span></label>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- #fsDealerLiPane -->
+
       <!-- Dealer Segmentation mode pane (hidden initially) -->
       <div id="fsDealerSegPane" style="display:none">
 
@@ -490,6 +602,7 @@
         <div class="map-tab-bar" id="mapTabBar">
           <button class="map-tab map-tab--active" onclick="switchMapView('map', this)">Map</button>
           <button class="map-tab" onclick="switchMapView('table', this)">Table</button>
+          <button class="map-tab" onclick="switchMapView('lis', this)">Dealer LI Score</button>
         </div>
         <div id="thailand-map"></div>
         <div id="mapTableView" style="display:none"></div>
@@ -508,6 +621,18 @@
           <div class="ops-legend-no-data">
             <div class="ops-legend-no-data-dot"></div>
             <span>ไม่มีข้อมูล</span>
+          </div>
+        </div>
+
+        <!-- Floating Dealer LI Score legend -->
+        <div class="dli-map-legend" id="dliMapLegend" style="display:none">
+          <div class="dli-legend-title">คะแนน LI ของพื้นที่</div>
+          <div class="dli-legend-scale">
+            <div class="dli-legend-item"><span class="dli-legend-swatch" style="background:#22c55e"></span>≥75 สูง</div>
+            <div class="dli-legend-item"><span class="dli-legend-swatch" style="background:#eab308"></span>50–74</div>
+            <div class="dli-legend-item"><span class="dli-legend-swatch" style="background:#f97316"></span>25–49</div>
+            <div class="dli-legend-item"><span class="dli-legend-swatch" style="background:#ef4444"></span>&lt;25 เสี่ยง</div>
+            <div class="dli-legend-item"><span class="dli-legend-swatch dli-legend-swatch--nd"></span>ไม่มีดีลเลอร์</div>
           </div>
         </div>
 

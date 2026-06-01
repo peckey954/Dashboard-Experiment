@@ -576,6 +576,9 @@ let coverageMode = null;
 /** @type {boolean} Whether the Potential heatmap mode is active. */
 let potentialMode = false;
 
+/** @type {boolean} Whether the Dealer LI Score choropleth mode is active. */
+let dealerLiMode = false;
+
 /** @type {string} Active crop filter in potential mode. */
 let potentialCrop = 'all';
 let currentPotentialProvince = '';
@@ -878,6 +881,7 @@ function toggleFilterSidebar() {
  */
 function switchPageTab(tab, btn) {
   if (dealerSegmentMode) exitDealerSegmentation();
+  if (dealerLiMode) exitDealerLiMode(/* skipRestore */ true);
   document.querySelectorAll('.page-tab').forEach((t) => t.classList.remove('page-tab--active'));
   if (btn) btn.classList.add('page-tab--active');
   setIrActive(TAB_IR_GROUP[tab] || null);
@@ -937,6 +941,7 @@ function updateOverlayUI() {
   const label = document.getElementById('ovCountLabel');
   if (label) label.textContent = `Overlay (${activeOverlays.size} / 2)`;
   updateMasterToggle();
+  if (typeof updateDliMasterToggle === 'function') updateDliMasterToggle();
 }
 
 /** Sets master toggle: indeterminate when any active, off when none. Never fully checked. */
@@ -1961,6 +1966,34 @@ function getPotentialLevel(value) {
 }
 
 /**
+ * Average LI score (0–100) across the dealers in a province.
+ * Returns null when no dealers serve that province.
+ * @param {string} provName Province name (Thai or English).
+ * @return {?number}
+ */
+function getProvinceLiScore(provName) {
+  const thai = EN_TO_TH_PROVINCE[provName] || provName;
+  const dealers = DEALERS.filter((d) => d.province === thai);
+  if (!dealers.length) return null;
+  let sum = 0;
+  dealers.forEach((d) => { sum += getDealerScores(d).li; });
+  return sum / dealers.length;
+}
+
+/**
+ * 4-bucket color for an LI score.
+ * @param {?number} score 0–100 or null.
+ * @return {string} Hex color (slate-400 when no data).
+ */
+function liScoreColor(score) {
+  if (score == null) return '#cbd5e1';
+  if (score >= 75) return '#22c55e'; // green  – high
+  if (score >= 50) return '#eab308'; // yellow – mid
+  if (score >= 25) return '#f97316'; // orange – low
+  return '#ef4444';                  // red    – at risk
+}
+
+/**
  * Returns potential data for a province name (Thai or English via EN_TO_TH_PROVINCE).
  * @param {string} provName Province name.
  * @return {?{market:number,sales:number,crops:!Array<string>}}
@@ -2695,6 +2728,17 @@ function styleProvince(feature) {
   const zone = zoneId ? ZONES.find((z) => z.id === zoneId) : null;
   const dimmed = currentZone !== 'all' && zoneId !== currentZone;
 
+  // ── Dealer LI Score choropleth ────────────────────────────────────────────
+  if (dealerLiMode) {
+    const score = getProvinceLiScore(provName);
+    const zoneMatch = currentZone === 'all' || zoneId === currentZone;
+    const show = score != null && zoneMatch;
+    const color = liScoreColor(show ? score : null);
+    const opacity = show ? 0.82 : (score == null ? 0.18 : 0.18);
+    const strokeColor = isDark ? '#1c1917' : '#d6d3d1';
+    return {fillColor: color, fillOpacity: opacity, color: strokeColor, weight: 0.7, opacity: 0.8};
+  }
+
   // ── Farmer heatmap mode ───────────────────────────────────────────────────
   if (farmerMode) {
     const thaiName = EN_TO_TH_PROVINCE[provName] || provName;
@@ -3219,6 +3263,9 @@ function switchMapView(view, btn) {
   const mapEl   = document.getElementById('thailand-map');
   const tableEl = document.getElementById('mapTableView');
 
+  // Leaving Dealer-LI-Score view always tears it down first
+  if (view !== 'lis' && dealerLiMode) exitDealerLiMode();
+
   if (view === 'table') {
     if (mapEl)   mapEl.style.display   = 'none';
     if (tableEl) tableEl.style.display = '';
@@ -3228,12 +3275,190 @@ function switchMapView(view, btn) {
     } else {
       renderDealerTable();
     }
+  } else if (view === 'lis') {
+    if (mapEl)   mapEl.style.display   = '';
+    if (tableEl) tableEl.style.display = 'none';
+    enterDealerLiMode();
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
   } else {
     if (mapEl)   mapEl.style.display   = '';
     if (tableEl) tableEl.style.display = 'none';
     if (farmerMode) farmerViewMode = 'map';
     setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
   }
+}
+
+/** Activates the Dealer LI Score choropleth view. */
+function enterDealerLiMode() {
+  if (dealerLiMode) return;
+
+  // Tear down conflicting modes so styleProvince paints with LI colors only
+  if (potentialMode) exitPotentialMode();
+  if (farmerMode)    exitFarmerMode();
+
+  dealerLiMode = true;
+
+  // Swap left sidebar to LI pane (keep other panes hidden)
+  const fsDealer    = document.getElementById('fsDealerPane');
+  const fsPotential = document.getElementById('fsPotentialPane');
+  const fsFarmer    = document.getElementById('fsFarmerPane');
+  const fsLi        = document.getElementById('fsDealerLiPane');
+  if (fsDealer)    fsDealer.style.display    = 'none';
+  if (fsPotential) fsPotential.style.display = 'none';
+  if (fsFarmer)    fsFarmer.style.display    = 'none';
+  if (fsLi)        fsLi.style.display        = '';
+
+  // Hide the global "ตัวกรอง" header (the legend + overlays serve as the header)
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = 'none';
+
+  // Show floating legend
+  const legend = document.getElementById('dliMapLegend');
+  if (legend) legend.style.display = '';
+
+  // Default overlays if none active yet (mirror Ops mode behaviour)
+  if (activeOverlays.size === 0) setDefaultOverlays();
+  updateOverlayUI();
+  updateDliMasterToggle();
+
+  // Repaint provinces with LI colors
+  if (mapInitialized && provinceLayer) {
+    provinceLayer.setStyle(styleProvince);
+    provinceLayer.eachLayer((layer) => {
+      if (!layer._thaiName) return;
+      layer.unbindTooltip();
+      layer.bindTooltip(() => buildDealerLiTooltip(layer._thaiName, layer._zoneId), {
+        permanent: false,
+        sticky: true,
+        direction: 'auto',
+        className: 'dealer-glass-tooltip',
+      });
+    });
+    renderOverlayMarkers();
+  }
+}
+
+/** Deactivates the Dealer LI Score view and restores default styling.
+ *  When skipRestore is true, the caller will set up the next mode itself —
+ *  used by switchPageTab so we don't double-apply mode transitions. */
+function exitDealerLiMode(skipRestore) {
+  if (!dealerLiMode) return;
+  dealerLiMode = false;
+
+  const fsLi     = document.getElementById('fsDealerLiPane');
+  if (fsLi) fsLi.style.display = 'none';
+
+  const legend = document.getElementById('dliMapLegend');
+  if (legend) legend.style.display = 'none';
+
+  // Reset Map sub-tab buttons so "Map" is the visually-active sub-tab again
+  document.querySelectorAll('.map-tab').forEach((t, i) => {
+    t.classList.toggle('map-tab--active', i === 0);
+  });
+
+  if (overlayMarkersLayer) overlayMarkersLayer.clearLayers();
+
+  if (skipRestore) {
+    // The caller (switchPageTab) will re-enter the appropriate mode and
+    // re-paint provinces. Just reset the left header for now.
+    const fsHeader = document.querySelector('.fs-header');
+    if (fsHeader) fsHeader.style.display = '';
+    return;
+  }
+
+  // Restore the current top-tab's natural mode (Ops / Farmer / Dealer / default).
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = '';
+
+  const fsDealer = document.getElementById('fsDealerPane');
+  if (fsDealer && currentPageTab !== 'ops' && currentPageTab !== 'farmer') {
+    fsDealer.style.display = '';
+  }
+
+  if (currentPageTab === 'ops') {
+    enterPotentialMode();
+  } else if (currentPageTab === 'farmer') {
+    enterFarmerMode();
+  } else {
+    // Dealer / Sale / Crop: plain province labels + dealer markers
+    if (mapInitialized && provinceLayer) {
+      provinceLayer.setStyle(styleProvince);
+      provinceLayer.eachLayer((layer) => {
+        if (!layer._thaiName) return;
+        layer.unbindTooltip();
+        layer.bindTooltip(layer._thaiName, {
+          permanent: true,
+          direction: 'center',
+          className: 'province-label',
+        });
+      });
+    }
+    if (currentPageTab === 'dealer') enterDealerHoverMode();
+  }
+}
+
+/** Mirrors updateMasterToggle but for the LI pane's #dliOvMasterToggle. */
+function updateDliMasterToggle() {
+  const input = document.getElementById('dliOvMasterToggle');
+  const label = document.getElementById('dliOvCountLabel');
+  if (label) label.textContent = `Overlay (${activeOverlays.size} / 2)`;
+  if (!input) return;
+  if (activeOverlays.size === 0) { input.checked = false; input.indeterminate = false; }
+  else                          { input.checked = false; input.indeterminate = true; }
+}
+
+/** Tooltip for a province in Dealer LI Score mode — name, zone, score, active overlays. */
+function buildDealerLiTooltip(thaiName, zoneId) {
+  const score = getProvinceLiScore(thaiName);
+  const dealers = DEALERS.filter((d) => d.province === thaiName);
+  const bucket = score == null ? 'ไม่มีดีลเลอร์'
+              : score >= 75 ? 'สูง'
+              : score >= 50 ? 'ปานกลาง'
+              : score >= 25 ? 'ต่ำ'
+              : 'เสี่ยง';
+  const color  = liScoreColor(score);
+
+  // Active overlay rows where this province appears
+  const issues = [];
+  activeOverlays.forEach((ovId) => {
+    const cfg = OVERLAY_CONFIG.find((c) => c.id === ovId);
+    if (!cfg) return;
+    const match = cfg.provinces.find((p) => p.name === thaiName);
+    if (match) issues.push({label: cfg.label, iconSvg: cfg.iconSvg, severity: match.severity});
+  });
+  const issuesHtml = issues.length > 0
+    ? `<div class="dt-sep"></div>
+       <div class="dt-issues">${issues.map((iss) => {
+        const cls = iss.severity === 'high' ? 'pds-overlay-badge--red' : 'pds-overlay-badge--yellow';
+        return `<div class="dt-issue-row">
+          <div class="pds-overlay-badge ${cls}">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${iss.iconSvg}</svg>
+          </div>
+          <span class="dt-issue-label">${iss.label}</span>
+        </div>`;
+      }).join('')}</div>`
+    : '';
+
+  return `<div class="dt-inner">
+    <div class="dt-header">
+      <span class="dt-name">${thaiName}</span>
+      <span class="dt-zone-plain">${zoneId || '—'}</span>
+    </div>
+    <div class="dt-sep"></div>
+    <div class="dt-cols">
+      <div class="dt-col">
+        <span class="dt-col-label">LI Score เฉลี่ย</span>
+        <span class="dt-col-val" style="color:${color}">${score == null ? '—' : score.toFixed(1)}</span>
+        <span class="dt-col-sub">${bucket}</span>
+      </div>
+      <div class="dt-col">
+        <span class="dt-col-label">ดีลเลอร์</span>
+        <span class="dt-col-val">${dealers.length}</span>
+        <span class="dt-col-sub">${dealers.length === 0 ? 'ไม่มีในพื้นที่' : 'ร้าน'}</span>
+      </div>
+    </div>
+    ${issuesHtml}
+  </div>`;
 }
 
 /** Renders dealer list as a sortable table in the map table view. */
