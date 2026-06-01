@@ -2744,7 +2744,7 @@ function styleProvince(feature) {
     const zoneMatch = currentZone === 'all' || zoneId === currentZone;
     const show = score != null && zoneMatch;
     const color = liScoreColor(show ? score : null);
-    const opacity = show ? 0.82 : (score == null ? 0.18 : 0.18);
+    const opacity = show ? 0.45 : 0.15;
     const strokeColor = isDark ? '#1c1917' : '#d6d3d1';
     return {fillColor: color, fillOpacity: opacity, color: strokeColor, weight: 0.7, opacity: 0.8};
   }
