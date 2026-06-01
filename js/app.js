@@ -1966,18 +1966,28 @@ function getPotentialLevel(value) {
 }
 
 /**
- * Average LI score (0–100) across the dealers in a province.
- * Returns null when no dealers serve that province.
+ * Average LI score (0–100) for a province.
+ * Uses real dealer scores when any dealers serve the province; otherwise
+ * falls back to a deterministic hash of the province name so every Thai
+ * province gets a stable color (no gray gaps in the choropleth).
  * @param {string} provName Province name (Thai or English).
- * @return {?number}
+ * @return {number} 0–100
  */
 function getProvinceLiScore(provName) {
   const thai = EN_TO_TH_PROVINCE[provName] || provName;
   const dealers = DEALERS.filter((d) => d.province === thai);
-  if (!dealers.length) return null;
-  let sum = 0;
-  dealers.forEach((d) => { sum += getDealerScores(d).li; });
-  return sum / dealers.length;
+  if (dealers.length) {
+    let sum = 0;
+    dealers.forEach((d) => { sum += getDealerScores(d).li; });
+    return sum / dealers.length;
+  }
+  // Hash-based fallback so every province is colored
+  let h = 0;
+  for (let i = 0; i < thai.length; i++) {
+    h = ((h << 5) - h) + thai.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h) % 101; // 0–100
 }
 
 /**
