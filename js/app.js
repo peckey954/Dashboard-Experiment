@@ -1600,32 +1600,32 @@ function initDsegInteractions() {
 
 // ── Competitive Price page (Competitor Intelligence flyout) ──────────────────
 
-/** Crop catalog — keys mirror existing PT_CROPS / PROVINCE_POTENTIAL labels. */
+/** Crop catalog used for filters + crop-list sidebar. */
 const CP_CROPS = [
   {id:'corn',    label:'ข้าวโพด',      color:'#f59e0b'},
   {id:'rubber',  label:'ยางพารา',      color:'#22c55e'},
   {id:'cassava', label:'มันสำปะหลัง',  color:'#ef4444'},
-  {id:'rice',    label:'ข้าวนาปี',     color:'#3b82f6'},
-  {id:'sugar',   label:'อ้อยโรงงาน',    color:'#10b981'},
+  {id:'banana',  label:'กล้วย',         color:'#84cc16'},
+  {id:'wheat',   label:'ข้าวสาลี',      color:'#a16207'},
   {id:'durian',  label:'ทุเรียน',       color:'#a855f7'},
+  {id:'rice',    label:'ข้าวนาปี',     color:'#3b82f6'},
   {id:'palm',    label:'ปาล์มน้ำมัน',   color:'#dc2626'},
-  {id:'longan',  label:'ลำไย',          color:'#8b5cf6'},
 ];
 
-/** Competitor brands. */
+/** Thai fertilizer brand names (matches Figma reference rows). */
 const CP_BRANDS = [
-  'Parich',  'GreenAg', 'TerraGrow', 'AgroMax',  'KasetPro',
-  'FarmKing','NaturAg', 'CropOne',   'SunFarm',  'EcoSeed',
-  'YieldPro','BangkokAgro','VetaGrow','RootBoost','AsiaFert',
+  'ยาร่า', 'ม้าเงา', 'ดวงตะวัน', 'พลอยเกษตร', 'มงกุฎ',
+  'กระต่าย', 'ปุ๋ยเกษตร', 'ตราเกษตร', 'มงคล', 'เพชรกล้า',
+  'ดาว', 'ทองคำ', 'ไทยฟาร์ม', 'อกริฟาร์ม', 'สุพรรณ',
 ];
 
-/** SKU code components for mock generation. */
+/** NPK formulas (rendered with spaces: "16 - 20 - 0"). */
 const CP_SKU_FORMULAS = [
   '16-20-0', '46-0-0', '15-15-15', '13-13-21', '21-0-0',
   '8-24-24', '20-10-12', '14-7-35', '12-6-22', '0-0-60',
 ];
 
-/** Returns a deterministic positive integer from a string hash. */
+/** Hash → positive int (deterministic per string). */
 function _cpHash(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) {
@@ -1635,87 +1635,127 @@ function _cpHash(str) {
   return Math.abs(h);
 }
 
-/** Generates mock SKU rows: {sku, brand, crop, parich, comp, change, unit, gap}. */
+/** Random-like signed % delta in [-15, +15] from a seed. */
+function _cpDelta(seed) {
+  return ((seed % 31) - 15);
+}
+
+/** Generates one SKU row with all the price metrics + per-cell deltas. */
+function _cpMakeSkuRow(brand, formulaIdx, cropIdx) {
+  const formula = CP_SKU_FORMULAS[formulaIdx % CP_SKU_FORMULAS.length];
+  const crop    = CP_CROPS[cropIdx % CP_CROPS.length];
+  const sku     = formula.split('-').join(' - '); // "16 - 20 - 0"
+  const seed    = _cpHash(brand + '|' + formula + '|' + crop.id);
+
+  const parich     = 10000 + ((seed)       % 14000); // 10k – 24k
+  const compAvg    =  9000 + ((seed >> 4)  % 13000); //  9k – 22k
+  const compMin    = Math.round(compAvg * (0.78 + (((seed >> 8) % 12) / 100)));
+  const compMax    = Math.round(compAvg * (1.10 + (((seed >> 12) % 18) / 100)));
+  const promoCount = (seed >> 16) % 12;
+  const skuCount   = 1 + ((seed >> 18) % 18);
+
+  const parichChg  = _cpDelta(seed >>  2);
+  const compAvgChg = _cpDelta(seed >>  6);
+  const compMaxChg = _cpDelta(seed >> 10);
+  const compMinChg = _cpDelta(seed >> 14);
+  const skuChg     = _cpDelta(seed >> 18);
+  const promoChg   = _cpDelta(seed >> 22);
+
+  // "เปลี่ยนแปลงสูงสุด" = largest absolute movement across all metrics for this row
+  const maxChange = [parichChg, compAvgChg, compMaxChg, compMinChg]
+      .reduce((m, v) => Math.abs(v) > Math.abs(m) ? v : m, 0);
+
+  return {
+    brand, sku, crop: crop.id, cropLabel: crop.label, cropColor: crop.color,
+    parich,  parichChg,
+    compAvg, compAvgChg,
+    compMin, compMinChg,
+    compMax, compMaxChg,
+    skuCount, skuChg,
+    promoCount, promoChg,
+    maxChange,
+  };
+}
+
 let _cpSkusCache = null;
 function getCpSkus() {
   if (_cpSkusCache) return _cpSkusCache;
   const rows = [];
-  CP_BRANDS.forEach((brand) => {
-    // 1–3 SKUs per brand
-    const h0 = _cpHash(brand);
-    const skuN = 1 + (h0 % 3);
+  CP_BRANDS.forEach((brand, bi) => {
+    const h = _cpHash(brand);
+    const skuN = 2 + (h % 4); // 2–5 SKUs per brand
     for (let i = 0; i < skuN; i++) {
-      const crop    = CP_CROPS[(h0 + i * 7) % CP_CROPS.length];
-      const formula = CP_SKU_FORMULAS[(h0 + i * 11) % CP_SKU_FORMULAS.length];
-      const sku     = `${brand.slice(0, 3).toUpperCase()}-${formula}-${(50 + (h0 % 50))}T`;
-      const seed    = _cpHash(sku);
-      const parich  = 10000 + ((seed       ) % 14000);   // 10,000 – 24,000
-      const comp    =  9000 + ((seed >> 4 ) % 13000);    //  9,000 – 22,000
-      const change  = ((seed >> 8) % 41) - 12;           // -12 .. +28 % (skewed positive)
-      const unit    = 50 + ((seed >> 12) % 4) * 5;       // 50/55/60/65 ตัน
-      const gap     = parich - comp;
-      rows.push({sku, brand, crop: crop.id, cropLabel: crop.label, cropColor: crop.color,
-                 parich, comp, change, unit, gap});
+      rows.push(_cpMakeSkuRow(brand, h + i * 3, h + i * 7 + bi));
     }
   });
   _cpSkusCache = rows;
   return rows;
 }
 
-/** Aggregates SKU rows to one row per brand. */
+/** Aggregates SKU rows into per-brand rows (still 8 columns). */
 function getCpBrands() {
   const skus = getCpSkus();
   const byBrand = {};
   skus.forEach((s) => {
-    const k = s.brand;
-    if (!byBrand[k]) byBrand[k] = {brand: k, parich: 0, comp: 0, change: 0, skuCount: 0,
-                                    cropsSet: new Set(), parichSum: 0, compSum: 0, changeSum: 0};
-    const b = byBrand[k];
-    b.skuCount += 1;
-    b.parichSum += s.parich;
-    b.compSum   += s.comp;
-    b.changeSum += s.change;
-    b.cropsSet.add(s.cropLabel);
+    if (!byBrand[s.brand]) byBrand[s.brand] = [];
+    byBrand[s.brand].push(s);
   });
-  return Object.values(byBrand).map((b) => ({
-    brand:    b.brand,
-    parich:   Math.round(b.parichSum / b.skuCount),
-    comp:     Math.round(b.compSum / b.skuCount),
-    change:   +(b.changeSum / b.skuCount).toFixed(1),
-    gap:      Math.round((b.parichSum - b.compSum) / b.skuCount),
-    skuCount: b.skuCount,
-    crops:    Array.from(b.cropsSet).join(', '),
-  }));
+  const avg = (arr, key) => arr.reduce((sum, r) => sum + r[key], 0) / arr.length;
+  return Object.entries(byBrand).map(([brand, list]) => {
+    const parichChg   = +avg(list, 'parichChg').toFixed(1);
+    const compAvgChg  = +avg(list, 'compAvgChg').toFixed(1);
+    const compMaxChg  = +avg(list, 'compMaxChg').toFixed(1);
+    const compMinChg  = +avg(list, 'compMinChg').toFixed(1);
+    const promoChg    = +avg(list, 'promoChg').toFixed(1);
+    const maxChange   = [parichChg, compAvgChg, compMaxChg, compMinChg]
+        .reduce((m, v) => Math.abs(v) > Math.abs(m) ? v : m, 0);
+    return {
+      brand,
+      parich:     Math.round(avg(list, 'parich')),     parichChg,
+      compAvg:    Math.round(avg(list, 'compAvg')),    compAvgChg,
+      compMin:    Math.round(avg(list, 'compMin')),    compMinChg,
+      compMax:    Math.round(avg(list, 'compMax')),    compMaxChg,
+      skuCount:   list.length,                         skuChg: +avg(list, 'skuChg').toFixed(1),
+      promoCount: list.reduce((s, r) => s + r.promoCount, 0), promoChg,
+      cropsSet:   Array.from(new Set(list.map((r) => r.cropLabel))),
+      maxChange,
+    };
+  });
 }
 
 // ── Competitive Price: state ─────────────────────────────────────────────────
 
 let cpMode = false;
 let cpView = 'brand';                                    // 'brand' | 'sku'
-let cpCropFilter = 'all';                                 // crop id or 'all'
+let cpCropFilter = 'all';
+let cpBrandFilter = 'all';
 let cpSearchTerm = '';
-let cpSortKey = 'change';                                 // current sort column
-let cpSortDir = 'desc';                                   // 'asc' | 'desc'
+let cpSortKey = 'maxChange';                              // default: largest mover first
+let cpSortDir = 'desc';
+let cpPage = 1;
+const CP_PAGE_SIZE = 8;
 
-/** Column schemas per view — key, label, type, default sort dir. */
+/** Column schemas — exactly 8 columns per Figma. Each price/count cell has
+ *  a paired `<key>Chg` field rendered as a delta below the value. */
 const CP_COLUMNS_BRAND = [
-  {key:'brand',    label:'แบรนด์',                type:'text'},
-  {key:'crops',    label:'พืช',                    type:'text'},
-  {key:'skuCount', label:'จำนวน SKU',             type:'num'},
-  {key:'parich',   label:'Avg. Parich',           type:'thb'},
-  {key:'comp',     label:'Avg. Competitors',      type:'thb'},
-  {key:'gap',      label:'Gap (Parich – คู่แข่ง)', type:'thb-signed'},
-  {key:'change',   label:'การเปลี่ยนแปลง',         type:'pct'},
+  {key:'brand',      label:'แบรนด์',                type:'text'},
+  {key:'parich',     label:'Avg. ราคา Parich',     type:'thb',  delta:'parichChg'},
+  {key:'compAvg',    label:'Avg. ราคา คู่แข่ง',     type:'thb',  delta:'compAvgChg'},
+  {key:'compMax',    label:'ราคา คู่แข่งสูงสุด',    type:'thb',  delta:'compMaxChg'},
+  {key:'compMin',    label:'ราคา คู่แข่งต่ำสุด',    type:'thb',  delta:'compMinChg'},
+  {key:'maxChange',  label:'เปลี่ยนแปลงสูงสุด',     type:'pct-only'},
+  {key:'skuCount',   label:'SKU',                  type:'num',  delta:'skuChg'},
+  {key:'promoCount', label:'โปรโมชั่น',            type:'num',  delta:'promoChg'},
 ];
 const CP_COLUMNS_SKU = [
-  {key:'sku',       label:'SKU',                    type:'text'},
-  {key:'brand',     label:'แบรนด์',                type:'text'},
-  {key:'cropLabel', label:'พืช',                    type:'text'},
-  {key:'unit',      label:'Unit',                  type:'unit'},
-  {key:'parich',    label:'Parich',                type:'thb'},
-  {key:'comp',      label:'คู่แข่ง',                type:'thb'},
-  {key:'gap',       label:'Gap',                   type:'thb-signed'},
-  {key:'change',    label:'การเปลี่ยนแปลง',         type:'pct'},
+  {key:'sku',        label:'สูตร',                  type:'text'},
+  {key:'parich',     label:'ราคา Parich',          type:'thb',  delta:'parichChg'},
+  {key:'compAvg',    label:'ราคา คู่แข่งเฉลี่ย',    type:'thb',  delta:'compAvgChg'},
+  {key:'compMax',    label:'ราคา คู่แข่งสูงสุด',    type:'thb',  delta:'compMaxChg'},
+  {key:'compMin',    label:'ราคา คู่แข่งต่ำสุด',    type:'thb',  delta:'compMinChg'},
+  {key:'maxChange',  label:'เปลี่ยนแปลงสูงสุด',     type:'pct-only'},
+  {key:'brand',      label:'แบรนด์',                type:'text'},
+  {key:'promoCount', label:'โปรโมชั่น',            type:'num',  delta:'promoChg'},
 ];
 
 // ── Competitive Price: open / close ─────────────────────────────────────────
@@ -1723,7 +1763,6 @@ const CP_COLUMNS_SKU = [
 function openCompetitivePrice() {
   document.querySelectorAll('.ir-popup').forEach((p) => p.classList.remove('ir-popup--visible'));
 
-  // Make Sale icon-rail section the active rail (Competitor Intelligence lives there)
   const salePill = document.querySelector('.nav-pill[data-section="sale"]');
   if (salePill && !salePill.classList.contains('nav-pill--active')) {
     switchNavSection('sale', salePill);
@@ -1735,7 +1774,7 @@ function openCompetitivePrice() {
   if (bcParent)  bcParent.textContent  = 'Competitor Intelligence';
   if (bcCurrent) bcCurrent.textContent = 'Competitive Price';
 
-  // Hide the page tabs (Ops/Sale/...) and Map tab bar
+  // Hide page tabs + map tab bar
   const pageTabs = document.getElementById('pageTabs');
   if (pageTabs) pageTabs.style.display = 'none';
   const mapTabs = document.getElementById('mapTabBar');
@@ -1761,7 +1800,7 @@ function openCompetitivePrice() {
   if (dsegV)  dsegV.style.display  = 'none';
   if (cpEl)   cpEl.style.display   = '';
 
-  // Swap left sidebar
+  // Swap left sidebar (KEEP fs-header showing — Figma shows "ตัวกรอง")
   ['fsDealerPane','fsPotentialPane','fsFarmerPane','fsDealerLiPane','fsDealerSegPane'].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
@@ -1769,17 +1808,11 @@ function openCompetitivePrice() {
   const fsCp = document.getElementById('fsCompPricePane');
   if (fsCp) fsCp.style.display = '';
   const fsHeader = document.querySelector('.fs-header');
-  if (fsHeader) fsHeader.style.display = 'none';
+  if (fsHeader) fsHeader.style.display = '';
 
-  // Swap right sidebar
-  ['dsDealerContent','dsPotentialPane','dsFarmerContent','dsDealerSegPane'].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-  const dsCp = document.getElementById('dsCompPricePane');
-  if (dsCp) dsCp.style.display = '';
-  const dsHeader = document.querySelector('.ds-header');
-  if (dsHeader) dsHeader.style.display = 'none';
+  // Hide the right sidebar entirely (Figma has no right sidebar on CP page)
+  const detailSidebar = document.getElementById('detailSidebar');
+  if (detailSidebar) detailSidebar.classList.add('ds-collapsed');
 
   cpMode = true;
   populateCpFilters();
@@ -1793,7 +1826,7 @@ function exitCompetitivePrice() {
   const cpEl = document.getElementById('comp-price-view');
   if (cpEl) cpEl.style.display = 'none';
 
-  const mapEl  = document.getElementById('thailand-map');
+  const mapEl   = document.getElementById('thailand-map');
   const mapTabs = document.getElementById('mapTabBar');
   if (mapEl)   mapEl.style.display   = '';
   if (mapTabs) mapTabs.style.display = '';
@@ -1805,41 +1838,50 @@ function exitCompetitivePrice() {
   if (fsCp) fsCp.style.display = 'none';
   const fsDealer = document.getElementById('fsDealerPane');
   if (fsDealer) fsDealer.style.display = '';
-  const fsHeader = document.querySelector('.fs-header');
-  if (fsHeader) fsHeader.style.display = '';
 
-  const dsCp = document.getElementById('dsCompPricePane');
-  if (dsCp) dsCp.style.display = 'none';
-  const dsDealer = document.getElementById('dsDealerContent');
-  if (dsDealer) dsDealer.style.display = '';
-  const dsHeader = document.querySelector('.ds-header');
-  if (dsHeader) dsHeader.style.display = '';
+  const detailSidebar = document.getElementById('detailSidebar');
+  if (detailSidebar) detailSidebar.classList.remove('ds-collapsed');
 }
 
 // ── Competitive Price: filter callbacks ──────────────────────────────────────
 
 function populateCpFilters() {
-  const sel = document.getElementById('cpCrop');
-  if (sel && sel.options.length <= 1) {
-    CP_CROPS.forEach((c) => {
+  // Brand dropdown — fill once
+  const bsel = document.getElementById('cpBrandSelect');
+  if (bsel && bsel.options.length <= 1) {
+    CP_BRANDS.forEach((b) => {
       const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = c.label;
-      sel.appendChild(opt);
+      opt.value = b;
+      opt.textContent = b;
+      bsel.appendChild(opt);
     });
   }
-  if (sel) sel.value = cpCropFilter;
+  if (bsel) bsel.value = cpBrandFilter;
+
   const searchEl = document.getElementById('cpSearch');
   if (searchEl) searchEl.value = cpSearchTerm;
 }
 
 function onCpCropChange(val) {
   cpCropFilter = val || 'all';
+  cpPage = 1;
   renderCpAll();
 }
 
 function onCpSearch(val) {
   cpSearchTerm = (val || '').trim().toLowerCase();
+  cpPage = 1;
+  renderCpAll();
+}
+
+function onCpBrandFilterChange(val) {
+  cpBrandFilter = val || 'all';
+  cpPage = 1;
+  renderCpAll();
+}
+
+function onCpDateChange(/* val */) {
+  // Visual only for now — mock data isn't time-series
   renderCpAll();
 }
 
@@ -1848,9 +1890,15 @@ function switchCpMode(mode) {
   document.querySelectorAll('.cp-mode-tab').forEach((b) => {
     b.classList.toggle('cp-mode-tab--active', b.dataset.cpMode === mode);
   });
-  // Reset to default sort: largest price change first.
-  cpSortKey = 'change';
+  // Brand filter only makes sense in SKU view
+  const bsel = document.getElementById('cpBrandSelect');
+  if (bsel) bsel.style.visibility = mode === 'sku' ? '' : 'hidden';
+  if (mode === 'brand') cpBrandFilter = 'all';
+
+  // Default sort: largest absolute price change first
+  cpSortKey = 'maxChange';
   cpSortDir = 'desc';
+  cpPage = 1;
   renderCpAll();
 }
 
@@ -1859,29 +1907,41 @@ function toggleCpSort(key) {
     cpSortDir = cpSortDir === 'desc' ? 'asc' : 'desc';
   } else {
     cpSortKey = key;
-    cpSortDir = (key === 'brand' || key === 'sku' || key === 'crops' || key === 'cropLabel') ? 'asc' : 'desc';
+    cpSortDir = (key === 'brand' || key === 'sku' || key === 'cropLabel') ? 'asc' : 'desc';
   }
+  cpPage = 1;
+  renderCpAll();
+}
+
+function cpGoPage(p) {
+  cpPage = Math.max(1, p);
   renderCpAll();
 }
 
 // ── Competitive Price: data shaping + filtering ──────────────────────────────
 
-/** Returns rows for the current view + filters + sort. */
+/** Returns rows for the current view + filters + sort (NOT paginated). */
 function getCpRows() {
   let rows = cpView === 'brand' ? getCpBrands() : getCpSkus();
 
-  // Crop filter — brand rows match if their crops list contains it
-  if (cpCropFilter !== 'all') {
-    const target = CP_CROPS.find((c) => c.id === cpCropFilter);
-    const label  = target ? target.label : '';
-    rows = rows.filter((r) => {
-      if (cpView === 'brand') return r.crops.includes(label);
-      return r.crop === cpCropFilter;
-    });
+  // Brand filter (SKU view only)
+  if (cpView === 'sku' && cpBrandFilter !== 'all') {
+    rows = rows.filter((r) => r.brand === cpBrandFilter);
   }
+
+  // Crop filter
+  if (cpCropFilter !== 'all') {
+    if (cpView === 'brand') {
+      const lbl = (CP_CROPS.find((c) => c.id === cpCropFilter) || {}).label;
+      rows = rows.filter((r) => r.cropsSet && r.cropsSet.indexOf(lbl) !== -1);
+    } else {
+      rows = rows.filter((r) => r.crop === cpCropFilter);
+    }
+  }
+
   if (cpSearchTerm) {
     rows = rows.filter((r) => {
-      const hay = (r.brand || '') + ' ' + (r.sku || '') + ' ' + (r.cropLabel || r.crops || '');
+      const hay = (r.brand || '') + ' ' + (r.sku || '') + ' ' + (r.cropLabel || '');
       return hay.toLowerCase().includes(cpSearchTerm);
     });
   }
@@ -1890,8 +1950,9 @@ function getCpRows() {
   const key = cpSortKey;
   const dir = cpSortDir === 'desc' ? -1 : 1;
   rows = rows.slice().sort((a, b) => {
-    const va = a[key];
-    const vb = b[key];
+    let va = a[key];
+    let vb = b[key];
+    if (key === 'maxChange') { va = Math.abs(va); vb = Math.abs(vb); }
     if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
     return String(va).localeCompare(String(vb)) * dir;
   });
@@ -1904,38 +1965,87 @@ function getCpRows() {
 function renderCpAll() {
   if (!cpMode) return;
   renderCpCropList();
+  renderCpKpis();
   renderCpTable();
-  renderCpRightSidebar();
-  const metaCount = document.getElementById('cpMetaCount');
-  const metaCrop  = document.getElementById('cpMetaCrop');
-  const rows = getCpRows();
-  if (metaCount) metaCount.textContent = `${rows.length} รายการ`;
-  if (metaCrop) {
-    const c = CP_CROPS.find((x) => x.id === cpCropFilter);
-    metaCrop.textContent = c ? c.label : 'ทุกพืช';
+  renderCpSubheader();
+}
+
+function renderCpSubheader() {
+  const titleEl = document.getElementById('cpSubTitle');
+  const countEl = document.getElementById('cpSubCount');
+  const bsel    = document.getElementById('cpBrandSelect');
+  if (cpView === 'brand') {
+    if (titleEl) titleEl.textContent = 'แบรนด์';
+    const total = CP_BRANDS.length;
+    if (countEl) countEl.textContent = `(${total} แบรนด์)`;
+    if (bsel)    bsel.style.visibility = 'hidden';
+  } else {
+    if (titleEl) titleEl.textContent = 'สูตร';
+    const total = getCpSkus().length;
+    if (countEl) countEl.textContent = `(${total} สูตร)`;
+    if (bsel)    bsel.style.visibility = '';
   }
+}
+
+function renderCpKpis() {
+  const rows = getCpRows();
+  if (!rows.length) {
+    ['cpKpiParich','cpKpiComp','cpKpiGap','cpKpiPromo'].forEach((id) => setText(id, '—'));
+    ['cpKpiParichDelta','cpKpiCompDelta','cpKpiGapDelta','cpKpiPromoDelta'].forEach((id) => setCpDelta(id, 0));
+    setText('cpKpiPromoSub', '— แบรนด์ | — สูตร');
+    return;
+  }
+  const avgParich = Math.round(rows.reduce((s, r) => s + r.parich,  0) / rows.length);
+  const avgComp   = Math.round(rows.reduce((s, r) => s + r.compAvg, 0) / rows.length);
+  const avgGap    = avgParich - avgComp;
+  const sumPromo  = rows.reduce((s, r) => s + r.promoCount, 0);
+  const dPa = +(rows.reduce((s, r) => s + r.parichChg,  0) / rows.length).toFixed(0);
+  const dCo = +(rows.reduce((s, r) => s + r.compAvgChg, 0) / rows.length).toFixed(0);
+  const dGap = dPa - dCo;
+  const dPr = +(rows.reduce((s, r) => s + r.promoChg,   0) / rows.length).toFixed(0);
+
+  setText('cpKpiParich', `฿${avgParich.toLocaleString()}`);
+  setText('cpKpiComp',   `฿${avgComp.toLocaleString()}`);
+  setText('cpKpiGap',    `${avgGap >= 0 ? '' : '-'}฿${Math.abs(avgGap).toLocaleString()}`);
+  setText('cpKpiPromo',  sumPromo);
+  setCpDelta('cpKpiParichDelta', dPa);
+  setCpDelta('cpKpiCompDelta',   dCo);
+  setCpDelta('cpKpiGapDelta',    dGap);
+  setCpDelta('cpKpiPromoDelta',  dPr);
+
+  // Promotion sub: "X แบรนด์ | Y สูตร"
+  const bSet = new Set(); const sSet = new Set();
+  getCpSkus().forEach((r) => {
+    if (r.promoCount > 0) { bSet.add(r.brand); sSet.add(r.sku); }
+  });
+  setText('cpKpiPromoSub', `${bSet.size} แบรนด์ | ${sSet.size} สูตร`);
 }
 
 function renderCpCropList() {
   const el = document.getElementById('cpCropList');
   if (!el) return;
   const skus = getCpSkus();
-  // "All" + each crop
   const rows = [{id:'all', label:'ทั้งหมด', color:'#71717a'}].concat(CP_CROPS);
+
   el.innerHTML = rows.map((c) => {
     const list = c.id === 'all' ? skus : skus.filter((s) => s.crop === c.id);
     if (!list.length) return '';
-    const avgParich = Math.round(list.reduce((s, r) => s + r.parich, 0) / list.length);
-    const avgChange = (list.reduce((s, r) => s + r.change, 0) / list.length);
-    const isActive  = cpCropFilter === c.id;
-    const dCol      = avgChange > 0 ? 'var(--cp-up)' : avgChange < 0 ? 'var(--cp-down)' : 'var(--muted-foreground)';
+    const skuCount   = list.length;
+    const brandCount = new Set(list.map((s) => s.brand)).size;
+    const avgPrice   = Math.round(list.reduce((s, r) => s + r.parich,    0) / list.length);
+    const avgChange  = +(list.reduce((s, r) => s + r.parichChg, 0) / list.length).toFixed(0);
+    const isActive   = cpCropFilter === c.id;
+    const dCol       = avgChange > 0 ? 'var(--cp-up)' : avgChange < 0 ? 'var(--cp-down)' : 'var(--muted-foreground)';
+    const arrow      = avgChange > 0 ? '↑' : avgChange < 0 ? '↓' : '·';
     return `
       <div class="cp-crop-row${isActive ? ' cp-crop-row--active' : ''}" onclick="onCpCropChange('${c.id}')">
-        <span class="cp-crop-dot" style="background:${c.color}"></span>
         <span class="cp-crop-name">${c.label}</span>
-        <span class="cp-crop-count">${list.length}</span>
-        <span class="cp-crop-price">฿${avgParich.toLocaleString()}</span>
-        <span class="cp-crop-delta" style="color:${dCol}">${avgChange > 0 ? '+' : ''}${avgChange.toFixed(1)}%</span>
+        <span class="cp-crop-num">${skuCount}</span>
+        <span class="cp-crop-num">${brandCount}</span>
+        <div class="cp-crop-price-wrap">
+          <span class="cp-crop-price">฿${avgPrice.toLocaleString()}</span>
+          <span class="cp-crop-delta" style="color:${dCol}">${arrow} ${Math.abs(avgChange)}%</span>
+        </div>
       </div>`;
   }).join('');
 }
@@ -1943,12 +2053,19 @@ function renderCpCropList() {
 function renderCpTable() {
   const headEl = document.getElementById('cpTableHead');
   const bodyEl = document.getElementById('cpTableBody');
+  const pagEl  = document.getElementById('cpPagination');
   if (!headEl || !bodyEl) return;
 
   const cols = cpView === 'brand' ? CP_COLUMNS_BRAND : CP_COLUMNS_SKU;
-  const rows = getCpRows();
+  const allRows = getCpRows();
 
-  // Header — sortable
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(allRows.length / CP_PAGE_SIZE));
+  if (cpPage > totalPages) cpPage = totalPages;
+  const start = (cpPage - 1) * CP_PAGE_SIZE;
+  const rows  = allRows.slice(start, start + CP_PAGE_SIZE);
+
+  // Header
   headEl.innerHTML = `<tr>${cols.map((c) => {
     const isSort = cpSortKey === c.key;
     const arrow  = isSort ? (cpSortDir === 'desc' ? '↓' : '↑') : '↕';
@@ -1960,77 +2077,67 @@ function renderCpTable() {
   // Body
   if (!rows.length) {
     bodyEl.innerHTML = `<tr><td class="cp-empty" colspan="${cols.length}">ไม่พบรายการ</td></tr>`;
+    if (pagEl) pagEl.innerHTML = '';
     return;
   }
   bodyEl.innerHTML = rows.map((r) => {
     return `<tr>${cols.map((c) => formatCpCell(r, c)).join('')}</tr>`;
   }).join('');
+
+  // Pagination footer
+  if (pagEl) {
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    const btns = [];
+    btns.push(`<button class="cp-pg-btn cp-pg-nav" ${cpPage <= 1 ? 'disabled' : ''} onclick="cpGoPage(${cpPage - 1})">‹ ก่อนหน้า</button>`);
+    // Up to 6 page numbers around current
+    const pages = [];
+    for (let p = 1; p <= totalPages; p++) pages.push(p);
+    const shown = totalPages <= 6 ? pages : pages.filter((p) => p <= 4 || p === totalPages);
+    let lastShown = 0;
+    shown.forEach((p) => {
+      if (lastShown && p > lastShown + 1) btns.push(`<span class="cp-pg-ellip">…</span>`);
+      btns.push(`<button class="cp-pg-btn ${p === cpPage ? 'cp-pg-btn--active' : ''}" onclick="cpGoPage(${p})">${p}</button>`);
+      lastShown = p;
+    });
+    btns.push(`<button class="cp-pg-btn cp-pg-nav" ${cpPage >= totalPages ? 'disabled' : ''} onclick="cpGoPage(${cpPage + 1})">ถัดไป ›</button>`);
+    pagEl.innerHTML = btns.join('');
+  }
 }
 
+/** Builds a <td> showing main value + delta line below (matches Figma). */
 function formatCpCell(row, col) {
   const v = row[col.key];
-  if (col.type === 'thb')         return `<td class="cp-td cp-td--num">฿${(v || 0).toLocaleString()}</td>`;
-  if (col.type === 'thb-signed') {
+
+  if (col.type === 'text') {
+    return `<td class="cp-td cp-td--text">${v}</td>`;
+  }
+
+  if (col.type === 'pct-only') {
     const cls = v > 0 ? 'cp-td--up' : v < 0 ? 'cp-td--down' : '';
+    const arrow = v > 0 ? '↑' : v < 0 ? '↓' : '·';
     const sign = v > 0 ? '+' : '';
-    return `<td class="cp-td cp-td--num ${cls}">${sign}฿${Math.abs(v).toLocaleString()}</td>`;
+    return `<td class="cp-td cp-td--num ${cls}">${arrow} ${sign}${v}%</td>`;
   }
-  if (col.type === 'pct') {
-    const cls = v > 0 ? 'cp-td--up' : v < 0 ? 'cp-td--down' : '';
-    const arrow = v > 0 ? '▲' : v < 0 ? '▼' : '·';
-    return `<td class="cp-td cp-td--num ${cls}"><span class="cp-pct-arrow">${arrow}</span>${v > 0 ? '+' : ''}${v}%</td>`;
-  }
-  if (col.type === 'num')  return `<td class="cp-td cp-td--num">${v}</td>`;
-  if (col.type === 'unit') return `<td class="cp-td cp-td--num">${v} ตัน</td>`;
-  return `<td class="cp-td">${v}</td>`;
-}
 
-function renderCpRightSidebar() {
-  const rows = getCpRows();
-  // Aggregate by Parich vs competitors using current view + filters
-  if (!rows.length) {
-    setText('cpKpiParich', '฿—'); setText('cpKpiParichDelta', '—');
-    setText('cpKpiComp',   '฿—'); setText('cpKpiCompDelta', '—');
-    setText('cpKpiGap',    '฿—'); setText('cpKpiGapDelta', '—');
-    const el = document.getElementById('cpLeaders');
-    if (el) el.innerHTML = '<div class="cp-empty cp-empty--ds">ไม่มีข้อมูล</div>';
-    return;
-  }
-  const avgParich = Math.round(rows.reduce((s, r) => s + r.parich, 0) / rows.length);
-  const avgComp   = Math.round(rows.reduce((s, r) => s + r.comp,   0) / rows.length);
-  const avgGap    = avgParich - avgComp;
-  const avgChange = +(rows.reduce((s, r) => s + r.change, 0) / rows.length).toFixed(1);
-
-  setText('cpKpiParich', `฿${avgParich.toLocaleString()}`);
-  setText('cpKpiComp',   `฿${avgComp.toLocaleString()}`);
-  setText('cpKpiGap',    `${avgGap >= 0 ? '+' : ''}฿${Math.abs(avgGap).toLocaleString()}`);
-  setCpDelta('cpKpiParichDelta', avgChange);
-  setCpDelta('cpKpiCompDelta',   +(avgChange * 0.85).toFixed(1));
-  setCpDelta('cpKpiGapDelta',    +(avgChange - avgChange * 0.85).toFixed(1));
-
-  // Top 3 movers by absolute change
-  const movers = rows.slice().sort((a, b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 3);
-  const titleKey = cpView === 'brand' ? 'brand' : 'sku';
-  const el = document.getElementById('cpLeaders');
-  if (el) {
-    el.innerHTML = '<div class="cp-leaders-title">การเปลี่ยนแปลงสูงสุด</div>' + movers.map((m) => {
-      const dCol = m.change > 0 ? 'var(--cp-up)' : 'var(--cp-down)';
-      const arrow = m.change > 0 ? '▲' : '▼';
-      return `<div class="cp-leader-row">
-        <span class="cp-leader-name">${m[titleKey]}</span>
-        <span class="cp-leader-delta" style="color:${dCol}">${arrow} ${m.change > 0 ? '+' : ''}${m.change}%</span>
-      </div>`;
-    }).join('');
-  }
+  // thb / num : value on top, delta on bottom
+  const d = col.delta ? row[col.delta] : 0;
+  const dCls = d > 0 ? 'cp-d--up' : d < 0 ? 'cp-d--down' : 'cp-d--zero';
+  const arrow = d > 0 ? '↑' : d < 0 ? '↓' : '·';
+  const main = col.type === 'thb' ? `฿${(v || 0).toLocaleString()}` : `${v}`;
+  return `<td class="cp-td cp-td--num">
+    <div class="cp-cell-main">${main}</div>
+    ${col.delta != null ? `<div class="cp-cell-delta ${dCls}">${arrow} ${Math.abs(d)}%</div>` : ''}
+  </td>`;
 }
 
 function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
 function setCpDelta(id, n) {
   const el = document.getElementById(id);
   if (!el) return;
-  const arrow = n > 0 ? '▲' : n < 0 ? '▼' : '·';
-  const col   = n > 0 ? 'var(--cp-up)' : n < 0 ? 'var(--cp-down)' : 'var(--muted-foreground)';
-  el.innerHTML = `<span style="color:${col}">${arrow} ${n > 0 ? '+' : ''}${n}%</span>`;
+  const cls   = n > 0 ? 'cp-d--up' : n < 0 ? 'cp-d--down' : 'cp-d--zero';
+  const arrow = n > 0 ? '↑' : n < 0 ? '↓' : '·';
+  el.className = 'cp-kpi-delta ' + cls;
+  el.textContent = `${arrow} ${Math.abs(n)}%`;
 }
 
 /** Tooltip for a dealer dot — title "D - name" or "S - name", status badge, location, Sales vs Target. */

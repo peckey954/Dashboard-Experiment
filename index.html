@@ -596,24 +596,32 @@
       <!-- Competitive Price mode pane (hidden initially) -->
       <div id="fsCompPricePane" style="display:none">
 
+        <!-- Date dropdown -->
         <div class="cp-fs-section">
+          <select class="ops-filter-select" id="cpDateRange" onchange="onCpDateChange(this.value)">
+            <option value="month">วันที่...</option>
+            <option value="week">สัปดาห์นี้</option>
+            <option value="month">เดือนนี้</option>
+            <option value="quarter">ไตรมาสนี้</option>
+            <option value="year">ปีนี้</option>
+          </select>
           <div class="cp-search-wrap">
             <svg class="cp-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
             </svg>
-            <input class="cp-search" type="text" placeholder="ค้นหา..." id="cpSearch" oninput="onCpSearch(this.value)">
+            <input class="cp-search" type="text" placeholder="ค้นหาพืช..." id="cpSearch" oninput="onCpSearch(this.value)">
           </div>
-          <select class="ops-filter-select" id="cpCrop" onchange="onCpCropChange(this.value)">
-            <option value="all">ทุกพืช</option>
-          </select>
         </div>
 
         <div class="cp-sep"></div>
 
+        <!-- Crop list table header + body -->
         <div class="cp-fs-section cp-fs-section--grow">
-          <div class="cp-fs-header">
-            <span class="cp-fs-title">พืช</span>
-            <span class="cp-fs-sub">การเปลี่ยนแปลงราคา</span>
+          <div class="cp-crop-head">
+            <span>Crop</span>
+            <span class="cp-crop-num">SKU</span>
+            <span class="cp-crop-num">Brand</span>
+            <span class="cp-crop-num">Avg. Price</span>
           </div>
           <div class="cp-crop-list" id="cpCropList"></div>
         </div>
@@ -710,24 +718,85 @@
 
         <!-- Competitive Price view (hidden initially) -->
         <div id="comp-price-view" style="display:none">
-          <div class="cp-toolbar">
-            <div class="cp-mode-tabs">
-              <button class="cp-mode-tab cp-mode-tab--active" data-cp-mode="brand" onclick="switchCpMode('brand')">แบรนด์</button>
-              <button class="cp-mode-tab" data-cp-mode="sku" onclick="switchCpMode('sku')">SKU</button>
+          <!-- Header: ALL chip + share button -->
+          <div class="cp-header">
+            <div class="cp-header-left">
+              <span class="cp-all-chip">ALL</span>
+              <span class="cp-all-label">รวมทั้งหมด</span>
             </div>
-            <div class="cp-toolbar-meta">
-              <span class="cp-meta-chip" id="cpMetaCount">— รายการ</span>
-              <span class="cp-meta-sep">·</span>
-              <span class="cp-meta-chip" id="cpMetaCrop">ทุกพืช</span>
+            <button class="cp-share-btn" title="แชร์">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- KPI strip (4 cards) -->
+          <div class="cp-kpi-strip">
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Avg. Parich Price</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpKpiParich">฿—</span>
+                <span class="cp-kpi-delta" id="cpKpiParichDelta">—</span>
+              </div>
+              <div class="cp-kpi-sub">Unit 50 ตัน</div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Avg. Competitors Price</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpKpiComp">฿—</span>
+                <span class="cp-kpi-delta" id="cpKpiCompDelta">—</span>
+              </div>
+              <div class="cp-kpi-sub">Unit 50 ตัน</div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Avg. Price Gap</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpKpiGap">฿—</span>
+                <span class="cp-kpi-delta" id="cpKpiGapDelta">—</span>
+              </div>
+              <div class="cp-kpi-sub">Unit 50 ตัน</div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Promotion</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpKpiPromo">—</span>
+                <span class="cp-kpi-delta" id="cpKpiPromoDelta">—</span>
+              </div>
+              <div class="cp-kpi-sub" id="cpKpiPromoSub">— แบรนด์ | — สูตร</div>
             </div>
           </div>
 
+          <!-- Title row + Brand/SKU pill toggle -->
+          <div class="cp-title-row">
+            <div class="cp-title">Competitive Price</div>
+            <div class="cp-mode-tabs">
+              <button class="cp-mode-tab cp-mode-tab--active" data-cp-mode="brand" onclick="switchCpMode('brand')">Brand</button>
+              <button class="cp-mode-tab" data-cp-mode="sku" onclick="switchCpMode('sku')">SKUs</button>
+            </div>
+          </div>
+
+          <!-- Sub-header: count + dropdown -->
+          <div class="cp-subheader">
+            <div class="cp-subheader-left">
+              <span class="cp-subheader-title" id="cpSubTitle">แบรนด์</span>
+              <span class="cp-subheader-count" id="cpSubCount">(— รายการ)</span>
+            </div>
+            <select class="ops-filter-select cp-brand-select" id="cpBrandSelect" onchange="onCpBrandFilterChange(this.value)">
+              <option value="all" id="cpBrandSelectDefault">แบรนด์...</option>
+            </select>
+          </div>
+
+          <!-- Table -->
           <div class="cp-table-wrap">
             <table class="cp-table">
               <thead id="cpTableHead"></thead>
               <tbody id="cpTableBody"></tbody>
             </table>
           </div>
+
+          <!-- Pagination -->
+          <div class="cp-pagination" id="cpPagination"></div>
         </div><!-- #comp-price-view -->
 
       </div>
