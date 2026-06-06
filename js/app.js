@@ -1730,8 +1730,8 @@ let cpView = 'brand';                                    // 'brand' | 'sku'
 let cpCropFilter = 'all';
 let cpBrandFilter = 'all';
 let cpSearchTerm = '';
-let cpSortKey = 'maxChange';                              // default: largest mover first
-let cpSortDir = 'desc';
+let cpSortKey = 'compAvgChg';                             // default: biggest % drop in Avg. คู่แข่ง first
+let cpSortDir = 'asc';                                    // asc → most negative (drop) → most positive (rise)
 let cpPage = 1;
 const CP_PAGE_SIZE = 8;
 
@@ -1895,9 +1895,9 @@ function switchCpMode(mode) {
   if (bsel) bsel.style.visibility = mode === 'sku' ? '' : 'hidden';
   if (mode === 'brand') cpBrandFilter = 'all';
 
-  // Default sort: largest absolute price change first
-  cpSortKey = 'maxChange';
-  cpSortDir = 'desc';
+  // Default sort: biggest % drop in competitor avg first
+  cpSortKey = 'compAvgChg';
+  cpSortDir = 'asc';
   cpPage = 1;
   renderCpAll();
 }
@@ -2025,26 +2025,41 @@ function renderCpCropList() {
   const el = document.getElementById('cpCropList');
   if (!el) return;
   const skus = getCpSkus();
-  const rows = [{id:'all', label:'ทั้งหมด', color:'#71717a'}].concat(CP_CROPS);
 
-  el.innerHTML = rows.map((c) => {
-    const list = c.id === 'all' ? skus : skus.filter((s) => s.crop === c.id);
-    if (!list.length) return '';
-    const skuCount   = list.length;
-    const brandCount = new Set(list.map((s) => s.brand)).size;
-    const avgPrice   = Math.round(list.reduce((s, r) => s + r.parich,    0) / list.length);
-    const avgChange  = +(list.reduce((s, r) => s + r.parichChg, 0) / list.length).toFixed(0);
-    const isActive   = cpCropFilter === c.id;
-    const dCol       = avgChange > 0 ? 'var(--cp-up)' : avgChange < 0 ? 'var(--cp-down)' : 'var(--muted-foreground)';
-    const arrow      = avgChange > 0 ? '↑' : avgChange < 0 ? '↓' : '·';
+  // Build per-crop aggregates (used for both display + sort)
+  const buildAgg = (c, list) => ({
+    id:         c.id,
+    label:      c.label,
+    color:      c.color,
+    skuCount:   list.length,
+    brandCount: new Set(list.map((s) => s.brand)).size,
+    avgPrice:   Math.round(list.reduce((s, r) => s + r.compAvg,    0) / list.length),
+    avgChange:  +(list.reduce((s, r) => s + r.compAvgChg, 0) / list.length).toFixed(0),
+  });
+  const allAgg = buildAgg({id:'all', label:'ทั้งหมด', color:'#71717a'}, skus);
+  const cropAggs = CP_CROPS
+      .map((c) => {
+        const list = skus.filter((s) => s.crop === c.id);
+        return list.length ? buildAgg(c, list) : null;
+      })
+      .filter(Boolean)
+      // Default: biggest % drop first → ascending by compAvgChg
+      .sort((a, b) => a.avgChange - b.avgChange);
+
+  const rows = [allAgg].concat(cropAggs);
+
+  el.innerHTML = rows.map((a) => {
+    const isActive = cpCropFilter === a.id;
+    const dCol     = a.avgChange > 0 ? 'var(--cp-up)' : a.avgChange < 0 ? 'var(--cp-down)' : 'var(--muted-foreground)';
+    const arrow    = a.avgChange > 0 ? '↑' : a.avgChange < 0 ? '↓' : '·';
     return `
-      <div class="cp-crop-row${isActive ? ' cp-crop-row--active' : ''}" onclick="onCpCropChange('${c.id}')">
-        <span class="cp-crop-name">${c.label}</span>
-        <span class="cp-crop-num">${skuCount}</span>
-        <span class="cp-crop-num">${brandCount}</span>
+      <div class="cp-crop-row${isActive ? ' cp-crop-row--active' : ''}" onclick="onCpCropChange('${a.id}')">
+        <span class="cp-crop-name">${a.label}</span>
+        <span class="cp-crop-num">${a.skuCount}</span>
+        <span class="cp-crop-num">${a.brandCount}</span>
         <div class="cp-crop-price-wrap">
-          <span class="cp-crop-price">฿${avgPrice.toLocaleString()}</span>
-          <span class="cp-crop-delta" style="color:${dCol}">${arrow} ${Math.abs(avgChange)}%</span>
+          <span class="cp-crop-price">฿${a.avgPrice.toLocaleString()}</span>
+          <span class="cp-crop-delta" style="color:${dCol}">${arrow} ${Math.abs(a.avgChange)}%</span>
         </div>
       </div>`;
   }).join('');
@@ -2065,9 +2080,9 @@ function renderCpTable() {
   const start = (cpPage - 1) * CP_PAGE_SIZE;
   const rows  = allRows.slice(start, start + CP_PAGE_SIZE);
 
-  // Header
+  // Header — light up the column whose value OR whose delta is the current sort key
   headEl.innerHTML = `<tr>${cols.map((c) => {
-    const isSort = cpSortKey === c.key;
+    const isSort = cpSortKey === c.key || cpSortKey === c.delta;
     const arrow  = isSort ? (cpSortDir === 'desc' ? '↓' : '↑') : '↕';
     return `<th class="cp-th${isSort ? ' cp-th--sorted' : ''}" onclick="toggleCpSort('${c.key}')">
       <span>${c.label}</span><span class="cp-th-arrow">${arrow}</span>
