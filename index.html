@@ -593,6 +593,33 @@
 
       </div><!-- #fsDealerSegPane -->
 
+      <!-- Competitive Price mode pane (hidden initially) -->
+      <div id="fsCompPricePane" style="display:none">
+
+        <div class="cp-fs-section">
+          <div class="cp-search-wrap">
+            <svg class="cp-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input class="cp-search" type="text" placeholder="ค้นหา..." id="cpSearch" oninput="onCpSearch(this.value)">
+          </div>
+          <select class="ops-filter-select" id="cpCrop" onchange="onCpCropChange(this.value)">
+            <option value="all">ทุกพืช</option>
+          </select>
+        </div>
+
+        <div class="cp-sep"></div>
+
+        <div class="cp-fs-section cp-fs-section--grow">
+          <div class="cp-fs-header">
+            <span class="cp-fs-title">พืช</span>
+            <span class="cp-fs-sub">การเปลี่ยนแปลงราคา</span>
+          </div>
+          <div class="cp-crop-list" id="cpCropList"></div>
+        </div>
+
+      </div><!-- #fsCompPricePane -->
+
     </div>
   </aside>
 
@@ -680,6 +707,28 @@
             </div>
           </div>
         </div><!-- #dealer-segment-view -->
+
+        <!-- Competitive Price view (hidden initially) -->
+        <div id="comp-price-view" style="display:none">
+          <div class="cp-toolbar">
+            <div class="cp-mode-tabs">
+              <button class="cp-mode-tab cp-mode-tab--active" data-cp-mode="brand" onclick="switchCpMode('brand')">แบรนด์</button>
+              <button class="cp-mode-tab" data-cp-mode="sku" onclick="switchCpMode('sku')">SKU</button>
+            </div>
+            <div class="cp-toolbar-meta">
+              <span class="cp-meta-chip" id="cpMetaCount">— รายการ</span>
+              <span class="cp-meta-sep">·</span>
+              <span class="cp-meta-chip" id="cpMetaCrop">ทุกพืช</span>
+            </div>
+          </div>
+
+          <div class="cp-table-wrap">
+            <table class="cp-table">
+              <thead id="cpTableHead"></thead>
+              <tbody id="cpTableBody"></tbody>
+            </table>
+          </div>
+        </div><!-- #comp-price-view -->
 
       </div>
 
@@ -956,6 +1005,31 @@
         <div class="dseg-ds-body" id="dsegDsBody"></div>
       </div><!-- #dsDealerSegPane -->
 
+      <!-- Competitive Price mode pane (right) (hidden initially) -->
+      <div id="dsCompPricePane" style="display:none">
+        <div class="cp-ds-title">สรุปราคา</div>
+        <div class="cp-kpi-card">
+          <div class="cp-kpi-label">Avg. Parich Price</div>
+          <div class="cp-kpi-val" id="cpKpiParich">฿—</div>
+          <div class="cp-kpi-sub">Unit 50 ตัน</div>
+          <div class="cp-kpi-delta" id="cpKpiParichDelta">—</div>
+        </div>
+        <div class="cp-kpi-card">
+          <div class="cp-kpi-label">Avg. Competitors Price</div>
+          <div class="cp-kpi-val" id="cpKpiComp">฿—</div>
+          <div class="cp-kpi-sub">Unit 50 ตัน</div>
+          <div class="cp-kpi-delta" id="cpKpiCompDelta">—</div>
+        </div>
+        <div class="cp-kpi-card">
+          <div class="cp-kpi-label">Avg. Price Gap</div>
+          <div class="cp-kpi-val" id="cpKpiGap">฿—</div>
+          <div class="cp-kpi-sub">Parich vs Competitors</div>
+          <div class="cp-kpi-delta" id="cpKpiGapDelta">—</div>
+        </div>
+        <div class="cp-ds-divider"></div>
+        <div class="cp-ds-leaders" id="cpLeaders"></div>
+      </div><!-- #dsCompPricePane -->
+
     </div>
       </aside>
 
@@ -1041,7 +1115,7 @@
 
 <div class="ir-popup ir-flyout" id="ir-popup-competitor">
   <div class="ir-flyout-title">Competitor Intelligence</div>
-  <button class="ir-flyout-item">Price Monitoring</button>
+  <button class="ir-flyout-item" onclick="openCompetitivePrice()">Competitive Price</button>
   <button class="ir-flyout-item">Competitor Profiles</button>
   <button class="ir-flyout-item">SKU Comparison</button>
   <button class="ir-flyout-item">Crop Market View</button>

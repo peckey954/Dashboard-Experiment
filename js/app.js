@@ -881,6 +881,7 @@ function toggleFilterSidebar() {
  */
 function switchPageTab(tab, btn) {
   if (dealerSegmentMode) exitDealerSegmentation();
+  if (cpMode) exitCompetitivePrice();
   if (dealerLiMode) exitDealerLiMode(/* skipRestore */ true);
   document.querySelectorAll('.page-tab').forEach((t) => t.classList.remove('page-tab--active'));
   if (btn) btn.classList.add('page-tab--active');
@@ -1595,6 +1596,441 @@ function initDsegInteractions() {
     dragging = false;
     viewport.classList.remove('dseg-dragging');
   });
+}
+
+// ── Competitive Price page (Competitor Intelligence flyout) ──────────────────
+
+/** Crop catalog — keys mirror existing PT_CROPS / PROVINCE_POTENTIAL labels. */
+const CP_CROPS = [
+  {id:'corn',    label:'ข้าวโพด',      color:'#f59e0b'},
+  {id:'rubber',  label:'ยางพารา',      color:'#22c55e'},
+  {id:'cassava', label:'มันสำปะหลัง',  color:'#ef4444'},
+  {id:'rice',    label:'ข้าวนาปี',     color:'#3b82f6'},
+  {id:'sugar',   label:'อ้อยโรงงาน',    color:'#10b981'},
+  {id:'durian',  label:'ทุเรียน',       color:'#a855f7'},
+  {id:'palm',    label:'ปาล์มน้ำมัน',   color:'#dc2626'},
+  {id:'longan',  label:'ลำไย',          color:'#8b5cf6'},
+];
+
+/** Competitor brands. */
+const CP_BRANDS = [
+  'Parich',  'GreenAg', 'TerraGrow', 'AgroMax',  'KasetPro',
+  'FarmKing','NaturAg', 'CropOne',   'SunFarm',  'EcoSeed',
+  'YieldPro','BangkokAgro','VetaGrow','RootBoost','AsiaFert',
+];
+
+/** SKU code components for mock generation. */
+const CP_SKU_FORMULAS = [
+  '16-20-0', '46-0-0', '15-15-15', '13-13-21', '21-0-0',
+  '8-24-24', '20-10-12', '14-7-35', '12-6-22', '0-0-60',
+];
+
+/** Returns a deterministic positive integer from a string hash. */
+function _cpHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h) + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+/** Generates mock SKU rows: {sku, brand, crop, parich, comp, change, unit, gap}. */
+let _cpSkusCache = null;
+function getCpSkus() {
+  if (_cpSkusCache) return _cpSkusCache;
+  const rows = [];
+  CP_BRANDS.forEach((brand) => {
+    // 1–3 SKUs per brand
+    const h0 = _cpHash(brand);
+    const skuN = 1 + (h0 % 3);
+    for (let i = 0; i < skuN; i++) {
+      const crop    = CP_CROPS[(h0 + i * 7) % CP_CROPS.length];
+      const formula = CP_SKU_FORMULAS[(h0 + i * 11) % CP_SKU_FORMULAS.length];
+      const sku     = `${brand.slice(0, 3).toUpperCase()}-${formula}-${(50 + (h0 % 50))}T`;
+      const seed    = _cpHash(sku);
+      const parich  = 10000 + ((seed       ) % 14000);   // 10,000 – 24,000
+      const comp    =  9000 + ((seed >> 4 ) % 13000);    //  9,000 – 22,000
+      const change  = ((seed >> 8) % 41) - 12;           // -12 .. +28 % (skewed positive)
+      const unit    = 50 + ((seed >> 12) % 4) * 5;       // 50/55/60/65 ตัน
+      const gap     = parich - comp;
+      rows.push({sku, brand, crop: crop.id, cropLabel: crop.label, cropColor: crop.color,
+                 parich, comp, change, unit, gap});
+    }
+  });
+  _cpSkusCache = rows;
+  return rows;
+}
+
+/** Aggregates SKU rows to one row per brand. */
+function getCpBrands() {
+  const skus = getCpSkus();
+  const byBrand = {};
+  skus.forEach((s) => {
+    const k = s.brand;
+    if (!byBrand[k]) byBrand[k] = {brand: k, parich: 0, comp: 0, change: 0, skuCount: 0,
+                                    cropsSet: new Set(), parichSum: 0, compSum: 0, changeSum: 0};
+    const b = byBrand[k];
+    b.skuCount += 1;
+    b.parichSum += s.parich;
+    b.compSum   += s.comp;
+    b.changeSum += s.change;
+    b.cropsSet.add(s.cropLabel);
+  });
+  return Object.values(byBrand).map((b) => ({
+    brand:    b.brand,
+    parich:   Math.round(b.parichSum / b.skuCount),
+    comp:     Math.round(b.compSum / b.skuCount),
+    change:   +(b.changeSum / b.skuCount).toFixed(1),
+    gap:      Math.round((b.parichSum - b.compSum) / b.skuCount),
+    skuCount: b.skuCount,
+    crops:    Array.from(b.cropsSet).join(', '),
+  }));
+}
+
+// ── Competitive Price: state ─────────────────────────────────────────────────
+
+let cpMode = false;
+let cpView = 'brand';                                    // 'brand' | 'sku'
+let cpCropFilter = 'all';                                 // crop id or 'all'
+let cpSearchTerm = '';
+let cpSortKey = 'change';                                 // current sort column
+let cpSortDir = 'desc';                                   // 'asc' | 'desc'
+
+/** Column schemas per view — key, label, type, default sort dir. */
+const CP_COLUMNS_BRAND = [
+  {key:'brand',    label:'แบรนด์',                type:'text'},
+  {key:'crops',    label:'พืช',                    type:'text'},
+  {key:'skuCount', label:'จำนวน SKU',             type:'num'},
+  {key:'parich',   label:'Avg. Parich',           type:'thb'},
+  {key:'comp',     label:'Avg. Competitors',      type:'thb'},
+  {key:'gap',      label:'Gap (Parich – คู่แข่ง)', type:'thb-signed'},
+  {key:'change',   label:'การเปลี่ยนแปลง',         type:'pct'},
+];
+const CP_COLUMNS_SKU = [
+  {key:'sku',       label:'SKU',                    type:'text'},
+  {key:'brand',     label:'แบรนด์',                type:'text'},
+  {key:'cropLabel', label:'พืช',                    type:'text'},
+  {key:'unit',      label:'Unit',                  type:'unit'},
+  {key:'parich',    label:'Parich',                type:'thb'},
+  {key:'comp',      label:'คู่แข่ง',                type:'thb'},
+  {key:'gap',       label:'Gap',                   type:'thb-signed'},
+  {key:'change',    label:'การเปลี่ยนแปลง',         type:'pct'},
+];
+
+// ── Competitive Price: open / close ─────────────────────────────────────────
+
+function openCompetitivePrice() {
+  document.querySelectorAll('.ir-popup').forEach((p) => p.classList.remove('ir-popup--visible'));
+
+  // Make Sale icon-rail section the active rail (Competitor Intelligence lives there)
+  const salePill = document.querySelector('.nav-pill[data-section="sale"]');
+  if (salePill && !salePill.classList.contains('nav-pill--active')) {
+    switchNavSection('sale', salePill);
+  }
+  setIrActive('ir-popup-competitor');
+
+  const bcParent  = document.querySelector('.sb-bc-parent');
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  if (bcParent)  bcParent.textContent  = 'Competitor Intelligence';
+  if (bcCurrent) bcCurrent.textContent = 'Competitive Price';
+
+  // Hide the page tabs (Ops/Sale/...) and Map tab bar
+  const pageTabs = document.getElementById('pageTabs');
+  if (pageTabs) pageTabs.style.display = 'none';
+  const mapTabs = document.getElementById('mapTabBar');
+  if (mapTabs)  mapTabs.style.display  = 'none';
+
+  // Tear down map modes
+  if (potentialMode)  exitPotentialMode();
+  if (farmerMode)     exitFarmerMode();
+  if (dealerLiMode)   exitDealerLiMode(true);
+  if (currentPageTab === 'dealer') exitDealerHoverMode();
+
+  // Swap center
+  const mapEl  = document.getElementById('thailand-map');
+  const tblEl  = document.getElementById('mapTableView');
+  const opsLeg = document.getElementById('opsMapLegend');
+  const dliLeg = document.getElementById('dliMapLegend');
+  const dsegV  = document.getElementById('dealer-segment-view');
+  const cpEl   = document.getElementById('comp-price-view');
+  if (mapEl)  mapEl.style.display  = 'none';
+  if (tblEl)  tblEl.style.display  = 'none';
+  if (opsLeg) opsLeg.style.display = 'none';
+  if (dliLeg) dliLeg.style.display = 'none';
+  if (dsegV)  dsegV.style.display  = 'none';
+  if (cpEl)   cpEl.style.display   = '';
+
+  // Swap left sidebar
+  ['fsDealerPane','fsPotentialPane','fsFarmerPane','fsDealerLiPane','fsDealerSegPane'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const fsCp = document.getElementById('fsCompPricePane');
+  if (fsCp) fsCp.style.display = '';
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = 'none';
+
+  // Swap right sidebar
+  ['dsDealerContent','dsPotentialPane','dsFarmerContent','dsDealerSegPane'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const dsCp = document.getElementById('dsCompPricePane');
+  if (dsCp) dsCp.style.display = '';
+  const dsHeader = document.querySelector('.ds-header');
+  if (dsHeader) dsHeader.style.display = 'none';
+
+  cpMode = true;
+  populateCpFilters();
+  renderCpAll();
+}
+
+function exitCompetitivePrice() {
+  if (!cpMode) return;
+  cpMode = false;
+
+  const cpEl = document.getElementById('comp-price-view');
+  if (cpEl) cpEl.style.display = 'none';
+
+  const mapEl  = document.getElementById('thailand-map');
+  const mapTabs = document.getElementById('mapTabBar');
+  if (mapEl)   mapEl.style.display   = '';
+  if (mapTabs) mapTabs.style.display = '';
+
+  const pageTabs = document.getElementById('pageTabs');
+  if (pageTabs) pageTabs.style.display = '';
+
+  const fsCp = document.getElementById('fsCompPricePane');
+  if (fsCp) fsCp.style.display = 'none';
+  const fsDealer = document.getElementById('fsDealerPane');
+  if (fsDealer) fsDealer.style.display = '';
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = '';
+
+  const dsCp = document.getElementById('dsCompPricePane');
+  if (dsCp) dsCp.style.display = 'none';
+  const dsDealer = document.getElementById('dsDealerContent');
+  if (dsDealer) dsDealer.style.display = '';
+  const dsHeader = document.querySelector('.ds-header');
+  if (dsHeader) dsHeader.style.display = '';
+}
+
+// ── Competitive Price: filter callbacks ──────────────────────────────────────
+
+function populateCpFilters() {
+  const sel = document.getElementById('cpCrop');
+  if (sel && sel.options.length <= 1) {
+    CP_CROPS.forEach((c) => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.label;
+      sel.appendChild(opt);
+    });
+  }
+  if (sel) sel.value = cpCropFilter;
+  const searchEl = document.getElementById('cpSearch');
+  if (searchEl) searchEl.value = cpSearchTerm;
+}
+
+function onCpCropChange(val) {
+  cpCropFilter = val || 'all';
+  renderCpAll();
+}
+
+function onCpSearch(val) {
+  cpSearchTerm = (val || '').trim().toLowerCase();
+  renderCpAll();
+}
+
+function switchCpMode(mode) {
+  cpView = mode;
+  document.querySelectorAll('.cp-mode-tab').forEach((b) => {
+    b.classList.toggle('cp-mode-tab--active', b.dataset.cpMode === mode);
+  });
+  // Reset to default sort: largest price change first.
+  cpSortKey = 'change';
+  cpSortDir = 'desc';
+  renderCpAll();
+}
+
+function toggleCpSort(key) {
+  if (cpSortKey === key) {
+    cpSortDir = cpSortDir === 'desc' ? 'asc' : 'desc';
+  } else {
+    cpSortKey = key;
+    cpSortDir = (key === 'brand' || key === 'sku' || key === 'crops' || key === 'cropLabel') ? 'asc' : 'desc';
+  }
+  renderCpAll();
+}
+
+// ── Competitive Price: data shaping + filtering ──────────────────────────────
+
+/** Returns rows for the current view + filters + sort. */
+function getCpRows() {
+  let rows = cpView === 'brand' ? getCpBrands() : getCpSkus();
+
+  // Crop filter — brand rows match if their crops list contains it
+  if (cpCropFilter !== 'all') {
+    const target = CP_CROPS.find((c) => c.id === cpCropFilter);
+    const label  = target ? target.label : '';
+    rows = rows.filter((r) => {
+      if (cpView === 'brand') return r.crops.includes(label);
+      return r.crop === cpCropFilter;
+    });
+  }
+  if (cpSearchTerm) {
+    rows = rows.filter((r) => {
+      const hay = (r.brand || '') + ' ' + (r.sku || '') + ' ' + (r.cropLabel || r.crops || '');
+      return hay.toLowerCase().includes(cpSearchTerm);
+    });
+  }
+
+  // Sort
+  const key = cpSortKey;
+  const dir = cpSortDir === 'desc' ? -1 : 1;
+  rows = rows.slice().sort((a, b) => {
+    const va = a[key];
+    const vb = b[key];
+    if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+    return String(va).localeCompare(String(vb)) * dir;
+  });
+
+  return rows;
+}
+
+// ── Competitive Price: render ────────────────────────────────────────────────
+
+function renderCpAll() {
+  if (!cpMode) return;
+  renderCpCropList();
+  renderCpTable();
+  renderCpRightSidebar();
+  const metaCount = document.getElementById('cpMetaCount');
+  const metaCrop  = document.getElementById('cpMetaCrop');
+  const rows = getCpRows();
+  if (metaCount) metaCount.textContent = `${rows.length} รายการ`;
+  if (metaCrop) {
+    const c = CP_CROPS.find((x) => x.id === cpCropFilter);
+    metaCrop.textContent = c ? c.label : 'ทุกพืช';
+  }
+}
+
+function renderCpCropList() {
+  const el = document.getElementById('cpCropList');
+  if (!el) return;
+  const skus = getCpSkus();
+  // "All" + each crop
+  const rows = [{id:'all', label:'ทั้งหมด', color:'#71717a'}].concat(CP_CROPS);
+  el.innerHTML = rows.map((c) => {
+    const list = c.id === 'all' ? skus : skus.filter((s) => s.crop === c.id);
+    if (!list.length) return '';
+    const avgParich = Math.round(list.reduce((s, r) => s + r.parich, 0) / list.length);
+    const avgChange = (list.reduce((s, r) => s + r.change, 0) / list.length);
+    const isActive  = cpCropFilter === c.id;
+    const dCol      = avgChange > 0 ? 'var(--cp-up)' : avgChange < 0 ? 'var(--cp-down)' : 'var(--muted-foreground)';
+    return `
+      <div class="cp-crop-row${isActive ? ' cp-crop-row--active' : ''}" onclick="onCpCropChange('${c.id}')">
+        <span class="cp-crop-dot" style="background:${c.color}"></span>
+        <span class="cp-crop-name">${c.label}</span>
+        <span class="cp-crop-count">${list.length}</span>
+        <span class="cp-crop-price">฿${avgParich.toLocaleString()}</span>
+        <span class="cp-crop-delta" style="color:${dCol}">${avgChange > 0 ? '+' : ''}${avgChange.toFixed(1)}%</span>
+      </div>`;
+  }).join('');
+}
+
+function renderCpTable() {
+  const headEl = document.getElementById('cpTableHead');
+  const bodyEl = document.getElementById('cpTableBody');
+  if (!headEl || !bodyEl) return;
+
+  const cols = cpView === 'brand' ? CP_COLUMNS_BRAND : CP_COLUMNS_SKU;
+  const rows = getCpRows();
+
+  // Header — sortable
+  headEl.innerHTML = `<tr>${cols.map((c) => {
+    const isSort = cpSortKey === c.key;
+    const arrow  = isSort ? (cpSortDir === 'desc' ? '↓' : '↑') : '↕';
+    return `<th class="cp-th${isSort ? ' cp-th--sorted' : ''}" onclick="toggleCpSort('${c.key}')">
+      <span>${c.label}</span><span class="cp-th-arrow">${arrow}</span>
+    </th>`;
+  }).join('')}</tr>`;
+
+  // Body
+  if (!rows.length) {
+    bodyEl.innerHTML = `<tr><td class="cp-empty" colspan="${cols.length}">ไม่พบรายการ</td></tr>`;
+    return;
+  }
+  bodyEl.innerHTML = rows.map((r) => {
+    return `<tr>${cols.map((c) => formatCpCell(r, c)).join('')}</tr>`;
+  }).join('');
+}
+
+function formatCpCell(row, col) {
+  const v = row[col.key];
+  if (col.type === 'thb')         return `<td class="cp-td cp-td--num">฿${(v || 0).toLocaleString()}</td>`;
+  if (col.type === 'thb-signed') {
+    const cls = v > 0 ? 'cp-td--up' : v < 0 ? 'cp-td--down' : '';
+    const sign = v > 0 ? '+' : '';
+    return `<td class="cp-td cp-td--num ${cls}">${sign}฿${Math.abs(v).toLocaleString()}</td>`;
+  }
+  if (col.type === 'pct') {
+    const cls = v > 0 ? 'cp-td--up' : v < 0 ? 'cp-td--down' : '';
+    const arrow = v > 0 ? '▲' : v < 0 ? '▼' : '·';
+    return `<td class="cp-td cp-td--num ${cls}"><span class="cp-pct-arrow">${arrow}</span>${v > 0 ? '+' : ''}${v}%</td>`;
+  }
+  if (col.type === 'num')  return `<td class="cp-td cp-td--num">${v}</td>`;
+  if (col.type === 'unit') return `<td class="cp-td cp-td--num">${v} ตัน</td>`;
+  return `<td class="cp-td">${v}</td>`;
+}
+
+function renderCpRightSidebar() {
+  const rows = getCpRows();
+  // Aggregate by Parich vs competitors using current view + filters
+  if (!rows.length) {
+    setText('cpKpiParich', '฿—'); setText('cpKpiParichDelta', '—');
+    setText('cpKpiComp',   '฿—'); setText('cpKpiCompDelta', '—');
+    setText('cpKpiGap',    '฿—'); setText('cpKpiGapDelta', '—');
+    const el = document.getElementById('cpLeaders');
+    if (el) el.innerHTML = '<div class="cp-empty cp-empty--ds">ไม่มีข้อมูล</div>';
+    return;
+  }
+  const avgParich = Math.round(rows.reduce((s, r) => s + r.parich, 0) / rows.length);
+  const avgComp   = Math.round(rows.reduce((s, r) => s + r.comp,   0) / rows.length);
+  const avgGap    = avgParich - avgComp;
+  const avgChange = +(rows.reduce((s, r) => s + r.change, 0) / rows.length).toFixed(1);
+
+  setText('cpKpiParich', `฿${avgParich.toLocaleString()}`);
+  setText('cpKpiComp',   `฿${avgComp.toLocaleString()}`);
+  setText('cpKpiGap',    `${avgGap >= 0 ? '+' : ''}฿${Math.abs(avgGap).toLocaleString()}`);
+  setCpDelta('cpKpiParichDelta', avgChange);
+  setCpDelta('cpKpiCompDelta',   +(avgChange * 0.85).toFixed(1));
+  setCpDelta('cpKpiGapDelta',    +(avgChange - avgChange * 0.85).toFixed(1));
+
+  // Top 3 movers by absolute change
+  const movers = rows.slice().sort((a, b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 3);
+  const titleKey = cpView === 'brand' ? 'brand' : 'sku';
+  const el = document.getElementById('cpLeaders');
+  if (el) {
+    el.innerHTML = '<div class="cp-leaders-title">การเปลี่ยนแปลงสูงสุด</div>' + movers.map((m) => {
+      const dCol = m.change > 0 ? 'var(--cp-up)' : 'var(--cp-down)';
+      const arrow = m.change > 0 ? '▲' : '▼';
+      return `<div class="cp-leader-row">
+        <span class="cp-leader-name">${m[titleKey]}</span>
+        <span class="cp-leader-delta" style="color:${dCol}">${arrow} ${m.change > 0 ? '+' : ''}${m.change}%</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
+function setCpDelta(id, n) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const arrow = n > 0 ? '▲' : n < 0 ? '▼' : '·';
+  const col   = n > 0 ? 'var(--cp-up)' : n < 0 ? 'var(--cp-down)' : 'var(--muted-foreground)';
+  el.innerHTML = `<span style="color:${col}">${arrow} ${n > 0 ? '+' : ''}${n}%</span>`;
 }
 
 /** Tooltip for a dealer dot — title "D - name" or "S - name", status badge, location, Sales vs Target. */
@@ -3873,6 +4309,7 @@ const MKT_TAB_LABELS = {
 
 function switchNavSection(section, btn) {
   if (dealerSegmentMode) exitDealerSegmentation();
+  if (cpMode) exitCompetitivePrice();
   document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('nav-pill--active'));
   if (btn) btn.classList.add('nav-pill--active');
 
