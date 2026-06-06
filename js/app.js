@@ -1902,12 +1902,23 @@ function switchCpMode(mode) {
   renderCpAll();
 }
 
-function toggleCpSort(key) {
-  if (cpSortKey === key) {
+function toggleCpSort(colKey) {
+  // For price/count columns we sort by the column's DELTA (e.g. compAvgChg)
+  // because that's what users care about and what the cell's ↑/↓ shows.
+  // Text columns and "เปลี่ยนแปลงสูงสุด" don't have a delta — sort by their own key.
+  const cols    = cpView === 'brand' ? CP_COLUMNS_BRAND : CP_COLUMNS_SKU;
+  const col     = cols.find((c) => c.key === colKey);
+  const sortKey = col && col.delta ? col.delta : colKey;
+
+  if (cpSortKey === sortKey) {
+    // Same column → just flip direction (asc⇄desc)
     cpSortDir = cpSortDir === 'desc' ? 'asc' : 'desc';
   } else {
-    cpSortKey = key;
-    cpSortDir = (key === 'brand' || key === 'sku' || key === 'cropLabel') ? 'asc' : 'desc';
+    cpSortKey = sortKey;
+    // Default direction: text columns ascending, delta/numeric ascending
+    // (so "biggest drop first" matches the page's intent on any % column)
+    const isText = (col && col.type === 'text');
+    cpSortDir = isText ? 'asc' : 'asc';
   }
   cpPage = 1;
   renderCpAll();
@@ -1946,13 +1957,12 @@ function getCpRows() {
     });
   }
 
-  // Sort
+  // Sort (signed, so asc on a delta puts biggest drop first)
   const key = cpSortKey;
   const dir = cpSortDir === 'desc' ? -1 : 1;
   rows = rows.slice().sort((a, b) => {
-    let va = a[key];
-    let vb = b[key];
-    if (key === 'maxChange') { va = Math.abs(va); vb = Math.abs(vb); }
+    const va = a[key];
+    const vb = b[key];
     if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
     return String(va).localeCompare(String(vb)) * dir;
   });
