@@ -801,6 +801,8 @@
 
         <!-- Competitive Price → SKU detail view (hidden initially) -->
         <div id="cp-detail-view" style="display:none">
+         <!-- Pinned region: header + KPI strip stay locked while content below scrolls -->
+         <div class="cpd-pinned">
           <!-- Header -->
           <div class="cpd-header">
             <div class="cpd-header-left">
@@ -858,6 +860,10 @@
               </div>
             </div>
           </div>
+         </div><!-- /.cpd-pinned -->
+
+         <!-- Scrollable content region -->
+         <div class="cpd-scroll">
 
           <!-- Parich products section -->
           <div class="cpd-section">
@@ -942,6 +948,7 @@
               </table>
             </div>
           </div>
+         </div><!-- /.cpd-scroll -->
         </div><!-- #cp-detail-view -->
 
       </div>

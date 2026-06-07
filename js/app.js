@@ -2201,6 +2201,10 @@ function openCpDetail(skuFormula) {
   if (detEl)  detEl.style.display  = '';
   if (detEl)  detEl.scrollTop = 0;
 
+  // Hide the LEFT filter sidebar on the detail page (Figma shows none)
+  const fs = document.getElementById('filterSidebar');
+  if (fs) fs.classList.add('fs-cpd-hidden');
+
   // Update breadcrumb
   const bcCurrent = document.querySelector('.sb-bc-current');
   if (bcCurrent) {
@@ -2237,6 +2241,10 @@ function closeCpDetail() {
   const detEl  = document.getElementById('cp-detail-view');
   if (detEl)  detEl.style.display  = 'none';
   if (listEl) listEl.style.display = '';
+
+  // Restore the left sidebar
+  const fs = document.getElementById('filterSidebar');
+  if (fs) fs.classList.remove('fs-cpd-hidden');
 
   // Restore breadcrumb
   const bc = document.querySelector('.sb-breadcrumb');
@@ -2409,15 +2417,19 @@ function renderCpdMarketPosition() {
   const maxP = Math.max(...brandPrices.map((b) => b.price));
   const span = maxP - minP || 1;
 
-  // X axis: 6 evenly-spaced gridlines from minP to maxP rounded
+  // SCALE: bars + dots span 0–SCALE%, leaving 100-SCALE % on the right for
+  // the price label (e.g. "฿16,700") so it doesn't run off the layout.
+  const SCALE = 88;
+
+  // X axis: 6 evenly-spaced gridlines
   const ticks = [];
   for (let i = 0; i <= 5; i++) ticks.push(Math.round(minP + (span * i / 5) / 100) * 100);
 
-  const avgPctX = ((avgPrice - minP) / span) * 100;
+  const avgPctX = ((avgPrice - minP) / span) * SCALE;
 
   const barsHtml = brandPrices.map((b) => {
     const isPa  = b.brand === 'พาริช';
-    const widthPct = ((b.price - minP) / span) * 100;
+    const widthPct = ((b.price - minP) / span) * SCALE;
     const color = isPa ? '#facc15' : b.price < parichPrice ? '#ef4444' : '#22c55e';
     return `
       <div class="cpd-pos-row${isPa ? ' cpd-pos-row--parich' : ''}">
@@ -2430,7 +2442,11 @@ function renderCpdMarketPosition() {
       </div>`;
   }).join('');
 
-  const ticksHtml = ticks.map((t) => `<span>฿${t.toLocaleString()}</span>`).join('');
+  // Place ticks at the same SCALE so the axis matches the bars
+  const ticksHtml = ticks.map((t, i) => {
+    const leftPct = (i / (ticks.length - 1)) * SCALE;
+    return `<span class="cpd-pos-tick" style="left:${leftPct.toFixed(2)}%">฿${t.toLocaleString()}</span>`;
+  }).join('');
 
   wrap.innerHTML = `
     <div class="cpd-pos-canvas">
@@ -2447,7 +2463,6 @@ function renderCpdTimeChart() {
   if (!wrap) return;
   const f = cpdCurrentFormula;
   const months = ['ม.ค. 69','ก.พ. 69','มี.ค. 69','เม.ย. 69','พ.ค. 69','มิ.ย. 69'];
-  // Use 5 brands + Parich + average line for visual richness
   const brands = ['ปุ๋ยเทพ', 'พาริช', 'มงกุฎ', 'ปุ๋ยกระต่าย', 'ปุ๋ยตราม้า'];
   const colors = {'ปุ๋ยเทพ':'#22c55e', 'พาริช':'#facc15', 'มงกุฎ':'#a855f7', 'ปุ๋ยกระต่าย':'#06b6d4', 'ปุ๋ยตราม้า':'#f97316'};
 
@@ -2460,44 +2475,49 @@ function renderCpdTimeChart() {
     });
   });
 
-  // Find min/max across all prices for y-axis
   const all = series.flat();
   const yMin = Math.floor(Math.min(...all) / 500) * 500;
   const yMax = Math.ceil(Math.max(...all) / 500) * 500;
   const ySpan = yMax - yMin;
 
-  // Y axis ticks (4 levels)
   const yTicks = [];
   for (let i = 0; i <= 3; i++) yTicks.push(Math.round(yMin + (ySpan * i / 3)));
   yTicks.reverse();
   const yAxisHtml = yTicks.map((y) => `<span>฿${y.toLocaleString()}</span>`).join('');
 
-  // Average per month (used for the gray dashed series)
-  const avgSeries = months.map((_, i) => {
-    return Math.round(series.reduce((s, b) => s + b[i], 0) / series.length);
-  });
+  // Reserve right padding so dots at the last month sit inside the chart
+  // (and the floating legend never collides with them)
+  const XSCALE = 88; // x-axis spans 0–88% of canvas
 
-  // Draw dots: position each (month, price) as left% + bottom%
+  // Average per month (gray dashed series)
+  const avgSeries = months.map((_, i) =>
+    Math.round(series.reduce((s, b) => s + b[i], 0) / series.length));
+
+  // Draw dots
   const dotsHtml = [];
   brands.forEach((brand, bi) => {
     series[bi].forEach((price, i) => {
-      const leftPct   = (i / (months.length - 1)) * 100;
+      const leftPct   = (i / (months.length - 1)) * XSCALE;
       const bottomPct = ((price - yMin) / ySpan) * 100;
-      dotsHtml.push(`<div class="cpd-time-dot" style="left:${leftPct.toFixed(2)}%;bottom:${bottomPct.toFixed(2)}%;background:${colors[brand]}" title="${brand}: ฿${price.toLocaleString()}"></div>`);
+      const tip = `${brand} · ${months[i]} · ฿${price.toLocaleString()}`;
+      dotsHtml.push(`<div class="cpd-time-dot" data-tip="${tip}" style="left:${leftPct.toFixed(2)}%;bottom:${bottomPct.toFixed(2)}%;background:${colors[brand]}"></div>`);
     });
   });
-  // Average dashed dots (gray)
   avgSeries.forEach((price, i) => {
-    const leftPct   = (i / (months.length - 1)) * 100;
+    const leftPct   = (i / (months.length - 1)) * XSCALE;
     const bottomPct = ((price - yMin) / ySpan) * 100;
-    dotsHtml.push(`<div class="cpd-time-dot cpd-time-dot--avg" style="left:${leftPct.toFixed(2)}%;bottom:${bottomPct.toFixed(2)}%" title="เฉลี่ย: ฿${price.toLocaleString()}"></div>`);
+    const tip = `ค่าเฉลี่ย · ${months[i]} · ฿${price.toLocaleString()}`;
+    dotsHtml.push(`<div class="cpd-time-dot cpd-time-dot--avg" data-tip="${tip}" style="left:${leftPct.toFixed(2)}%;bottom:${bottomPct.toFixed(2)}%"></div>`);
   });
 
-  const xAxisHtml = months.map((m) => `<span>${m}</span>`).join('');
+  // X-axis ticks at the same scale
+  const xAxisHtml = months.map((m, i) => {
+    const leftPct = (i / (months.length - 1)) * XSCALE;
+    return `<span class="cpd-time-tick" style="left:${leftPct.toFixed(2)}%">${m}</span>`;
+  }).join('');
 
-  // Floating legend on right
   const lastIdx = months.length - 1;
-  const top    = series[0][lastIdx];     // ปุ๋ยเทพ
+  const top    = series[0][lastIdx];
   const avgEnd = avgSeries[lastIdx];
   const paIdx  = brands.indexOf('พาริช');
   const paEnd  = series[paIdx][lastIdx];
