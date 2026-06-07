@@ -4838,3 +4838,479 @@ body {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Competitive Price → SKU detail (.cpd-*) — Figma node 811:79508 detail
+   ─────────────────────────────────────────────────────────────────────────── */
+
+#cp-detail-view {
+  background: var(--background);
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  left: 0;
+  overflow-y: auto;
+  padding: 14px 16px 24px;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+#cp-detail-view::-webkit-scrollbar { width: 6px; }
+#cp-detail-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* SKU row clickable affordance */
+.cp-row--clickable { cursor: pointer; }
+
+.cpd-bc-back:hover { color: var(--foreground); }
+
+/* ── Header ── */
+.cpd-header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+.cpd-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cpd-title {
+  color: var(--foreground);
+  font-size: 18px;
+  font-weight: 700;
+}
+.cpd-formula-hi { color: #f97316; }
+.cpd-subtitle {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+/* ── KPI strip (6 cards) ── */
+.cpd-kpi-strip {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(6, 1fr);
+}
+
+/* ── Section header ── */
+.cpd-section-title-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0 -4px;
+}
+.cpd-section-line {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+.cpd-section-sub {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 400;
+  margin-left: 6px;
+}
+
+/* Parich products table */
+.cpd-products-table .cp-th { text-align: left; padding-left: 16px; }
+.cpd-products-table .cp-td { text-align: left; padding-left: 16px; }
+.cpd-products-table .cp-td--num { text-align: right; padding-right: 16px; }
+.cpd-prod-formula {
+  color: #f97316;
+  font-weight: 700;
+}
+.cpd-prod-name {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+/* ── Card section ── */
+.cpd-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px 18px;
+}
+.cpd-card-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.cpd-card-head-left {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cpd-card-head-right { display: flex; gap: 14px; }
+.cpd-card-title {
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 700;
+}
+.cpd-card-meta {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.cpd-status-pill {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 999px;
+  color: var(--cp-up);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+}
+.cpd-status-pill--down {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: var(--cp-down);
+}
+
+.cpd-pos-legend, .cpd-legend-item {
+  align-items: center;
+  display: flex;
+  font-size: 11px;
+  gap: 4px;
+  color: var(--muted-foreground);
+}
+.cpd-pos-legend { gap: 14px; }
+.cpd-legend-dot {
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+.cpd-legend-dash {
+  border-top: 1.5px dashed var(--muted-foreground);
+  display: inline-block;
+  height: 0;
+  width: 14px;
+}
+
+/* ── Market position chart ── */
+.cpd-pos-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cpd-pos-canvas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0 4px;
+  position: relative;
+}
+.cpd-pos-avg-line {
+  background: transparent;
+  border-left: 1px dashed var(--muted-foreground);
+  bottom: 28px;
+  position: absolute;
+  top: 4px;
+  width: 0;
+  z-index: 1;
+}
+.cpd-pos-avg-label {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  position: absolute;
+  top: -10px;
+  transform: translateX(-50%);
+}
+.cpd-pos-row {
+  align-items: center;
+  display: grid;
+  font-size: 12px;
+  gap: 12px;
+  grid-template-columns: 100px 1fr;
+  position: relative;
+}
+.cpd-pos-row--parich .cpd-pos-label {
+  color: var(--foreground);
+  font-weight: 700;
+}
+.cpd-pos-label {
+  color: var(--foreground);
+  text-align: right;
+}
+.cpd-pos-bar-wrap {
+  height: 16px;
+  position: relative;
+}
+.cpd-pos-bar {
+  border-radius: 3px;
+  height: 3px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.cpd-pos-dot {
+  border-radius: 50%;
+  border: 2px solid var(--card);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1);
+  height: 10px;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+}
+.cpd-pos-price {
+  color: var(--foreground);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  position: absolute;
+  top: 50%;
+  transform: translate(8px, -50%);
+  white-space: nowrap;
+}
+.cpd-pos-xaxis {
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 10px;
+  justify-content: space-between;
+  margin-left: 112px;
+  padding: 4px 0;
+}
+
+/* ── Time chart ── */
+.cpd-time-controls {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+.cpd-time-select { font-size: 12px; padding: 4px 8px; width: 130px; }
+.cpd-chart-toggle {
+  background: var(--secondary);
+  border-radius: 6px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+}
+.cpd-chart-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 4px 14px;
+}
+.cpd-chart-toggle-btn--active {
+  background: var(--background);
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  color: var(--foreground);
+  font-weight: 600;
+}
+.cpd-time-chart {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: 60px 1fr;
+  grid-template-rows: 220px 24px;
+  height: 244px;
+}
+.cpd-time-yaxis {
+  align-items: stretch;
+  color: var(--muted-foreground);
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  grid-column: 1;
+  grid-row: 1;
+  justify-content: space-between;
+  padding: 0 4px;
+  text-align: right;
+}
+.cpd-time-canvas {
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+}
+.cpd-time-gridline {
+  background: var(--border);
+  height: 1px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+.cpd-time-dot {
+  border-radius: 50%;
+  height: 8px;
+  position: absolute;
+  transform: translate(-50%, 50%);
+  width: 8px;
+}
+.cpd-time-dot--avg {
+  background: transparent;
+  border: 1.5px dashed var(--muted-foreground);
+}
+.cpd-time-yaxis-spacer { grid-column: 1; grid-row: 2; }
+.cpd-time-xaxis {
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 10px;
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+.cpd-time-legend {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  position: absolute;
+  right: 10px;
+  top: 60px;
+  z-index: 3;
+}
+.cpd-time-legend-item {
+  align-items: center;
+  color: var(--foreground);
+  display: flex;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  gap: 6px;
+}
+.cpd-time-legend-dot {
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+.cpd-time-legend-dot--avg {
+  background: transparent;
+  border: 1.5px dashed var(--muted-foreground);
+}
+
+/* ── NPK section ── */
+.cpd-npk-row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 280px 1fr;
+}
+.cpd-npk-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+}
+.cpd-formula-display {
+  color: #f97316;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cpd-npk-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cpd-npk-bar-row {
+  align-items: center;
+  display: grid;
+  font-size: 12px;
+  gap: 12px;
+  grid-template-columns: 90px 1fr 32px;
+}
+.cpd-npk-bar-label {
+  font-weight: 500;
+}
+.cpd-npk-bar-track {
+  background: var(--secondary);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+.cpd-npk-bar-fill {
+  border-radius: 999px;
+  height: 100%;
+  transition: width 0.2s;
+}
+.cpd-npk-bar-val {
+  color: var(--foreground);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cpd-npk-interp {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 10px 12px;
+}
+.cpd-npk-interp-title {
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+.cpd-npk-interp-text {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.cpd-suitability {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.cpd-suit-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  width: 100%;
+}
+.cpd-suit-table th {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 12px 14px;
+  text-align: left;
+}
+.cpd-suit-table td {
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+.cpd-suit-table tbody tr:last-child td { border-bottom: none; }
+.cpd-suit-pill {
+  border: 1px solid;
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 12px;
+}
+.cpd-suit-pill--good {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: var(--cp-up);
+  color: var(--cp-up);
+}
+.cpd-suit-pill--ok {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: #eab308;
+  color: #eab308;
+}

@@ -799,6 +799,151 @@
           <div class="cp-pagination" id="cpPagination"></div>
         </div><!-- #comp-price-view -->
 
+        <!-- Competitive Price → SKU detail view (hidden initially) -->
+        <div id="cp-detail-view" style="display:none">
+          <!-- Header -->
+          <div class="cpd-header">
+            <div class="cpd-header-left">
+              <div class="cpd-title">สูตร <span class="cpd-formula-hi" id="cpdHeadFormula">— - — - —</span></div>
+              <div class="cpd-subtitle">กลุ่มพืช <span id="cpdHeadCrops">—</span></div>
+            </div>
+            <button class="cp-share-btn" title="แชร์">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 6 KPI strip -->
+          <div class="cpd-kpi-strip">
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Avg. Parich Price</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpdKpiParich">฿—</span>
+                <span class="cp-kpi-delta" id="cpdKpiParichDelta">—</span>
+              </div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Avg. Competitors Price</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpdKpiComp">฿—</span>
+                <span class="cp-kpi-delta" id="cpdKpiCompDelta">—</span>
+              </div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Avg. Price Gap</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpdKpiGap">฿—</span>
+                <span class="cp-kpi-delta" id="cpdKpiGapDelta">—</span>
+              </div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Price Range</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpdKpiRange">฿— - —</span>
+              </div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">เคลื่อนไหวมากสุด (แบรนด์)</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpdKpiMover">—/—</span>
+                <span class="cp-kpi-delta" id="cpdKpiMoverDelta">—</span>
+              </div>
+            </div>
+            <div class="cp-kpi-card">
+              <div class="cp-kpi-label">Promotion</div>
+              <div class="cp-kpi-row">
+                <span class="cp-kpi-val" id="cpdKpiPromo">—</span>
+                <span class="cp-kpi-delta" id="cpdKpiPromoDelta">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parich products section -->
+          <div class="cpd-section">
+            <div class="cpd-section-title-row">
+              <span class="cpd-section-line">
+                สินค้าพาริชสำหรับสูตร <span class="cpd-formula-hi" id="cpdProdFormula">— - — - —</span>
+                <span class="cpd-section-sub" id="cpdProdCount">(— สูตร)</span>
+              </span>
+            </div>
+            <div class="cp-table-wrap">
+              <table class="cp-table cpd-products-table">
+                <thead>
+                  <tr>
+                    <th class="cp-th">ชื่อสินค้า <span class="cp-th-arrow">↕</span></th>
+                    <th class="cp-th">หมวด <span class="cp-th-arrow">↕</span></th>
+                    <th class="cp-th">บรรจุภัณฑ์ <span class="cp-th-arrow">↕</span></th>
+                    <th class="cp-th">ราคา <span class="cp-th-arrow">↕</span></th>
+                    <th class="cp-th">เปลี่ยนแปลง <span class="cp-th-arrow">↕</span></th>
+                  </tr>
+                </thead>
+                <tbody id="cpdProductsBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Market position chart -->
+          <div class="cpd-card">
+            <div class="cpd-card-head">
+              <div class="cpd-card-head-left">
+                <span class="cpd-card-title">ตำแหน่งราคาในตลาด</span>
+                <span class="cpd-card-meta" id="cpdPosRank">พาริชถูกจัดเป็นอันดับ — จาก — แบรนด์</span>
+                <span class="cpd-status-pill" id="cpdPosBadge">—</span>
+              </div>
+              <div class="cpd-card-head-right cpd-pos-legend">
+                <span class="cpd-legend-item"><span class="cpd-legend-dot" style="background:#ef4444"></span>ถูกกว่าพาริช</span>
+                <span class="cpd-legend-item"><span class="cpd-legend-dot" style="background:#22c55e"></span>แพงกว่าพาริช</span>
+                <span class="cpd-legend-item"><span class="cpd-legend-dash"></span><span id="cpdPosAvgLegend">ราคาเฉลี่ยตลาด —</span></span>
+              </div>
+            </div>
+            <div class="cpd-pos-chart" id="cpdPosChart"></div>
+          </div>
+
+          <!-- Price over time chart -->
+          <div class="cpd-card">
+            <div class="cpd-card-head">
+              <span class="cpd-card-title">ราคาตามช่วงเวลา</span>
+              <div class="cpd-time-controls">
+                <select class="ops-filter-select cpd-time-select"><option>แบรนด์...</option></select>
+                <select class="ops-filter-select cpd-time-select"><option>วันที่...</option></select>
+                <div class="cpd-chart-toggle">
+                  <button class="cpd-chart-toggle-btn cpd-chart-toggle-btn--active">Chart</button>
+                  <button class="cpd-chart-toggle-btn">Table</button>
+                </div>
+              </div>
+            </div>
+            <div class="cpd-time-chart" id="cpdTimeChart"></div>
+          </div>
+
+          <!-- NPK section -->
+          <div class="cpd-npk-row">
+            <div class="cpd-npk-card">
+              <div class="cpd-card-title">ธาตุอาหาร NPK</div>
+              <div class="cpd-formula-display" id="cpdNpkFormula">— - — - —</div>
+              <div class="cpd-npk-bars" id="cpdNpkBars"></div>
+              <div class="cpd-npk-interp">
+                <div class="cpd-npk-interp-title">การแปลผลทางการเกษตร</div>
+                <div class="cpd-npk-interp-text" id="cpdNpkInterp">—</div>
+              </div>
+            </div>
+
+            <div class="cpd-suitability">
+              <table class="cpd-suit-table">
+                <thead>
+                  <tr>
+                    <th>พืช</th>
+                    <th>รายละเอียด</th>
+                    <th>ระยะที่เหมาะสม</th>
+                    <th>ความเหมาะสม</th>
+                  </tr>
+                </thead>
+                <tbody id="cpdSuitBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div><!-- #cp-detail-view -->
+
       </div>
 
   <!-- Detail Sidebar (Right) -->

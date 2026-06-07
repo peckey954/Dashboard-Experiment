@@ -1823,8 +1823,12 @@ function exitCompetitivePrice() {
   if (!cpMode) return;
   cpMode = false;
 
+  if (cpdCurrentFormula) closeCpDetail();
+
   const cpEl = document.getElementById('comp-price-view');
   if (cpEl) cpEl.style.display = 'none';
+  const detEl = document.getElementById('cp-detail-view');
+  if (detEl) detEl.style.display = 'none';
 
   const mapEl   = document.getElementById('thailand-map');
   const mapTabs = document.getElementById('mapTabBar');
@@ -2106,7 +2110,10 @@ function renderCpTable() {
     return;
   }
   bodyEl.innerHTML = rows.map((r) => {
-    return `<tr>${cols.map((c) => formatCpCell(r, c)).join('')}</tr>`;
+    // SKU rows: clicking the row opens the formula detail page
+    const onclick = cpView === 'sku'
+        ? ` class="cp-row--clickable" onclick="openCpDetail('${(r.sku || '').replace(/'/g, '&#39;')}')"` : '';
+    return `<tr${onclick}>${cols.map((c) => formatCpCell(r, c)).join('')}</tr>`;
   }).join('');
 
   // Pagination footer
@@ -2163,6 +2170,411 @@ function setCpDelta(id, n) {
   const arrow = n > 0 ? '↑' : n < 0 ? '↓' : '·';
   el.className = 'cp-kpi-delta ' + cls;
   el.textContent = `${arrow} ${Math.abs(n)}%`;
+}
+
+// ── Competitive Price: SKU detail page ───────────────────────────────────────
+
+/** Hardcoded product variants per Parich row (package types per SKU). */
+const CPD_PRODUCT_TYPES = [
+  {name:'ผง',       category:'แม่ปุ๋ย', pkg:'50 กก.'},
+  {name:'เม็ดแดง',  category:'แม่ปุ๋ย', pkg:'ตัน'},
+  {name:'เม็ดเขียว', category:'แม่ปุ๋ย', pkg:'ตัน'},
+];
+
+/** Thai brand list used for the market-position chart (matches Figma row order). */
+const CPD_MARKET_BRANDS = [
+  'สามห่วง', 'ปุ๋ยเทพ', 'ปุ๋ย ซี.พี.', 'ปุ๋ยตราค่า', 'ปริ๊นซ์สเปรย์',
+  'ปุ๋ยมิตรไมตรี', 'พาริช', 'ปุ๋ยตราม้า', 'ตรากระต่าย', 'มงกุฎ', 'ปุ๋ยกระต่าย',
+];
+
+let cpdCurrentFormula = null;
+
+/** Opens the SKU detail page for a given formula like "0 - 0 - 60". */
+function openCpDetail(skuFormula) {
+  if (!skuFormula) return;
+  cpdCurrentFormula = skuFormula;
+
+  // Hide the list view, show the detail view
+  const listEl = document.getElementById('comp-price-view');
+  const detEl  = document.getElementById('cp-detail-view');
+  if (listEl) listEl.style.display = 'none';
+  if (detEl)  detEl.style.display  = '';
+  if (detEl)  detEl.scrollTop = 0;
+
+  // Update breadcrumb
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  if (bcCurrent) {
+    // Replace breadcrumb to show the current SKU as a 3rd segment
+    bcCurrent.textContent = 'Competitive Price';
+    const bc = bcCurrent.parentNode;
+    if (bc && !bc.querySelector('.cpd-bc-extra')) {
+      const sep   = document.createElement('span');
+      sep.className = 'sb-bc-sep cpd-bc-extra';
+      sep.textContent = '›';
+      const item  = document.createElement('span');
+      item.className = 'sb-bc-current cpd-bc-extra';
+      item.textContent = 'SKU ' + skuFormula;
+      bc.appendChild(sep);
+      bc.appendChild(item);
+      // Make the now-middle "Competitive Price" clickable + look like a parent
+      bcCurrent.classList.add('sb-bc-parent', 'cpd-bc-back');
+      bcCurrent.classList.remove('sb-bc-current');
+      bcCurrent.style.cursor = 'pointer';
+      bcCurrent.onclick = closeCpDetail;
+    } else if (bc) {
+      const item = bc.querySelector('.cpd-bc-extra.sb-bc-current');
+      if (item) item.textContent = 'SKU ' + skuFormula;
+    }
+  }
+
+  renderCpDetailAll();
+}
+
+/** Closes the SKU detail page and returns to the Competitive Price list. */
+function closeCpDetail() {
+  cpdCurrentFormula = null;
+  const listEl = document.getElementById('comp-price-view');
+  const detEl  = document.getElementById('cp-detail-view');
+  if (detEl)  detEl.style.display  = 'none';
+  if (listEl) listEl.style.display = '';
+
+  // Restore breadcrumb
+  const bc = document.querySelector('.sb-breadcrumb');
+  if (bc) {
+    bc.querySelectorAll('.cpd-bc-extra').forEach((el) => el.remove());
+    const backEl = bc.querySelector('.cpd-bc-back');
+    if (backEl) {
+      backEl.classList.remove('sb-bc-parent', 'cpd-bc-back');
+      backEl.classList.add('sb-bc-current');
+      backEl.style.cursor = '';
+      backEl.onclick = null;
+    }
+  }
+}
+
+/** Renders every section of the SKU detail page. */
+function renderCpDetailAll() {
+  if (!cpdCurrentFormula) return;
+  renderCpdHeaderAndKpis();
+  renderCpdProducts();
+  renderCpdMarketPosition();
+  renderCpdTimeChart();
+  renderCpdNpk();
+}
+
+/** Returns aggregate stats for the current SKU formula across brands. */
+function getCpdFormulaStats() {
+  const formula = cpdCurrentFormula;
+  const rows = getCpSkus().filter((r) => r.sku === formula);
+  const fallback = getCpSkus()[0]; // safety
+  if (!rows.length) return {
+    parich: 0, parichChg: 0, compAvg: 0, compAvgChg: 0,
+    gap: 0, gapChg: 0, min: 0, max: 0, promo: 0, promoChg: 0,
+    cropLabels: [], moverBrand: '—', moverChg: 0, count: 0,
+    referenceRow: fallback,
+  };
+
+  const sum = (k) => rows.reduce((s, r) => s + r[k], 0);
+  const avg = (k) => Math.round(sum(k) / rows.length);
+  const avgFloat = (k) => +(sum(k) / rows.length).toFixed(0);
+
+  const parich     = avg('parich');
+  const parichChg  = avgFloat('parichChg');
+  const compAvg    = avg('compAvg');
+  const compAvgChg = avgFloat('compAvgChg');
+  const min        = Math.min(...rows.map((r) => r.compMin));
+  const max        = Math.max(...rows.map((r) => r.compMax));
+  const promo      = rows.reduce((s, r) => s + r.promoCount, 0);
+  const promoChg   = avgFloat('promoChg');
+
+  // Mover: brand with the biggest absolute change
+  const sorted = rows.slice().sort((a, b) => Math.abs(b.maxChange) - Math.abs(a.maxChange));
+  const moverBrand = sorted[0].brand;
+  const moverChg   = sorted[0].maxChange;
+
+  const cropLabels = Array.from(new Set(rows.map((r) => r.cropLabel)));
+  return {
+    parich, parichChg, compAvg, compAvgChg,
+    gap: parich - compAvg, gapChg: parichChg - compAvgChg,
+    min, max, promo, promoChg,
+    cropLabels, moverBrand, moverChg,
+    count: rows.length,
+    referenceRow: rows[0],
+  };
+}
+
+function renderCpdHeaderAndKpis() {
+  const f = cpdCurrentFormula;
+  const fDisp = f; // already "0 - 0 - 60" format
+
+  setText('cpdHeadFormula', fDisp);
+  setText('cpdProdFormula', fDisp);
+  setText('cpdNpkFormula',  fDisp);
+
+  const s = getCpdFormulaStats();
+
+  setText('cpdHeadCrops', s.cropLabels.join(' ') || '—');
+  setText('cpdProdCount', `(${CPD_PRODUCT_TYPES.length} สูตร)`);
+
+  setText('cpdKpiParich', `฿${s.parich.toLocaleString()}`);
+  setText('cpdKpiComp',   `฿${s.compAvg.toLocaleString()}`);
+  setText('cpdKpiGap',    `฿${s.gap.toLocaleString()}`);
+  setText('cpdKpiRange',  `฿${s.min.toLocaleString()} - ${s.max.toLocaleString()}`);
+  setText('cpdKpiMover',  s.moverBrand);
+  setText('cpdKpiPromo',  s.promo);
+
+  setCpdDelta('cpdKpiParichDelta', s.parichChg);
+  setCpdDelta('cpdKpiCompDelta',   s.compAvgChg);
+  setCpdDelta('cpdKpiGapDelta',    s.gapChg);
+  setCpdDelta('cpdKpiMoverDelta',  s.moverChg);
+  setCpdDelta('cpdKpiPromoDelta',  s.promoChg);
+}
+
+function setCpdDelta(id, n) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const cls   = n > 0 ? 'cp-d--up' : n < 0 ? 'cp-d--down' : 'cp-d--zero';
+  const arrow = n > 0 ? '↑' : n < 0 ? '↓' : '·';
+  el.className = 'cp-kpi-delta ' + cls;
+  el.textContent = `${arrow} ${Math.abs(Math.round(n))}%`;
+}
+
+function renderCpdProducts() {
+  const body = document.getElementById('cpdProductsBody');
+  if (!body) return;
+  const s = getCpdFormulaStats();
+  const base = s.referenceRow ? s.referenceRow.parich : 16000;
+
+  body.innerHTML = CPD_PRODUCT_TYPES.map((pt, i) => {
+    const seed  = _cpHash(cpdCurrentFormula + '|' + pt.name);
+    const price = base + ((seed % 1500) - 200);
+    const delta = ((seed >> 4) % 21) - 6;
+    const change = Math.max(500, Math.round(price * Math.abs(delta) / 100));
+    const dCls = delta > 0 ? 'cp-d--up' : delta < 0 ? 'cp-d--down' : 'cp-d--zero';
+    const arrow = delta > 0 ? '↑' : delta < 0 ? '↓' : '·';
+    return `
+      <tr>
+        <td class="cp-td cp-td--text" style="text-align:left">
+          <div class="cpd-prod-formula">${cpdCurrentFormula}</div>
+          <div class="cpd-prod-name">${pt.name}</div>
+        </td>
+        <td class="cp-td cp-td--text">${pt.category}</td>
+        <td class="cp-td cp-td--text">${pt.pkg}</td>
+        <td class="cp-td cp-td--num">
+          <div class="cp-cell-main">฿${price.toLocaleString()}</div>
+          <div class="cp-cell-delta ${dCls}">${arrow} ${Math.abs(delta)}%</div>
+        </td>
+        <td class="cp-td cp-td--num">
+          <div class="cp-cell-main">฿${change.toLocaleString()}</div>
+          <div class="cp-cell-delta ${dCls}">${arrow} ${Math.abs(delta)}%</div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function renderCpdMarketPosition() {
+  const wrap = document.getElementById('cpdPosChart');
+  if (!wrap) return;
+
+  const f = cpdCurrentFormula;
+  // Generate stable prices for each brand for this formula
+  const brandPrices = CPD_MARKET_BRANDS.map((brand) => {
+    const seed = _cpHash(brand + '|' + f);
+    // Spread prices 14,500–17,000
+    const price = 14500 + (seed % 2500);
+    return {brand, price};
+  });
+  // Force "พาริช" to a mid price (yellow) — keep its hashed value
+  brandPrices.sort((a, b) => a.price - b.price);
+
+  const parichEntry = brandPrices.find((b) => b.brand === 'พาริช');
+  const parichPrice = parichEntry ? parichEntry.price : 0;
+  const rank        = parichEntry ? (brandPrices.indexOf(parichEntry) + 1) : 0;
+  const total       = brandPrices.length;
+  const avgPrice    = Math.round(brandPrices.reduce((s, b) => s + b.price, 0) / total);
+  const diff        = parichPrice - avgPrice;
+  const diffPct     = (diff / avgPrice) * 100;
+  const above       = diff >= 0;
+
+  setText('cpdPosRank', `พาริชถูกจัดเป็นอันดับ ${rank} จาก ${total} แบรนด์`);
+  const badge = document.getElementById('cpdPosBadge');
+  if (badge) {
+    badge.textContent = `${above ? 'สูงกว่า' : 'ต่ำกว่า'}ค่าเฉลี่ยตลาด ฿${Math.abs(diff).toLocaleString()} · ${Math.abs(diffPct).toFixed(0)}%`;
+    badge.className = 'cpd-status-pill ' + (above ? 'cpd-status-pill--up' : 'cpd-status-pill--down');
+  }
+  setText('cpdPosAvgLegend', `ราคาเฉลี่ยตลาด ฿${avgPrice.toLocaleString()}`);
+
+  // Build horizontal bars
+  const minP = Math.min(...brandPrices.map((b) => b.price));
+  const maxP = Math.max(...brandPrices.map((b) => b.price));
+  const span = maxP - minP || 1;
+
+  // X axis: 6 evenly-spaced gridlines from minP to maxP rounded
+  const ticks = [];
+  for (let i = 0; i <= 5; i++) ticks.push(Math.round(minP + (span * i / 5) / 100) * 100);
+
+  const avgPctX = ((avgPrice - minP) / span) * 100;
+
+  const barsHtml = brandPrices.map((b) => {
+    const isPa  = b.brand === 'พาริช';
+    const widthPct = ((b.price - minP) / span) * 100;
+    const color = isPa ? '#facc15' : b.price < parichPrice ? '#ef4444' : '#22c55e';
+    return `
+      <div class="cpd-pos-row${isPa ? ' cpd-pos-row--parich' : ''}">
+        <div class="cpd-pos-label">${b.brand}</div>
+        <div class="cpd-pos-bar-wrap">
+          <div class="cpd-pos-bar" style="width:${widthPct.toFixed(2)}%;background:${color}"></div>
+          <span class="cpd-pos-dot" style="left:${widthPct.toFixed(2)}%;background:${color}"></span>
+          <span class="cpd-pos-price" style="left:${widthPct.toFixed(2)}%">฿${b.price.toLocaleString()}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  const ticksHtml = ticks.map((t) => `<span>฿${t.toLocaleString()}</span>`).join('');
+
+  wrap.innerHTML = `
+    <div class="cpd-pos-canvas">
+      <div class="cpd-pos-avg-line" style="left:${avgPctX.toFixed(2)}%"></div>
+      <div class="cpd-pos-avg-label" style="left:${avgPctX.toFixed(2)}%">เฉลี่ย</div>
+      ${barsHtml}
+    </div>
+    <div class="cpd-pos-xaxis">${ticksHtml}</div>
+  `;
+}
+
+function renderCpdTimeChart() {
+  const wrap = document.getElementById('cpdTimeChart');
+  if (!wrap) return;
+  const f = cpdCurrentFormula;
+  const months = ['ม.ค. 69','ก.พ. 69','มี.ค. 69','เม.ย. 69','พ.ค. 69','มิ.ย. 69'];
+  // Use 5 brands + Parich + average line for visual richness
+  const brands = ['ปุ๋ยเทพ', 'พาริช', 'มงกุฎ', 'ปุ๋ยกระต่าย', 'ปุ๋ยตราม้า'];
+  const colors = {'ปุ๋ยเทพ':'#22c55e', 'พาริช':'#facc15', 'มงกุฎ':'#a855f7', 'ปุ๋ยกระต่าย':'#06b6d4', 'ปุ๋ยตราม้า':'#f97316'};
+
+  const series = brands.map((brand) => {
+    const seed = _cpHash(brand + '|' + f);
+    const base = 14000 + (seed % 3000);
+    return months.map((_, i) => {
+      const wave = Math.sin((seed % 13) + i * 0.9) * 700;
+      return base + Math.round(wave + ((seed >> (i * 2)) % 600) - 300);
+    });
+  });
+
+  // Find min/max across all prices for y-axis
+  const all = series.flat();
+  const yMin = Math.floor(Math.min(...all) / 500) * 500;
+  const yMax = Math.ceil(Math.max(...all) / 500) * 500;
+  const ySpan = yMax - yMin;
+
+  // Y axis ticks (4 levels)
+  const yTicks = [];
+  for (let i = 0; i <= 3; i++) yTicks.push(Math.round(yMin + (ySpan * i / 3)));
+  yTicks.reverse();
+  const yAxisHtml = yTicks.map((y) => `<span>฿${y.toLocaleString()}</span>`).join('');
+
+  // Average per month (used for the gray dashed series)
+  const avgSeries = months.map((_, i) => {
+    return Math.round(series.reduce((s, b) => s + b[i], 0) / series.length);
+  });
+
+  // Draw dots: position each (month, price) as left% + bottom%
+  const dotsHtml = [];
+  brands.forEach((brand, bi) => {
+    series[bi].forEach((price, i) => {
+      const leftPct   = (i / (months.length - 1)) * 100;
+      const bottomPct = ((price - yMin) / ySpan) * 100;
+      dotsHtml.push(`<div class="cpd-time-dot" style="left:${leftPct.toFixed(2)}%;bottom:${bottomPct.toFixed(2)}%;background:${colors[brand]}" title="${brand}: ฿${price.toLocaleString()}"></div>`);
+    });
+  });
+  // Average dashed dots (gray)
+  avgSeries.forEach((price, i) => {
+    const leftPct   = (i / (months.length - 1)) * 100;
+    const bottomPct = ((price - yMin) / ySpan) * 100;
+    dotsHtml.push(`<div class="cpd-time-dot cpd-time-dot--avg" style="left:${leftPct.toFixed(2)}%;bottom:${bottomPct.toFixed(2)}%" title="เฉลี่ย: ฿${price.toLocaleString()}"></div>`);
+  });
+
+  const xAxisHtml = months.map((m) => `<span>${m}</span>`).join('');
+
+  // Floating legend on right
+  const lastIdx = months.length - 1;
+  const top    = series[0][lastIdx];     // ปุ๋ยเทพ
+  const avgEnd = avgSeries[lastIdx];
+  const paIdx  = brands.indexOf('พาริช');
+  const paEnd  = series[paIdx][lastIdx];
+
+  wrap.innerHTML = `
+    <div class="cpd-time-yaxis">${yAxisHtml}</div>
+    <div class="cpd-time-canvas">
+      ${[0, 1, 2, 3].map((i) => `<div class="cpd-time-gridline" style="bottom:${(i / 3 * 100).toFixed(2)}%"></div>`).join('')}
+      ${dotsHtml.join('')}
+      <div class="cpd-time-legend">
+        <div class="cpd-time-legend-item"><span class="cpd-time-legend-dot" style="background:${colors['ปุ๋ยเทพ']}"></span>ปุ๋ยเทพ ฿${top.toLocaleString()}</div>
+        <div class="cpd-time-legend-item"><span class="cpd-time-legend-dot cpd-time-legend-dot--avg"></span>ค่าเฉลี่ย ฿${avgEnd.toLocaleString()}</div>
+        <div class="cpd-time-legend-item"><span class="cpd-time-legend-dot" style="background:${colors['พาริช']}"></span>พาริช ฿${paEnd.toLocaleString()}</div>
+      </div>
+    </div>
+    <div class="cpd-time-yaxis-spacer"></div>
+    <div class="cpd-time-xaxis">${xAxisHtml}</div>
+  `;
+}
+
+function renderCpdNpk() {
+  const f = cpdCurrentFormula;
+  // Parse "0 - 0 - 60" → [0, 0, 60]
+  const parts = f.split('-').map((s) => parseInt(s.trim(), 10) || 0);
+  const [N, P, K] = [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+  const maxVal = Math.max(N, P, K, 1);
+
+  const barsHtml = [
+    {label:'ไนโตรเจน (N)',  v:N, c:'#3b82f6'},
+    {label:'ฟอสฟอรัส (P)',  v:P, c:'#f97316'},
+    {label:'โพแทสเซียม (K)', v:K, c:'#a855f7'},
+  ].map((it) => {
+    const pct = (it.v / 100) * 100;
+    return `
+      <div class="cpd-npk-bar-row">
+        <div class="cpd-npk-bar-label" style="color:${it.c}">${it.label}</div>
+        <div class="cpd-npk-bar-track"><div class="cpd-npk-bar-fill" style="width:${pct.toFixed(0)}%;background:${it.c}"></div></div>
+        <div class="cpd-npk-bar-val">${it.v ? it.v + '%' : '0'}</div>
+      </div>`;
+  }).join('');
+  const barsEl = document.getElementById('cpdNpkBars');
+  if (barsEl) barsEl.innerHTML = barsHtml;
+
+  // Interpretation text — varies by which nutrient dominates
+  let interp = '';
+  if (K >= 30 && N < 15 && P < 15) {
+    interp = 'ส่งเสริมคุณภาพผลผลิต ความหวาน และน้ำหนัก พัฒนาระบบรากร + ทนต่อความเครียด/แล้ง เหมาะช่วงออกดอก-ติดผล-เก็บเกี่ยว ไม่เหมาะช่วงต้นกล้า (ไม่มี N เร่งใบ)';
+  } else if (N >= 20 && P < 15) {
+    interp = 'เร่งการเจริญเติบโตและใบ เหมาะช่วงต้นกล้า/บำรุงต้น ไม่เหมาะระยะออกดอก-ติดผล (ขาด P/K)';
+  } else if (P >= 20 && N < 15) {
+    interp = 'เน้นพัฒนาระบบรากและตาดอก เหมาะช่วงเริ่มออกดอก ไม่เหมาะระยะเก็บเกี่ยวผล';
+  } else {
+    interp = 'สูตรสมดุล เหมาะใช้ระยะทั่วไป — ปรับตามระยะการเจริญของพืชที่ต้องการบำรุง';
+  }
+  setText('cpdNpkInterp', interp);
+
+  // Suitability table — generated per formula
+  const rows = [
+    {crop:'ทุเรียน',      detail:'เพิ่มความหวานและคุณภาพผล เนื้อแน่น', stage:'ระยะติดผล - ขยายผล', kBest:true},
+    {crop:'อ้อย',          detail:'เพิ่มค่าความหวาน (CCS)',              stage:'ระยะสะสมน้ำตาล',     kBest:true},
+    {crop:'มันสำปะหลัง', detail:'เพิ่มน้ำหนักและแป้งในหัว',            stage:'ระยะลงหัว',           kBest:K >= 20},
+    {crop:'สับปะรด',      detail:'เสริมคุณภาพ ใช้ร่วมสูตรอื่น',          stage:'ระยะติดผล',           kBest:false},
+  ];
+  const body = document.getElementById('cpdSuitBody');
+  if (body) {
+    body.innerHTML = rows.map((r) => {
+      const isHigh = r.kBest && K >= 30;
+      const cls    = isHigh ? 'cpd-suit-pill--good' : 'cpd-suit-pill--ok';
+      const label  = isHigh ? 'เหมาะมาก' : 'ใช้เสริม';
+      return `<tr>
+        <td>${r.crop}</td>
+        <td>${r.detail}</td>
+        <td>${r.stage}</td>
+        <td><span class="cpd-suit-pill ${cls}">${label}</span></td>
+      </tr>`;
+    }).join('');
+  }
 }
 
 /** Tooltip for a dealer dot — title "D - name" or "S - name", status badge, location, Sales vs Target. */
