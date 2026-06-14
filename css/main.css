@@ -5588,58 +5588,97 @@ body {
   inset: 0;
   position: absolute;
 }
-.ai-orb-core {
-  background:
-    radial-gradient(circle at 36% 30%, #fff 0%, #ffedd5 18%, #fb923c 45%, #ea580c 75%, #7c2d12 100%);
-  box-shadow:
-    0 0 30px rgba(249, 115, 22, 0.55),
-    0 0 60px rgba(234, 88, 12, 0.35) inset;
-  inset: 22%;
-  z-index: 3;
-  animation: ai-orb-breathe 3.6s ease-in-out infinite;
-}
-.ai-orb-ring {
-  background: conic-gradient(from 0deg,
-    rgba(251, 146, 60, 0) 0deg,
-    rgba(251, 146, 60, 0.85) 80deg,
-    rgba(255, 200, 120, 0.95) 140deg,
-    rgba(251, 146, 60, 0.85) 200deg,
-    rgba(251, 146, 60, 0) 360deg);
-  filter: blur(8px);
-  mask: radial-gradient(circle, transparent 50%, #000 52%, #000 70%, transparent 72%);
-  -webkit-mask: radial-gradient(circle, transparent 50%, #000 52%, #000 70%, transparent 72%);
-  z-index: 1;
-}
-.ai-orb-ring--a { animation: ai-orb-spin 6s linear infinite; }
-.ai-orb-ring--b {
-  animation: ai-orb-spin 11s linear infinite reverse;
-  filter: blur(12px);
-  mask: radial-gradient(circle, transparent 56%, #000 58%, #000 78%, transparent 80%);
-  -webkit-mask: radial-gradient(circle, transparent 56%, #000 58%, #000 78%, transparent 80%);
-  opacity: 0.7;
-}
-.ai-orb-ring--c {
-  animation: ai-orb-spin 18s linear infinite;
-  filter: blur(16px);
-  mask: radial-gradient(circle, transparent 64%, #000 66%, #000 86%, transparent 88%);
-  -webkit-mask: radial-gradient(circle, transparent 64%, #000 66%, #000 86%, transparent 88%);
-  opacity: 0.45;
-}
+
+/* Glow: smaller + softer than before so it doesn't dominate */
 .ai-orb-glow {
-  background: radial-gradient(circle, rgba(251, 146, 60, 0.35) 0%, transparent 60%);
-  filter: blur(20px);
-  inset: -10%;
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.22) 0%, transparent 55%);
+  filter: blur(14px);
+  inset: 4%;
   z-index: 0;
   animation: ai-orb-pulse 3.6s ease-in-out infinite;
 }
+
+/* Rings: now use clear asymmetric conic gradients so rotation is visible.
+   Bright "hot spot" + dark "shadow" rotate around the center. */
+.ai-orb-ring {
+  background: conic-gradient(from 0deg,
+    rgba(255, 224, 178, 0.85) 0deg,    /* bright hot spot */
+    rgba(251, 146, 60, 0.55) 60deg,
+    rgba(251, 146, 60, 0.15) 130deg,
+    rgba(251, 146, 60, 0)    200deg,   /* fade-out shadow */
+    rgba(251, 146, 60, 0.15) 280deg,
+    rgba(251, 146, 60, 0.55) 340deg,
+    rgba(255, 224, 178, 0.85) 360deg);
+  filter: blur(6px);
+  /* Thinner ring + soft inner/outer fade so edges look airy */
+  mask: radial-gradient(circle,
+    transparent 52%,
+    #000 58%,
+    #000 64%,
+    transparent 72%);
+  -webkit-mask: radial-gradient(circle,
+    transparent 52%,
+    #000 58%,
+    #000 64%,
+    transparent 72%);
+  z-index: 1;
+  transform-origin: 50% 50%;
+}
+.ai-orb-ring--a {
+  animation: ai-orb-spin 7s linear infinite;
+  opacity: 0.95;
+}
+.ai-orb-ring--b {
+  animation: ai-orb-spin 13s linear infinite reverse;
+  filter: blur(10px);
+  mask: radial-gradient(circle,
+    transparent 60%,
+    #000 66%,
+    #000 72%,
+    transparent 80%);
+  -webkit-mask: radial-gradient(circle,
+    transparent 60%,
+    #000 66%,
+    #000 72%,
+    transparent 80%);
+  opacity: 0.5;
+}
+.ai-orb-ring--c {
+  animation: ai-orb-spin 21s linear infinite;
+  filter: blur(14px);
+  mask: radial-gradient(circle,
+    transparent 70%,
+    #000 76%,
+    #000 82%,
+    transparent 92%);
+  -webkit-mask: radial-gradient(circle,
+    transparent 70%,
+    #000 76%,
+    #000 82%,
+    transparent 92%);
+  opacity: 0.3;
+}
+
+/* Core: solid orb in the middle with a soft highlight + gentle scale breathe */
+.ai-orb-core {
+  background:
+    radial-gradient(circle at 36% 30%, #fff 0%, #ffedd5 18%, #fb923c 50%, #ea580c 80%, #9a3412 100%);
+  box-shadow:
+    0 0 24px rgba(249, 115, 22, 0.4),
+    0 0 50px rgba(234, 88, 12, 0.28) inset;
+  inset: 28%;
+  z-index: 3;
+  animation: ai-orb-breathe 3.6s ease-in-out infinite;
+}
+
 @keyframes ai-orb-spin { to { transform: rotate(360deg); } }
 @keyframes ai-orb-breathe {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.05); }
 }
 @keyframes ai-orb-pulse {
-  0%, 100% { opacity: 0.75; transform: scale(1); }
-  50%      { opacity: 1;    transform: scale(1.12); }
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50%      { opacity: 0.95; transform: scale(1.08); }
 }
 
 .ai-welcome-title {
