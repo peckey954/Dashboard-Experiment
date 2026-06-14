@@ -5020,3 +5020,157 @@ document.addEventListener('DOMContentLoaded', () => {
   const salePill = document.querySelector('.nav-pill[data-section="sale"]');
   switchNavSection('sale', salePill);
 });
+
+// ── AI Chat Drawer ───────────────────────────────────────────────────────────
+
+let aiDrawerOpen = false;
+let aiBusy = false;
+
+function toggleAiDrawer() {
+  aiDrawerOpen ? closeAiDrawer() : openAiDrawer();
+}
+
+function openAiDrawer() {
+  const d = document.getElementById('aiDrawer');
+  const bd = document.getElementById('aiBackdrop');
+  const btn = document.getElementById('aiBtn');
+  if (d)  { d.classList.add('ai-drawer--open');  d.setAttribute('aria-hidden', 'false'); }
+  if (bd)  bd.classList.add('ai-backdrop--show');
+  if (btn) btn.classList.add('ai-btn--active');
+  aiDrawerOpen = true;
+  setTimeout(() => {
+    const inp = document.getElementById('aiInput');
+    if (inp) inp.focus();
+  }, 220);
+}
+
+function closeAiDrawer() {
+  const d  = document.getElementById('aiDrawer');
+  const bd = document.getElementById('aiBackdrop');
+  const btn = document.getElementById('aiBtn');
+  if (d)   { d.classList.remove('ai-drawer--open', 'ai-drawer--expanded'); d.setAttribute('aria-hidden', 'true'); }
+  if (bd)  bd.classList.remove('ai-backdrop--show');
+  if (btn) btn.classList.remove('ai-btn--active');
+  aiDrawerOpen = false;
+}
+
+function toggleAiExpand() {
+  const d = document.getElementById('aiDrawer');
+  if (d) d.classList.toggle('ai-drawer--expanded');
+}
+
+/** Sends a message from the input box. */
+function sendAiMessage() {
+  if (aiBusy) return;
+  const inp = document.getElementById('aiInput');
+  const txt = inp && inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  inp.style.height = '';
+  appendAiMessage(txt, 'user');
+  respondAi(txt);
+}
+
+/** A suggested-question pill was clicked. */
+function askAiSuggested(txt) {
+  if (aiBusy) return;
+  appendAiMessage(txt, 'user');
+  respondAi(txt);
+}
+
+function onAiInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendAiMessage();
+  }
+}
+
+/** Hides the welcome / suggestions once the user starts chatting. */
+function ensureChatModeStarted() {
+  const welcome = document.getElementById('aiWelcome');
+  const sugg    = document.getElementById('aiSuggestWrap');
+  if (welcome) welcome.style.display = 'none';
+  if (sugg)    sugg.style.display    = 'none';
+}
+
+function appendAiMessage(text, who) {
+  ensureChatModeStarted();
+  const list = document.getElementById('aiMessages');
+  if (!list) return;
+  const row = document.createElement('div');
+  row.className = 'ai-msg ai-msg--' + who;
+  if (who === 'ai') {
+    row.innerHTML = `
+      <div class="ai-msg-avatar"><span class="ai-msg-orb"></span></div>
+      <div class="ai-msg-bubble">${text}</div>`;
+  } else {
+    row.innerHTML = `<div class="ai-msg-bubble">${escapeHtml(text)}</div>`;
+  }
+  list.appendChild(row);
+  // Scroll body to bottom
+  const body = document.getElementById('aiDrawerBody');
+  if (body) body.scrollTop = body.scrollHeight;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[c]);
+}
+
+/** Produces a mock AI response with typing indicator. */
+function respondAi(userText) {
+  aiBusy = true;
+  const list = document.getElementById('aiMessages');
+  const typing = document.createElement('div');
+  typing.className = 'ai-msg ai-msg--ai ai-msg--typing';
+  typing.innerHTML = `
+    <div class="ai-msg-avatar"><span class="ai-msg-orb"></span></div>
+    <div class="ai-msg-bubble ai-typing">
+      <span class="ai-typing-dot"></span><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span>
+    </div>`;
+  if (list) list.appendChild(typing);
+  const body = document.getElementById('aiDrawerBody');
+  if (body) body.scrollTop = body.scrollHeight;
+
+  setTimeout(() => {
+    if (list) list.removeChild(typing);
+    const reply = mockAiReply(userText);
+    appendAiMessage(reply, 'ai');
+    aiBusy = false;
+  }, 900 + Math.random() * 600);
+}
+
+/** Very simple keyword-routed mock response — replace with real API later. */
+function mockAiReply(txt) {
+  const t = txt.toLowerCase();
+  if (t.includes('ช่วย') && (t.includes('อะไรได้') || t.includes('ทำอะไร'))) {
+    return `ผมช่วยได้หลายอย่างเลยครับ:<br>
+      • <strong>วิเคราะห์ยอดขาย</strong> รายดีลเลอร์ / รายพืช / ราย SKU<br>
+      • <strong>เปรียบเทียบราคา</strong> กับคู่แข่ง พร้อมระบุดีลเลอร์ที่กำลังเสี่ยง<br>
+      • <strong>แนะนำโอกาสการขาย</strong> ตามคะแนน LI × RFM<br>
+      • <strong>สรุปข้อมูลรายวัน/รายสัปดาห์</strong> + จุดที่ควรลงดู<br>
+      ลองพิมพ์คำถามได้เลยครับ`;
+  }
+  if (t.includes('ยอดขาย') || t.includes('sale')) {
+    return `เดือนนี้ยอดขายรวม <strong>฿72.1M</strong> เพิ่มขึ้น <strong style="color:#22c55e">+8.5%</strong> เทียบเดือนก่อน<br><br>
+      <strong>โซนที่โต:</strong> เหนือ 1 (+14%), อีสาน 2 (+11%)<br>
+      <strong>โซนที่ลด:</strong> ตะวันออก 2 (−6%), กลาง 3 (−3%)<br><br>
+      อยากให้เจาะลึกโซนไหนต่อครับ?`;
+  }
+  if (t.includes('โอกาส') || t.includes('opportunity')) {
+    return `ตอนนี้มี <strong>4 จังหวัด</strong> ที่น่าสนใจครับ:<br>
+      1. <strong>ตาก</strong> — ตลาดศักยภาพ ฿850M, market share 22% (ช่องว่างใหญ่)<br>
+      2. <strong>กาญจนบุรี</strong> — Dealer Gap สูง + LI score 78<br>
+      3. <strong>เพชรบูรณ์</strong> — ราคาคู่แข่งลด 6% เดือนนี้<br>
+      4. <strong>ลพบุรี</strong> — Price Gap risk แต่ activity ยังสูง<br><br>
+      อยากให้ทำแผนแก้ครับ?`;
+  }
+  if (t.includes('ราคา') || t.includes('price') || t.includes('คู่แข่ง')) {
+    return `ตอนนี้ราคาเฉลี่ย Parich อยู่ที่ <strong>฿15,200</strong> · ราคาเฉลี่ยตลาด <strong>฿15,174</strong> · เราอยู่อันดับ 7 จาก 11 แบรนด์<br><br>
+      <strong>คู่แข่งที่ปรับลงเยอะสุด:</strong> ปุ๋ยมิตรไมตรี (−8%), ปุ๋ย ซี.พี. (−5%)<br>
+      ควรพิจารณาทำ promotion ในช่วง 2 สัปดาห์ข้างหน้าครับ`;
+  }
+  return `จากข้อมูลที่ผมมี ผมเข้าใจคำถามว่า "<strong>${escapeHtml(txt)}</strong>" — กำลังประมวลผลครับ<br><br>
+    ยังไม่พบข้อมูลตรงๆ ลองถามใหม่ในมุมของ <em>ยอดขาย / ดีลเลอร์ / ราคา / โอกาส</em> หรือพิมพ์ <code>@</code> เพื่อระบุ context เฉพาะ`;
+}

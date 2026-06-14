@@ -30,6 +30,14 @@
         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
       </svg>
     </button>
+    <button class="ai-btn" id="aiBtn" onclick="toggleAiDrawer()" title="Ask AI">
+      <span class="ai-btn-glow"></span>
+      <svg class="ai-btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>
+        <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>
+      </svg>
+      <span class="ai-btn-label">Ask AI</span>
+    </button>
     <button class="header-icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="5"/>
@@ -1355,6 +1363,120 @@
   <button class="ir-flyout-item" onclick="irNavigateMarketing('segment')">Customer Segmentation</button>
   <button class="ir-flyout-item" onclick="irNavigateMarketing('monitor')">Real time sentiment monitoring</button>
 </div>
+
+<!-- ── AI Chat Drawer ── -->
+<div class="ai-backdrop" id="aiBackdrop" onclick="closeAiDrawer()"></div>
+<aside class="ai-drawer" id="aiDrawer" aria-hidden="true">
+  <!-- Drawer header -->
+  <div class="ai-drawer-head">
+    <div class="ai-drawer-title">
+      <span class="ai-drawer-title-orb"></span>
+      ผู้ช่วย AI
+    </div>
+    <div class="ai-drawer-head-actions">
+      <button class="ai-icon-btn" title="ตัวเลือก">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+        </svg>
+      </button>
+      <button class="ai-icon-btn" title="ขยาย" onclick="toggleAiExpand()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/>
+        </svg>
+      </button>
+      <button class="ai-icon-btn" title="ปิด" onclick="closeAiDrawer()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="ai-drawer-body" id="aiDrawerBody">
+    <!-- Welcome screen -->
+    <div class="ai-welcome" id="aiWelcome">
+      <div class="ai-orb">
+        <span class="ai-orb-ring ai-orb-ring--a"></span>
+        <span class="ai-orb-ring ai-orb-ring--b"></span>
+        <span class="ai-orb-ring ai-orb-ring--c"></span>
+        <span class="ai-orb-core"></span>
+        <span class="ai-orb-glow"></span>
+      </div>
+      <div class="ai-welcome-title">สวัสดี</div>
+      <div class="ai-welcome-sub">วันนี้อยากให้ช่วยวิเคราะห์<br>ยอดขายเรื่องอะไรดีครับ?</div>
+    </div>
+
+    <!-- Chat messages -->
+    <div class="ai-messages" id="aiMessages"></div>
+  </div>
+
+  <!-- Suggestions + summary insight -->
+  <div class="ai-suggest-wrap" id="aiSuggestWrap">
+    <div class="ai-insight-card">
+      <div class="ai-insight-head">
+        <span class="ai-insight-dot"></span>
+        <span class="ai-insight-title">สรุปผลวันนี้</span>
+        <span class="ai-insight-time">อัปเดต 2 นาทีก่อน</span>
+      </div>
+      <div class="ai-insight-body" id="aiInsightBody">
+        ยอดขายโดยรวม <strong>฿72.1M</strong> เพิ่มขึ้น <strong style="color:#22c55e">+8.5%</strong> จากเดือนก่อน · ดีลเลอร์ที่เคลื่อนไหวเด่นวันนี้คือ <strong>รุ่งเจริญการเกษตร</strong> (+12% WoW)
+      </div>
+    </div>
+
+    <div class="ai-suggest-list">
+      <button class="ai-suggest-item" onclick="askAiSuggested('ผู้ช่วย AI ช่วยอะไรได้บ้าง?')">
+        <span class="ai-suggest-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>
+          </svg>
+        </span>
+        <span>ผู้ช่วย AI ช่วยอะไรได้บ้าง?</span>
+      </button>
+      <button class="ai-suggest-item" onclick="askAiSuggested('ถามอะไรเกี่ยวกับยอดขายได้บ้าง?')">
+        <span class="ai-suggest-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+        </span>
+        <span>ถามอะไรเกี่ยวกับยอดขายได้บ้าง?</span>
+      </button>
+      <button class="ai-suggest-item" onclick="askAiSuggested('ช่วยวิเคราะห์โอกาสการขายให้หน่อย')">
+        <span class="ai-suggest-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+          </svg>
+        </span>
+        <span>ช่วยวิเคราะห์โอกาสการขายให้หน่อย</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Input area -->
+  <div class="ai-input-wrap">
+    <textarea class="ai-input" id="aiInput" rows="2" placeholder="พิมพ์ @ เพื่อถามเกี่ยวกับข้อมูลหมวดหมู่นั้น..." onkeydown="onAiInputKey(event)"></textarea>
+    <div class="ai-input-foot">
+      <button class="ai-input-foot-btn" title="แนบไฟล์ / เพิ่ม context">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </button>
+      <div class="ai-input-foot-right">
+        <button class="ai-model-pill" title="เลือกโมเดล">
+          <span>GPT-4o</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiMessage()" title="ส่ง">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m5 12 7-7 7 7M12 5v14"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</aside>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/app.js"></script>
