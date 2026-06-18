@@ -6067,7 +6067,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 14px 0 14px;
+  /* Horizontal padding lives on the CARD (not the inner list) so the
+     list can use sticky `left: 0` and naturally clip overflow at its
+     own edge. */
+  overflow: hidden;
+  padding: 14px 18px 14px 18px;
   position: relative;
 }
 [data-theme="dark"] .exo-ai-card {
@@ -6080,7 +6084,7 @@ body {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  padding: 0 18px;
+  padding: 0;             /* card now provides horizontal padding */
   position: relative;
   z-index: 3;
 }
@@ -6191,28 +6195,17 @@ body {
 .exo-ai-list {
   align-items: stretch;
   display: flex;
-  gap: 24px;                                  /* generous gap between cards */
+  gap: 24px;
   min-height: 200px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 4px 24px 14px;
+  /* No horizontal padding — keep sticky `left: X` aligned with the
+     element edge so scrolled cards bleeding past Key Insight land
+     exactly in the masked transparent zone. */
+  padding: 4px 0 14px 0;
   position: relative;
-  scroll-padding-left: 400px;                 /* sticky width + offset + buffer */
+  scroll-padding-left: 384px;
   z-index: 3;
-  /* Fade the leftmost 24px so cards scrolling past the sticky Key
-     Insight never bleed into the padding zone on the left.
-     Same fade on the right so the last card melts cleanly into the
-     container edge instead of stopping abruptly. */
-  -webkit-mask-image: linear-gradient(to right,
-    transparent 0,
-    #000 24px,
-    #000 calc(100% - 16px),
-    transparent 100%);
-          mask-image: linear-gradient(to right,
-    transparent 0,
-    #000 24px,
-    #000 calc(100% - 16px),
-    transparent 100%);
 }
 .exo-ai-list::-webkit-scrollbar { height: 8px; }
 .exo-ai-list::-webkit-scrollbar-track { background: transparent; }
@@ -6300,19 +6293,19 @@ body {
 .exo-ai-item--key {
   background: var(--card);
   flex: 0 0 360px;
-  left: 24px;                                  /* matches list mask edge */
-  margin-right: 20px;                          /* extra white space after Key */
-  padding-right: 80px;                         /* internal right buffer */
+  left: 0;                                     /* flush with list edge */
+  margin-right: 24px;                          /* extra space after Key */
+  padding-right: 70px;                         /* internal right buffer */
   position: sticky;
   z-index: 4;
   box-shadow:
-    12px 0 18px -16px rgba(0, 0, 0, 0.08),
-    24px 0 24px -22px rgba(0, 0, 0, 0.06);
+    14px 0 20px -14px rgba(0, 0, 0, 0.10),
+    28px 0 28px -22px rgba(0, 0, 0, 0.06);
 }
 [data-theme="dark"] .exo-ai-item--key {
   box-shadow:
-    12px 0 18px -16px rgba(0, 0, 0, 0.55),
-    24px 0 24px -22px rgba(0, 0, 0, 0.4);
+    14px 0 20px -14px rgba(0, 0, 0, 0.55),
+    28px 0 28px -22px rgba(0, 0, 0, 0.45);
 }
 /* Pin badge in the corner so user knows the card is locked */
 .exo-ai-item--key::after {
