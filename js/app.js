@@ -5141,6 +5141,37 @@ function respondAi(userText) {
   }, 900 + Math.random() * 600);
 }
 
+/** Opens the AI drawer and replays a card's mock conversation. */
+function askAiAboutInsight(idx) {
+  // Defensive: card data is defined later in the file
+  if (typeof EXO_AI_CARDS === 'undefined' || !EXO_AI_CARDS[idx]) return;
+  const card = EXO_AI_CARDS[idx];
+  if (!card.prompt) return;
+
+  if (!aiDrawerOpen) openAiDrawer();
+  appendAiMessage(card.prompt, 'user');
+
+  aiBusy = true;
+  const list = document.getElementById('aiMessages');
+  const typing = document.createElement('div');
+  typing.className = 'ai-msg ai-msg--ai ai-msg--typing';
+  typing.innerHTML = `
+    <div class="ai-msg-avatar"><span class="ai-msg-orb"></span></div>
+    <div class="ai-msg-bubble ai-typing">
+      <span class="ai-typing-dot"></span><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span>
+    </div>`;
+  if (list) list.appendChild(typing);
+  const body = document.getElementById('aiDrawerBody');
+  if (body) body.scrollTop = body.scrollHeight;
+
+  setTimeout(() => {
+    if (list && typing.parentNode === list) list.removeChild(typing);
+    const reply = card.expandedResponse || mockAiReply(card.prompt);
+    appendAiMessage(reply, 'ai');
+    aiBusy = false;
+  }, 1100 + Math.random() * 500);
+}
+
 /** Very simple keyword-routed mock response — replace with real API later. */
 function mockAiReply(txt) {
   const t = txt.toLowerCase();
@@ -5194,20 +5225,140 @@ const EXO_ZONES = [
   {id:'S2',  sale: 180, opp: 180, margin:17.5, msSales:52, msFarmer:46},
 ];
 
-/** 6 AI insight cards (matches the Figma sample). */
+/** 6 AI insight cards (matches the Figma sample).
+ *  Each card carries a `prompt` (auto-sent as the user question) and
+ *  `expandedResponse` (the AI's rich answer) — used by askAiAboutInsight().
+ */
 const EXO_AI_CARDS = [
-  {kind:'key', level:'KEY INSIGHT', title:'',
-    body:'ยอดขายโต <span class="exo-ai-hi">12.5%</span> แต่ Market Share ลด <span class="exo-ai-hi">10%</span> — ตลาดโตเร็วกว่าเรา โฟกัสที่ <span class="exo-ai-hi">Active Farmer Coverage 64%</span> (ต่ำสุดในกลุ่ม)'},
-  {kind:'urgent',      level:'ด่วน',  title:'โอกาสเติบโตสูงในเขต N2',
-    actions:['เพิ่ม Dealer Coverage และ Push SKUs ตรงกับพืชหลัก']},
-  {kind:'high',        level:'สูง',   title:'คู่แข่งลดราคาในพืชหลักกลุ่มข้าวโพด',
-    actions:['ติดตาม Price War เน้น Value selling']},
-  {kind:'high',        level:'สูง',   title:'Dealer กลุ่มเสี่ยงมีจำนวนเพิ่มขึ้น 24%',
-    actions:['ทำ Recovery campaign และติดตามใกล้ชิด']},
-  {kind:'opportunity', level:'โอกาส', title:'กลุ่มพืชทุเรียน มีกำไรสูงถึง 40%',
-    actions:['ขายโปรดัก Mix พื้นที่ที่คุมี Demand สูง']},
-  {kind:'opportunity', level:'โอกาส', title:'กลุ่ม Active Dealer มี Conversion ดี',
-    actions:['ขยาย Loyalty program ในกลุ่มนี้']},
+  {
+    kind:'key', level:'KEY INSIGHT', title:'',
+    body:'ยอดขายโต <span class="exo-ai-hi">12.5%</span> แต่ Market Share ลด <span class="exo-ai-hi">10%</span> — ตลาดโตเร็วกว่าเรา โฟกัสที่ <span class="exo-ai-hi">Active Farmer Coverage 64%</span> (ต่ำสุดในกลุ่ม)',
+    prompt:'อธิบายให้ละเอียดหน่อย — ทำไมยอดขายโต 12.5% แต่ Market Share ลด 10%?',
+    expandedResponse:
+      'ภาพรวม <strong>3 สัญญาณ</strong> ที่บอกว่าเรากำลังโตช้ากว่าตลาด:<br><br>' +
+      '<strong>1) ตลาดโตเร็วกว่าเรา</strong><br>' +
+      '• ยอดขายเราโต <strong>+12.5%</strong> · ตลาดรวมโต <strong>+24%</strong> (ส่วนใหญ่จากพืชเศรษฐกิจกลุ่มทุเรียน + ข้าวโพด)<br>' +
+      '• แปลผล: เราเสีย share ราว <strong>10 จุด</strong> เพราะคู่แข่งดูดส่วนแบ่งใหม่ไปได้เร็วกว่า<br><br>' +
+      '<strong>2) Active Farmer Coverage เพียง 64%</strong> (ต่ำสุดในกลุ่ม metrics)<br>' +
+      '• โซนที่ Coverage ต่ำสุด: <strong>N2 (52%) · E1 (58%) · S2 (61%)</strong><br>' +
+      '• แปลผล: เรามีดีลเลอร์ครอบคลุมพื้นที่ แต่ activate farmer ได้น้อย<br><br>' +
+      '<strong>3) ราคาคู่แข่งลดในกลุ่มหลัก</strong><br>' +
+      '• ข้าวโพด −8%, มันสำปะหลัง −5% เดือนนี้<br><br>' +
+      '<strong>แนะนำ Action Plan:</strong><br>' +
+      '→ <strong>Q1:</strong> Activate farmer ใน N2 + E1 ผ่าน demo plot<br>' +
+      '→ <strong>Q2:</strong> เปิด Loyalty program ในกลุ่มพืชเศรษฐกิจ<br>' +
+      '→ <strong>Q3:</strong> Value selling เน้นสูตร NPK ที่กำไรสูง',
+  },
+  {
+    kind:'urgent', level:'ด่วน', title:'โอกาสเติบโตสูงในเขต N2',
+    actions:['เพิ่ม Dealer Coverage และ Push SKUs ตรงกับพืชหลัก'],
+    prompt:'ทำไมเขต N2 ถึงเป็นโอกาสด่วน? และต้องทำอะไรบ้าง?',
+    expandedResponse:
+      '<strong>เขต N2 (เหนือ 2)</strong> เป็นโอกาสเร่งด่วนเพราะ:<br><br>' +
+      '<strong>📊 Market Potential สูง</strong><br>' +
+      '• ตลาดประเมิน <strong>฿1,450M</strong> · Sales เราแค่ <strong>฿720M</strong><br>' +
+      '• Market Share เพียง <strong>49%</strong> · ตลาดยังเปิดอยู่อีก ~฿730M<br><br>' +
+      '<strong>🌾 พืชหลักในพื้นที่:</strong><br>' +
+      '• ข้าวนาปี (78% ของพื้นที่ปลูก)<br>' +
+      '• ข้าวโพด · มันสำปะหลัง<br><br>' +
+      '<strong>🚫 ปัญหาปัจจุบัน:</strong><br>' +
+      '• Dealer Gap สูง: 6 อำเภอไม่มีดีลเลอร์<br>' +
+      '• Activity score ต่ำ — เยี่ยมเพียง 8 ครั้ง/เดือน vs avg 14<br><br>' +
+      '<strong>⚡ Action ภายใน 30 วัน:</strong><br>' +
+      '→ เปิด Dealer ใหม่ <strong>3 ราย</strong> ใน หล่มสัก · เขาค้อ · บางขุนนาก<br>' +
+      '→ Push SKU <strong>16-20-0</strong> + <strong>46-0-0</strong> (สูตรเร่งใบสำหรับข้าวนาปี)<br>' +
+      '→ Demo plot 5 พื้นที่ · ตั้งงบ <strong>฿2.5M</strong><br><br>' +
+      '<em>คาดยอดเพิ่ม ฿180–220M ใน Q3</em>',
+  },
+  {
+    kind:'high', level:'สูง', title:'คู่แข่งลดราคาในพืชหลักกลุ่มข้าวโพด',
+    actions:['ติดตาม Price War เน้น Value selling'],
+    prompt:'ใครเป็นคู่แข่งที่ลดราคาในกลุ่มข้าวโพด? และเราควรตอบสนองยังไง?',
+    expandedResponse:
+      '<strong>คู่แข่งหลักที่ปรับลดราคาเดือนนี้:</strong><br><br>' +
+      '🔻 <strong>ปุ๋ยมิตรไมตรี</strong> ลด <strong>−8%</strong> (฿15,150 → ฿13,940)<br>' +
+      '🔻 <strong>ปุ๋ย ซี.พี.</strong> ลด <strong>−5%</strong> (฿15,000 → ฿14,250)<br>' +
+      '🔻 <strong>ดวงตะวัน</strong> ลด <strong>−3%</strong> (฿15,000 → ฿14,550)<br><br>' +
+      '<strong>📍 พื้นที่ที่ได้รับผลกระทบมากสุด:</strong><br>' +
+      '• N3 (กำแพงเพชร · นครสวรรค์)<br>' +
+      '• NE2 (นครราชสีมา · บุรีรัมย์)<br><br>' +
+      '<strong>⚠️ ความเสี่ยง:</strong><br>' +
+      '• ดีลเลอร์ <strong>14 ราย</strong> เริ่มถามเรื่อง matching price<br>' +
+      '• Farmer หันไปซื้อสูตร 16-20-0 ของคู่แข่ง +18%<br><br>' +
+      '<strong>💡 กลยุทธ์ Value Selling แนะนำ:</strong><br>' +
+      '→ <strong>อย่าลดราคา</strong> — รักษา margin (Parich premium)<br>' +
+      '→ เพิ่ม service: ตรวจดินฟรี + คำแนะนำสูตรเฉพาะแปลง<br>' +
+      '→ จัด Bundle 16-20-0 + 46-0-0 ส่วนลด 3% เฉพาะลูกค้าใหม่<br>' +
+      '→ ออก demo plot เปรียบเทียบผลผลิตให้เห็นภาพ',
+  },
+  {
+    kind:'high', level:'สูง', title:'Dealer กลุ่มเสี่ยงมีจำนวนเพิ่มขึ้น 24%',
+    actions:['ทำ Recovery campaign และติดตามใกล้ชิด'],
+    prompt:'Dealer กลุ่มเสี่ยงคือใครบ้าง และ Recovery campaign ทำยังไง?',
+    expandedResponse:
+      '<strong>กลุ่มเสี่ยงเพิ่มจาก 21 ราย → 26 ราย</strong> ในรอบ 30 วัน<br><br>' +
+      '<strong>🔍 สัญญาณเสี่ยง:</strong><br>' +
+      '• ยอดสั่งลดลง <strong>&gt;30%</strong> เทียบ 3 เดือนก่อน<br>' +
+      '• ไม่มีการเยี่ยม &gt;45 วัน<br>' +
+      '• LI Score ตก ต่ำกว่า 35<br><br>' +
+      '<strong>📍 กระจายตัวตามโซน:</strong><br>' +
+      '• N3 (5 ราย) · NE3 (4) · E2 (4) · W2 (3) · อื่นๆ (10)<br><br>' +
+      '<strong>🎯 สาเหตุหลัก:</strong><br>' +
+      '1. คู่แข่งเข้าพื้นที่ + ลดราคาดึงลูกค้า (45%)<br>' +
+      '2. ดีลเลอร์เปลี่ยนเจ้าของ / ขายของอย่างอื่น (28%)<br>' +
+      '3. ปัญหา cash flow + เครดิตเต็ม (27%)<br><br>' +
+      '<strong>♻️ Recovery Campaign 60 วัน:</strong><br>' +
+      '→ <strong>สัปดาห์ 1–2:</strong> Sales ลงพื้นที่ทุกราย ทำ Discovery Call<br>' +
+      '→ <strong>สัปดาห์ 3–4:</strong> เสนอ "Win-back Bundle" — credit ขยาย 60 วัน + ส่งฟรี<br>' +
+      '→ <strong>เดือน 2:</strong> Activate ผ่าน farmer event ในพื้นที่<br><br>' +
+      '<em>ตั้งเป้า recover &gt;60% ของกลุ่มนี้ใน Q3</em>',
+  },
+  {
+    kind:'opportunity', level:'โอกาส', title:'กลุ่มพืชทุเรียน มีกำไรสูงถึง 40%',
+    actions:['ขายโปรดัก Mix พื้นที่ที่คุมี Demand สูง'],
+    prompt:'กลุ่มทุเรียนกำไรสูงขนาดนี้ — ควรขายอะไร? ที่ไหน?',
+    expandedResponse:
+      '<strong>ทุเรียน = พืชเศรษฐกิจ margin สูงสุดในพอร์ต</strong><br>' +
+      '• Margin เฉลี่ย <strong>40%</strong> (vs ข้าวนาปี 18% · มัน 22%)<br>' +
+      '• ตลาดประเมิน <strong>฿2.4B</strong> · เรา share เพียง 16%<br><br>' +
+      '<strong>📍 พื้นที่ Demand สูง (เรียงจากศักยภาพ):</strong><br>' +
+      '1. <strong>จันทบุรี</strong> · 980M · เราอยู่ 12%<br>' +
+      '2. <strong>ตราด</strong> · 540M · เราอยู่ 18%<br>' +
+      '3. <strong>ระยอง</strong> · 420M · เราอยู่ 22%<br>' +
+      '4. <strong>นครศรีธรรมราช</strong> · 580M · เราอยู่ 9%<br>' +
+      '5. <strong>ชุมพร</strong> · 380M · เราอยู่ 14%<br><br>' +
+      '<strong>🌱 SKU Mix แนะนำต่อระยะ:</strong><br>' +
+      '• <strong>ระยะบำรุงต้น:</strong> 15-15-15 + 13-13-21<br>' +
+      '• <strong>ระยะติดดอก:</strong> 8-24-24 (Parich premium)<br>' +
+      '• <strong>ระยะติดผล:</strong> 14-7-35 + 0-0-60 (เร่งความหวาน)<br><br>' +
+      '<strong>💰 แผนรายไตรมาส:</strong><br>' +
+      '→ Q1: เปิด Dealer ใหม่ใน จันทบุรี + นครศรีฯ (+6 ราย)<br>' +
+      '→ Q2: Demo plot 12 พื้นที่ · งบ ฿4M<br>' +
+      '→ ตั้งเป้า share <strong>16% → 24%</strong> ในปีนี้',
+  },
+  {
+    kind:'opportunity', level:'โอกาส', title:'กลุ่ม Active Dealer มี Conversion ดี',
+    actions:['ขยาย Loyalty program ในกลุ่มนี้'],
+    prompt:'Active Dealer กลุ่มไหน Conversion ดี และจะขยาย Loyalty program ยังไง?',
+    expandedResponse:
+      '<strong>Active Dealer = 18 ราย</strong> (จาก 41 ราย ทั่วประเทศ)<br>' +
+      '• Avg Sales <strong>฿35M/ราย/ปี</strong> (vs 18M ของกลุ่มอื่น)<br>' +
+      '• Conversion rate <strong>68%</strong> (vs avg 32%)<br>' +
+      '• SR ปิดขายโต <strong>+22% YoY</strong><br><br>' +
+      '<strong>🏆 Top 5 Active Dealers:</strong><br>' +
+      '1. รุ่งเจริญการเกษตร (N1) — ฿42M · LI 88<br>' +
+      '2. ขอนแก่นการเกษตร (NE1) — ฿39M · LI 85<br>' +
+      '3. ศรีสุวรรณเกษตร (N1) — ฿37M · LI 82<br>' +
+      '4. บุรีรัมย์อะกริ (NE2) — ฿35M · LI 80<br>' +
+      '5. นครสวรรค์การเกษตร (N3) — ฿33M · LI 78<br><br>' +
+      '<strong>🎁 Loyalty Program "Parich Elite":</strong><br>' +
+      '→ <strong>Tier A (LI ≥ 80):</strong> Cashback 3% · Priority delivery · Exclusive SKUs<br>' +
+      '→ <strong>Tier B (LI 65–79):</strong> Cashback 2% · Quarterly training · Co-marketing fund ฿50k<br>' +
+      '→ <strong>Tier C (LI 50–64):</strong> Cashback 1% · Demo plot support<br><br>' +
+      '<strong>📈 Expected impact:</strong><br>' +
+      '• เพิ่ม Active Dealer 18 → 30 ราย ใน 6 เดือน<br>' +
+      '• ROI program ประมาณ <strong>4.2x</strong> ในปีแรก',
+  },
 ];
 
 /** LI score breakdown by area. */
@@ -5376,22 +5527,24 @@ function renderExoAiList() {
   const el = document.getElementById('exoAiList');
   if (!el) return;
 
-  const cardsHtml = EXO_AI_CARDS.map((c) => {
+  const cardsHtml = EXO_AI_CARDS.map((c, i) => {
     if (c.kind === 'key') {
-      return `<div class="exo-ai-item exo-ai-item--key">
+      return `<div class="exo-ai-item exo-ai-item--key" onclick="askAiAboutInsight(${i})">
         <div class="exo-ai-item-head">
           <span class="exo-ai-item-bulb">${EXO_AI_BULB_SVG}</span>
           <span class="exo-ai-item-level">${c.level}</span>
+          <span class="exo-ai-card-arrow">→</span>
         </div>
         <div class="exo-ai-item-body">${c.body}</div>
       </div>`;
     }
     const actionsHtml = (c.actions || []).map((a) =>
       `<div class="exo-ai-action"><span class="exo-ai-action-arrow">→</span><span>${a}</span></div>`).join('');
-    return `<div class="exo-ai-item exo-ai-item--${c.kind}">
+    return `<div class="exo-ai-item exo-ai-item--${c.kind}" onclick="askAiAboutInsight(${i})">
       <div class="exo-ai-item-head">
         <span class="exo-ai-item-dot"></span>
         <span class="exo-ai-item-level">${c.level}</span>
+        <span class="exo-ai-card-arrow">→</span>
       </div>
       ${c.title ? `<div class="exo-ai-item-title">${c.title}</div>` : ''}
       ${actionsHtml ? `<div class="exo-ai-actions">${actionsHtml}</div>` : ''}
