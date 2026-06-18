@@ -6191,14 +6191,28 @@ body {
 .exo-ai-list {
   align-items: stretch;
   display: flex;
-  gap: 16px;
+  gap: 24px;                                  /* generous gap between cards */
   min-height: 200px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 4px 20px 14px;
+  padding: 4px 24px 14px;
   position: relative;
-  scroll-padding-left: 372px;   /* sticky width + offset + buffer */
+  scroll-padding-left: 400px;                 /* sticky width + offset + buffer */
   z-index: 3;
+  /* Fade the leftmost 24px so cards scrolling past the sticky Key
+     Insight never bleed into the padding zone on the left.
+     Same fade on the right so the last card melts cleanly into the
+     container edge instead of stopping abruptly. */
+  -webkit-mask-image: linear-gradient(to right,
+    transparent 0,
+    #000 24px,
+    #000 calc(100% - 16px),
+    transparent 100%);
+          mask-image: linear-gradient(to right,
+    transparent 0,
+    #000 24px,
+    #000 calc(100% - 16px),
+    transparent 100%);
 }
 .exo-ai-list::-webkit-scrollbar { height: 8px; }
 .exo-ai-list::-webkit-scrollbar-track { background: transparent; }
@@ -6285,16 +6299,20 @@ body {
      hidden in the buffer zone, never bleeding through. */
 .exo-ai-item--key {
   background: var(--card);
-  flex: 0 0 340px;
-  left: 20px;
-  margin-right: 12px;
-  padding-right: 70px;
+  flex: 0 0 360px;
+  left: 24px;                                  /* matches list mask edge */
+  margin-right: 20px;                          /* extra white space after Key */
+  padding-right: 80px;                         /* internal right buffer */
   position: sticky;
   z-index: 4;
-  box-shadow: 14px 0 18px -16px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    12px 0 18px -16px rgba(0, 0, 0, 0.08),
+    24px 0 24px -22px rgba(0, 0, 0, 0.06);
 }
 [data-theme="dark"] .exo-ai-item--key {
-  box-shadow: 14px 0 18px -16px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    12px 0 18px -16px rgba(0, 0, 0, 0.55),
+    24px 0 24px -22px rgba(0, 0, 0, 0.4);
 }
 /* Pin badge in the corner so user knows the card is locked */
 .exo-ai-item--key::after {
