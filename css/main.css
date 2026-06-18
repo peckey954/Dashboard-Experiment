@@ -6070,7 +6070,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  overflow: hidden;
   padding: 14px 0 14px;
   position: relative;
 }
@@ -6156,6 +6155,46 @@ body {
   font-size: 11px;
   margin-top: 2px;
 }
+.exo-ai-head-actions {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+.exo-ai-ask-btn {
+  align-items: center;
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 45%, #ea580c 100%);
+  border: none;
+  border-radius: 8px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 4px 14px -2px rgba(249, 115, 22, 0.55);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 5px;
+  height: 30px;
+  overflow: hidden;
+  padding: 0 12px;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.exo-ai-ask-btn:hover {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.45) inset,
+    0 8px 20px -3px rgba(249, 115, 22, 0.7);
+  transform: translateY(-1px);
+}
+.exo-ai-ask-glow {
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%);
+  inset: 0;
+  position: absolute;
+  transform: translateX(-100%);
+}
+.exo-ai-ask-btn:hover .exo-ai-ask-glow { animation: exo-ai-shine 1.2s ease-out; }
+@keyframes exo-ai-shine { to { transform: translateX(110%); } }
 
 /* ── Cards row — clickable boxes that scroll horizontally ──
    Generous gap + sticky offset so cards don't visually crowd the
@@ -6163,12 +6202,13 @@ body {
 .exo-ai-list {
   align-items: stretch;
   display: flex;
-  gap: 18px;            /* generous gap between cards */
+  gap: 18px;
+  min-height: 200px;            /* safety: never collapse */
   overflow-x: auto;
   overflow-y: hidden;
   padding: 4px 20px 14px;
   position: relative;
-  scroll-padding-left: 332px;  /* sticky-card width + offset */
+  scroll-padding-left: 332px;
   z-index: 3;
 }
 .exo-ai-list::-webkit-scrollbar { height: 8px; }

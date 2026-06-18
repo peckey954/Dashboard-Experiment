@@ -1002,11 +1002,18 @@
                   <div class="exo-ai-head-sub">Updated 5 min ago · Last 30 days · powered by Parich AI</div>
                 </div>
               </div>
-              <button class="exo-icon-btn exo-icon-btn--ghost" title="รีเฟรช" onclick="renderExoAll()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
-                </svg>
-              </button>
+              <div class="exo-ai-head-actions">
+                <button class="exo-ai-ask-btn" onclick="toggleAiDrawer()">
+                  <span class="exo-ai-ask-glow"></span>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/></svg>
+                  Ask AI
+                </button>
+                <button class="exo-icon-btn exo-icon-btn--ghost" title="รีเฟรช" onclick="renderExoAll()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="exo-ai-list" id="exoAiList"></div>
           </div>

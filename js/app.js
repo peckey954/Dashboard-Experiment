@@ -5557,22 +5557,7 @@ function renderExoAiList() {
     </div>`;
   }).join('');
 
-  // Right-side action column: Ask AI + ดูทั้งหมด
-  const totalNonKey = EXO_AI_CARDS.filter((c) => c.kind !== 'key').length;
-  const actionsCol = `<div class="exo-ai-actions-col">
-    <button class="exo-ai-ask-big" onclick="toggleAiDrawer()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/>
-      </svg>
-      Ask AI
-    </button>
-    <button class="exo-ai-all-btn">
-      ดูทั้งหมด (${totalNonKey})
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-    </button>
-  </div>`;
-
-  el.innerHTML = cardsHtml + actionsCol;
+  el.innerHTML = cardsHtml;
 }
 
 function renderExoSoChart() {
