@@ -5174,3 +5174,490 @@ function mockAiReply(txt) {
   return `จากข้อมูลที่ผมมี ผมเข้าใจคำถามว่า "<strong>${escapeHtml(txt)}</strong>" — กำลังประมวลผลครับ<br><br>
     ยังไม่พบข้อมูลตรงๆ ลองถามใหม่ในมุมของ <em>ยอดขาย / ดีลเลอร์ / ราคา / โอกาส</em> หรือพิมพ์ <code>@</code> เพื่อระบุ context เฉพาะ`;
 }
+
+// ── Executive Overview page ──────────────────────────────────────────────────
+
+let exoMode = false;
+let exoSoSortKey = 'sale-desc';
+
+/** Mock zone metrics: sales/opportunity in tonnes + margin % + per-cell deltas. */
+const EXO_ZONES = [
+  {id:'N1',  sale:1100, opp: 580, margin:9.5,  msSales:75, msFarmer:65},
+  {id:'NE1', sale:1450, opp: 760, margin:8.5,  msSales:72, msFarmer:62},
+  {id:'N2',  sale: 450, opp: 500, margin:10.5, msSales:68, msFarmer:55},
+  {id:'E1',  sale:1620, opp:1080, margin:12.0, msSales:71, msFarmer:60},
+  {id:'W3',  sale: 380, opp: 320, margin:13.5, msSales:54, msFarmer:48},
+  {id:'E2',  sale: 290, opp: 220, margin:15.0, msSales:60, msFarmer:52},
+  {id:'S1',  sale: 240, opp: 200, margin:14.0, msSales:58, msFarmer:50},
+  {id:'C1',  sale: 720, opp: 380, margin: 9.0, msSales:66, msFarmer:58},
+  {id:'C2',  sale: 510, opp: 280, margin:11.0, msSales:62, msFarmer:54},
+  {id:'S2',  sale: 180, opp: 180, margin:17.5, msSales:52, msFarmer:46},
+];
+
+/** 6 AI insight cards (matches the Figma sample). */
+const EXO_AI_CARDS = [
+  {kind:'key',         num:'',  level:'Key Insight', title:'',
+    body:'ยอดขายโต <strong>12.5%</strong> แต่ Market Share ลด <strong>10%</strong> — แสดงว่าตลาดโตเร็วกว่าเรา · คู่แข่งกินส่วนแบ่ง · โฟกัสที่ Active Farmer Portfolio (64%) ซึ่งต่ำสุดในกลุ่ม metrics'},
+  {kind:'urgent',      num:'1', level:'URGENT',        title:'โอกาสเติบโตสูงในเขต N2',
+    body:'แนะนำ: เพิ่ม Dealer Portfolio และ Push SKUs ตรงกับพืชหลัก'},
+  {kind:'high',        num:'2', level:'High',          title:'คู่แข่งลดราคาในพืชหลักกลุ่มข้าวโพด',
+    body:'แนะนำ: ติดตาม Price War เน้น Value selling'},
+  {kind:'high',        num:'2', level:'High',          title:'Dealer กลุ่มเสี่ยงมีจำนวนเพิ่มขึ้น 24%',
+    body:'แนะนำ: ทำ Recovery campaign และติดตามใกล้ชิด'},
+  {kind:'opportunity', num:'1', level:'Opportunity',   title:'กลุ่มพืชทุเรียน มีกำไรสูงถึง 40%',
+    body:'แนะนำขายโปรดัก Mix พื้นที่คุมี Demand สูง'},
+  {kind:'opportunity', num:'1', level:'Opportunity',   title:'กลุ่ม Active Dealer มี Conversion ดี',
+    body:'แนะนำ: ขยาย Loyalty program ในกลุ่มนี้'},
+];
+
+/** LI score breakdown by area. */
+const EXO_LI_AREAS = [
+  {key:'LI1', label:'โปรโมชั่น',        score:88.5, max:100, color:'#22c55e', val:4},
+  {key:'LI2', label:'ข้อมูลคู่แข่ง',     score:65.2, max:100, color:'#eab308', val:3},
+  {key:'LI3', label:'ซับดีลเลอร์',      score:84.0, max:100, color:'#22c55e', val:4},
+  {key:'LI4', label:'ตั้งใจขาย',         score:24.0, max:100, color:'#ef4444', val:1},
+  {key:'LI5', label:'ลงแปลง',            score:48.5, max:100, color:'#eab308', val:2},
+  {key:'L6',  label:'วิเคราะห์อุปสรรค', score:82.5, max:100, color:'#22c55e', val:4},
+];
+
+/** LI tier distribution + per-zone rows. */
+const EXO_TIERS = [
+  {id:'all', label:'ทั้งหมด (18)', color:'#94a3b8'},
+  {id:'A',   label:'Tier A (5)',    color:'#22c55e'},
+  {id:'B',   label:'Tier B (12)',  color:'#eab308'},
+  {id:'C',   label:'Tier C (3)',   color:'#f97316'},
+  {id:'D',   label:'Tier D (2)',   color:'#ef4444'},
+];
+const EXO_ZONE_LI = [
+  {zone:'N1', liScore:85.5, grade:'A', sales:35.4, visits:120, sr:46},
+  {zone:'C1', liScore:75.5, grade:'B', sales:35.4, visits:120, sr:46},
+  {zone:'W1', liScore:40.5, grade:'C', sales:35.4, visits:120, sr:46},
+  {zone:'N2', liScore:35.5, grade:'D', sales:35.4, visits:120, sr:46},
+  {zone:'N3', liScore:40.5, grade:'C', sales:35.4, visits:120, sr:46},
+];
+
+function gradeColor(g) {
+  return {A:'#22c55e', B:'#eab308', C:'#f97316', D:'#ef4444'}[g] || '#94a3b8';
+}
+
+// ── Open / close ─────────────────────────────────────────────────────────────
+
+function openExecutiveOverview() {
+  document.querySelectorAll('.ir-popup').forEach((p) => p.classList.remove('ir-popup--visible'));
+
+  // Active rail = current section's nav-pill stays as-is; just set ir-btn active
+  document.querySelectorAll('.ir-btn').forEach((b) => b.classList.remove('ir-btn--active'));
+  const homeBtn = document.querySelector('.ir-item[data-popup="ir-popup-overview"] .ir-btn');
+  if (homeBtn) homeBtn.classList.add('ir-btn--active');
+
+  // Breadcrumb
+  const bcParent  = document.querySelector('.sb-bc-parent');
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  const bcSep     = document.querySelector('.sb-bc-sep');
+  if (bcParent)  bcParent.textContent  = 'Performance Overview';
+  if (bcSep)     bcSep.style.display   = 'none';
+  if (bcCurrent) bcCurrent.style.display = 'none';
+
+  // Hide page tabs + map tab bar
+  const pageTabs = document.getElementById('pageTabs');
+  if (pageTabs) pageTabs.style.display = 'none';
+  const mapTabs = document.getElementById('mapTabBar');
+  if (mapTabs)  mapTabs.style.display  = 'none';
+
+  // Tear down map modes
+  if (potentialMode)  exitPotentialMode();
+  if (farmerMode)     exitFarmerMode();
+  if (dealerLiMode)   exitDealerLiMode(true);
+  if (cpMode)         exitCompetitivePrice();
+  if (dealerSegmentMode) exitDealerSegmentation();
+  if (currentPageTab === 'dealer') exitDealerHoverMode();
+
+  // Swap center
+  ['thailand-map','mapTableView','opsMapLegend','dliMapLegend',
+   'dealer-segment-view','comp-price-view','cp-detail-view'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const exoEl = document.getElementById('exec-overview-view');
+  if (exoEl) exoEl.style.display = '';
+
+  // Hide sidebars entirely (Figma exec page has none)
+  ['fsDealerPane','fsPotentialPane','fsFarmerPane','fsDealerLiPane',
+   'fsDealerSegPane','fsCompPricePane'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = 'none';
+  const fs = document.getElementById('filterSidebar');
+  if (fs) fs.classList.add('fs-cpd-hidden');
+  const detailSidebar = document.getElementById('detailSidebar');
+  if (detailSidebar) detailSidebar.classList.add('ds-collapsed');
+
+  exoMode = true;
+  renderExoAll();
+}
+
+function exitExecutiveOverview() {
+  if (!exoMode) return;
+  exoMode = false;
+
+  const exoEl = document.getElementById('exec-overview-view');
+  if (exoEl) exoEl.style.display = 'none';
+
+  const mapEl   = document.getElementById('thailand-map');
+  const mapTabs = document.getElementById('mapTabBar');
+  if (mapEl)   mapEl.style.display   = '';
+  if (mapTabs) mapTabs.style.display = '';
+
+  const pageTabs = document.getElementById('pageTabs');
+  if (pageTabs) pageTabs.style.display = '';
+
+  const bcSep     = document.querySelector('.sb-bc-sep');
+  const bcCurrent = document.querySelector('.sb-bc-current');
+  if (bcSep)     bcSep.style.display   = '';
+  if (bcCurrent) bcCurrent.style.display = '';
+
+  // Restore sidebars
+  const fs = document.getElementById('filterSidebar');
+  if (fs) fs.classList.remove('fs-cpd-hidden');
+  const detailSidebar = document.getElementById('detailSidebar');
+  if (detailSidebar) detailSidebar.classList.remove('ds-collapsed');
+  const fsDealer = document.getElementById('fsDealerPane');
+  if (fsDealer) fsDealer.style.display = '';
+  const fsHeader = document.querySelector('.fs-header');
+  if (fsHeader) fsHeader.style.display = '';
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+
+function renderExoAll() {
+  if (!exoMode) return;
+  renderExoKpis();
+  renderExoAiList();
+  renderExoSoChart();
+  renderExoSoTable();
+  renderExoSalesChart();
+  renderExoLiList();
+  renderExoTierBar();
+  renderExoZoneLi();
+  renderExoCpKpis();
+  renderExoCropList();
+  renderExoCpBrandTable();
+}
+
+function renderExoKpis() {
+  const kpis = [
+    {label:'ยอดขายรวม Sales',     val:'2,856 ตัน', sub:'฿2,186 M',           delta:+12.5, dir:'up'},
+    {label:'โอกาสรวม Opportunity', val:'-658 ตัน',  sub:'',                   delta:+12.5, dir:'up'},
+    {label:'Sales VS Target',      val:'78.9%',     sub:'฿1,806/2,188 M',     delta:-12.5, dir:'down'},
+    {label:'Weight Margin mix',    val:'27%',       sub:'Ave. 25%',           delta:-12.5, dir:'down'},
+    {label:'MS Sales',             val:'56%',       sub:'฿1,806/2,188 M',     delta:-12.5, dir:'down'},
+    {label:'MS HC Farmers',        val:'46%',       sub:'8,240/10,250 ราย',  delta:-12.5, dir:'down'},
+  ];
+  const el = document.getElementById('exoKpiStrip');
+  if (!el) return;
+  el.innerHTML = kpis.map((k) => {
+    const cls = k.dir === 'up' ? 'exo-d--up' : 'exo-d--down';
+    const arrow = k.dir === 'up' ? '↑' : '↓';
+    return `<div class="exo-kpi-card">
+      <div class="exo-kpi-label">${k.label}</div>
+      <div class="exo-kpi-val">${k.val}</div>
+      <div class="exo-kpi-sub">${k.sub}</div>
+      <div class="exo-kpi-delta ${cls}">${arrow} ${Math.abs(k.delta)}% <span>YoY</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderExoAiList() {
+  const el = document.getElementById('exoAiList');
+  if (!el) return;
+  el.innerHTML = EXO_AI_CARDS.map((c) => {
+    const isKey = c.kind === 'key';
+    return `<div class="exo-ai-item exo-ai-item--${c.kind}">
+      <div class="exo-ai-item-head">
+        ${c.num ? `<span class="exo-ai-item-num">${c.num}</span>` : ''}
+        <span class="exo-ai-item-level">${c.level}</span>
+        ${!isKey ? `<button class="exo-ai-item-ask" onclick="toggleAiDrawer()">Ask AI</button>` : ''}
+      </div>
+      ${c.title ? `<div class="exo-ai-item-title">${c.title}</div>` : ''}
+      <div class="exo-ai-item-body">${c.body}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderExoSoChart() {
+  const el = document.getElementById('exoSoChart');
+  if (!el) return;
+
+  const H = 220;
+  const maxBar = Math.max(...EXO_ZONES.map((z) => z.sale + z.opp));
+  const yMax   = Math.ceil(maxBar / 1000) * 1000;
+  const yTicks = [0, yMax * 0.5, yMax].map((v) => Math.round(v));
+
+  // Right Y axis for margin (0–30%)
+  const marginMax = 30;
+
+  const barsHtml = EXO_ZONES.map((z, i) => {
+    const totalH = ((z.sale + z.opp) / yMax) * H;
+    const saleH  = (z.sale / yMax) * H;
+    const oppH   = (z.opp  / yMax) * H;
+    const marginBottom = (z.margin / marginMax) * H;
+    const leftPct = ((i + 0.5) / EXO_ZONES.length) * 100;
+    const isHighlight = z.id === 'N2';
+    return `<div class="exo-bar-group" style="left:${leftPct.toFixed(2)}%">
+      <div class="exo-bar-stack">
+        <div class="exo-bar exo-bar--opp"  style="height:${oppH.toFixed(1)}px"></div>
+        <div class="exo-bar exo-bar--sale" style="height:${saleH.toFixed(1)}px"></div>
+      </div>
+      <div class="exo-margin-label" style="bottom:${(marginBottom + 6).toFixed(0)}px">${z.margin}%</div>
+      <div class="exo-bar-x">${z.id}</div>
+      ${isHighlight ? `<div class="exo-bar-tooltip">
+        <div class="exo-bar-tooltip-title">${z.id} - เหนือ</div>
+        <div class="exo-bar-tooltip-row"><span class="exo-bar-tooltip-dot" style="background:#f97316"></span>ยอดขาย <strong>450K ตัน</strong></div>
+        <div class="exo-bar-tooltip-row"><span class="exo-bar-tooltip-dot exo-bar-tooltip-dot--ghost"></span>โอกาส <strong>500k ตัน</strong></div>
+        <div class="exo-bar-tooltip-row"><span class="exo-bar-tooltip-dot" style="background:#eab308"></span>อัตรากำไร <strong>10.5%</strong></div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Margin line (SVG path)
+  const SVG_W = 100; // percent
+  const pointsLine = EXO_ZONES.map((z, i) => {
+    const x = ((i + 0.5) / EXO_ZONES.length) * SVG_W;
+    const y = H - (z.margin / marginMax) * H;
+    return `${x},${y}`;
+  });
+  const linePath = 'M ' + pointsLine.join(' L ');
+
+  const yLeftHtml  = yTicks.slice().reverse().map((v) => `<span>${v >= 1000 ? (v / 1000) + 'K' : v}</span>`).join('');
+  const yRightHtml = ['30%', '15%', '0%'].map((v) => `<span>${v}</span>`).join('');
+
+  el.innerHTML = `
+    <div class="exo-chart-y-left">${yLeftHtml}</div>
+    <div class="exo-chart-canvas" style="height:${H}px">
+      ${barsHtml}
+      <svg class="exo-margin-svg" viewBox="0 0 100 ${H}" preserveAspectRatio="none">
+        <path d="${linePath}" stroke="#eab308" stroke-width="0.5" fill="none" stroke-dasharray="0" />
+      </svg>
+    </div>
+    <div class="exo-chart-y-right">${yRightHtml}</div>
+  `;
+}
+
+function renderExoSoTable(sortKey) {
+  if (sortKey) exoSoSortKey = sortKey;
+  const head = document.getElementById('exoSoTableHead');
+  const body = document.getElementById('exoSoTableBody');
+  if (!head || !body) return;
+
+  const cols = [
+    {key:'zone',     label:'Zone'},
+    {key:'sale',     label:'Sale (ตัน)'},
+    {key:'opp',      label:'Ops (ตัน)'},
+    {key:'margin',   label:'Margin'},
+    {key:'msSales',  label:'MS Sales'},
+    {key:'msFarmer', label:'MS Farmer'},
+  ];
+  head.innerHTML = `<tr>${cols.map((c) => `<th>${c.label} <span class="exo-th-arrow">↕</span></th>`).join('')}</tr>`;
+
+  const sorted = EXO_ZONES.slice();
+  const [k, dir] = exoSoSortKey.split('-');
+  const m = dir === 'desc' ? -1 : 1;
+  sorted.sort((a, b) => (a[k === 'sale' ? 'sale' : 'margin'] - b[k === 'sale' ? 'sale' : 'margin']) * m);
+  const top5 = sorted.slice(0, 5);
+
+  body.innerHTML = top5.map((z) => {
+    return `<tr>
+      <td>${z.id}</td>
+      <td><div class="exo-td-main">120K</div><div class="exo-td-d exo-d--up">↑ 10%</div></td>
+      <td><div class="exo-td-main">790</div><div class="exo-td-d exo-d--up">↑ 10%</div></td>
+      <td><div class="exo-td-main">45%</div><div class="exo-td-d exo-d--down">↓ 10%</div></td>
+      <td><div class="exo-td-main">75%</div><div class="exo-td-d exo-d--down">↓ 10%</div></td>
+      <td><div class="exo-td-main">65%</div><div class="exo-td-d exo-d--up">↑ 10%</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderExoSalesChart() {
+  const el = document.getElementById('exoSalesActualChart');
+  if (!el) return;
+  const H = 140;
+  // 6 months: เม.ย, พ.ค, มิ.ย ...
+  const months = ['เม.ย.','เม.ย.','พ.ค.','มิ.ย.'];
+  const actual = [50, 250, 320, 400];          // Sales actual (orange)
+  const target = [40, 200, 380, 550, 700, 900]; // Target dashed
+  const budget = [20, 80, 120, 140];            // Budget activity (gray)
+  const yMax = 1200;
+
+  const pathFromArr = (arr) => {
+    return arr.map((v, i) => {
+      const x = (i / (arr.length - 1)) * 100;
+      const y = H - (v / yMax) * H;
+      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    }).join(' ');
+  };
+
+  const yLabels = ['฿1.2B', '฿900M', '฿600M', '฿300M', '฿0'];
+
+  el.innerHTML = `
+    <div class="exo-sas-yaxis">${yLabels.map((y) => `<span>${y}</span>`).join('')}</div>
+    <div class="exo-sas-canvas" style="height:${H}px">
+      <svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" style="width:100%;height:100%">
+        <path d="${pathFromArr(target)}" stroke="#fb923c" stroke-width="0.4" fill="none" stroke-dasharray="1.5,1" opacity="0.7"/>
+        <path d="${pathFromArr(actual)}" stroke="#f97316" stroke-width="0.8" fill="none"/>
+        <path d="${pathFromArr(budget)}" stroke="#94a3b8" stroke-width="0.6" fill="none"/>
+      </svg>
+      <div class="exo-sas-today">today</div>
+      <div class="exo-sas-anno-actual">-฿180M</div>
+      <div class="exo-sas-anno-budget">฿20M</div>
+      <div class="exo-sas-anno-target">Target ฿1.05B</div>
+    </div>
+    <div class="exo-sas-xaxis"><span>เม.ย.</span><span>เม.ย.</span><span>พ.ค.</span><span>มิ.ย.</span></div>
+  `;
+}
+
+function renderExoLiList() {
+  const el = document.getElementById('exoLiList');
+  if (!el) return;
+  el.innerHTML = EXO_LI_AREAS.map((it) => {
+    const pct = (it.score / it.max) * 100;
+    return `<div class="exo-li-item">
+      <div class="exo-li-item-head">
+        <span class="exo-li-item-label">${it.key} - ${it.label}</span>
+        <span class="exo-li-item-badge" style="background:${it.color}">${it.val}</span>
+      </div>
+      <div class="exo-li-item-bar"><div class="exo-li-item-fill" style="width:${pct}%;background:${it.color}"></div></div>
+      <div class="exo-li-item-foot"><span>1956% - กก. 46%</span><span>${it.score}/100</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderExoTierBar() {
+  const el = document.getElementById('exoTierBar');
+  const lg = document.getElementById('exoTierLegend');
+  if (!el) return;
+  const tiers = EXO_TIERS.slice(1); // skip "all" for the bar
+  const total = tiers.reduce((s, t) => s + parseInt(t.label.match(/\((\d+)\)/)[1], 10), 0);
+  el.innerHTML = tiers.map((t) => {
+    const n = parseInt(t.label.match(/\((\d+)\)/)[1], 10);
+    const pct = (n / total) * 100;
+    return `<div class="exo-tier-seg" style="width:${pct}%;background:${t.color}"></div>`;
+  }).join('');
+  if (lg) lg.innerHTML = EXO_TIERS.map((t) => {
+    return `<span class="exo-tier-chip"><span class="exo-tier-dot" style="background:${t.color}"></span>${t.label}</span>`;
+  }).join('');
+}
+
+function renderExoZoneLi() {
+  const head = document.getElementById('exoZoneLiHead');
+  const body = document.getElementById('exoZoneLiBody');
+  if (!head || !body) return;
+  head.innerHTML = `<tr>
+    <th>เขต</th><th>LI รวม</th><th>ยอดขาย</th><th>เยี่ยม</th><th>SR ปิดขาย</th>
+  </tr>`;
+  body.innerHTML = EXO_ZONE_LI.map((z) => {
+    return `<tr>
+      <td>${z.zone}</td>
+      <td><span class="exo-grade-pill" style="border-color:${gradeColor(z.grade)};color:${gradeColor(z.grade)}">${z.liScore} (${z.grade})</span><div class="exo-td-d exo-d--up">↑ 10%</div></td>
+      <td><div class="exo-td-main">฿${z.sales} M</div><div class="exo-td-d exo-d--up">↑ 10%</div></td>
+      <td><div class="exo-td-main">${z.visits}</div><div class="exo-td-d exo-d--up">↑ 10%</div></td>
+      <td><div class="exo-td-main">${z.sr}%</div><div class="exo-td-d exo-d--up">↑ 10%</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderExoCpKpis() {
+  const el = document.getElementById('exoCpKpis');
+  if (!el) return;
+  const kpis = [
+    {label:'Avg. Parich Price',      val:'฿12,000', sub:'Unit 50 ตัน', delta:-10},
+    {label:'Avg. Competitors Price', val:'฿12,000', sub:'Unit 50 ตัน', delta:-10},
+    {label:'Avg. Price Gap',          val:'฿12,000', sub:'Unit 50 ตัน', delta:-10},
+    {label:'Promotion',               val:'25',      sub:'15 แบรนด์ | 12 สูตร', delta:-10},
+  ];
+  el.innerHTML = kpis.map((k) => {
+    const cls = k.delta > 0 ? 'exo-d--up' : 'exo-d--down';
+    const arrow = k.delta > 0 ? '↑' : '↓';
+    return `<div class="exo-cp-kpi">
+      <div class="exo-kpi-label">${k.label}</div>
+      <div class="exo-cp-kpi-row">
+        <span class="exo-kpi-val">${k.val}</span>
+        <span class="exo-kpi-delta ${cls}">${arrow} ${Math.abs(k.delta)}%</span>
+      </div>
+      <div class="exo-kpi-sub">${k.sub}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderExoCropList() {
+  const el = document.getElementById('exoCropList');
+  if (!el) return;
+  const crops = [
+    {name:'ทั้งหมด',       sku:17, brand:22, price:17689, change:-10, active:true},
+    {name:'ข้าวโพด',       sku:17, brand:22, price:17689, change:-9},
+    {name:'ยางพารา',       sku:17, brand:22, price:17689, change:-5},
+    {name:'มันสำปะหลัง',   sku:17, brand:22, price:17689, change:-3},
+    {name:'กล้วย',          sku:17, brand:22, price:17689, change:-1},
+    {name:'ข้าวสาลี',       sku:17, brand:22, price:17689, change:+2},
+  ];
+  el.innerHTML = crops.map((c) => {
+    const cls = c.change > 0 ? 'exo-d--up' : c.change < 0 ? 'exo-d--down' : '';
+    const arrow = c.change > 0 ? '↑' : c.change < 0 ? '↓' : '';
+    return `<div class="exo-crop-row${c.active ? ' exo-crop-row--active' : ''}">
+      <span class="exo-crop-name">${c.name}</span>
+      <span class="exo-crop-num">${c.sku}</span>
+      <span class="exo-crop-num">${c.brand}</span>
+      <div class="exo-crop-price-wrap">
+        <span class="exo-crop-price">฿${c.price.toLocaleString()}</span>
+        <span class="exo-crop-delta ${cls}">${arrow} ${Math.abs(c.change)}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderExoCpBrandTable() {
+  const head = document.getElementById('exoCpBrandHead');
+  const body = document.getElementById('exoCpBrandBody');
+  if (!head || !body) return;
+  head.innerHTML = `<tr>
+    <th>แบรนด์ <span class="exo-th-arrow">↕</span></th>
+    <th>Avg. ราคา Parich <span class="exo-th-arrow">↕</span></th>
+    <th>Avg. ราคา คู่แข่ง <span class="exo-th-arrow">↕</span></th>
+    <th>เปลี่ยนแปลง (฿) <span class="exo-th-arrow">↕</span></th>
+    <th>เปลี่ยนแปลง (%) <span class="exo-th-arrow">↕</span></th>
+    <th>โปรโมชั่น <span class="exo-th-arrow">↕</span></th>
+  </tr>`;
+  const rows = [
+    {brand:'ยาร่า',      parich:14000, comp:15000, deltaB:'฿2,000', dir:'down', deltaPct:-8, promo:7},
+    {brand:'ม้าเงา',     parich:14000, comp:15000, deltaB:'฿1,800', dir:'down', deltaPct:-5, promo:7},
+    {brand:'ดวงตะวัน',   parich:14000, comp:15000, deltaB:'฿1,500', dir:'down', deltaPct:-3, promo:7},
+    {brand:'พลอยเกษตร', parich:14000, comp:15000, deltaB:'฿500',   dir:'down', deltaPct:-1, promo:7},
+    {brand:'พลอยเกษตร', parich:14000, comp:15000, deltaB:'฿500',   dir:'down', deltaPct:-1, promo:7},
+    {brand:'มงกุฎ',      parich:14000, comp:15000, deltaB:'฿100',   dir:'up',   deltaPct:+1, promo:7},
+  ];
+  body.innerHTML = rows.map((r) => {
+    const cls = r.deltaPct > 0 ? 'exo-d--up' : 'exo-d--down';
+    const arrowB = r.dir === 'up' ? '↑' : '↓';
+    return `<tr>
+      <td>${r.brand}</td>
+      <td>฿${r.parich.toLocaleString()}</td>
+      <td>฿${r.comp.toLocaleString()}</td>
+      <td>${r.deltaB} <span class="exo-d--down">${arrowB}</span></td>
+      <td class="${cls}">${r.deltaPct > 0 ? '+' : ''}${r.deltaPct}%</td>
+      <td>${r.promo}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Hook into the existing nav: leaving exec mode tears down on any nav change
+const _origSwitchPageTab = switchPageTab;
+switchPageTab = function(tab, btn) {
+  if (exoMode) exitExecutiveOverview();
+  return _origSwitchPageTab.apply(this, arguments);
+};
+const _origSwitchNavSection = switchNavSection;
+switchNavSection = function(section, btn) {
+  if (exoMode) exitExecutiveOverview();
+  return _origSwitchNavSection.apply(this, arguments);
+};

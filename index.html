@@ -59,7 +59,7 @@
     <div class="ir-top">
       <!-- Overview (always visible) -->
       <div class="ir-item" data-popup="ir-popup-overview">
-        <button class="ir-btn">
+        <button class="ir-btn" onclick="openExecutiveOverview()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
             <polyline points="9 22 9 12 15 12 15 22"/>
@@ -957,6 +957,220 @@
           </div>
          </div><!-- /.cpd-scroll -->
         </div><!-- #cp-detail-view -->
+
+        <!-- Executive Overview view (hidden initially) -->
+        <div id="exec-overview-view" style="display:none">
+          <!-- Title row -->
+          <div class="exo-title-row">
+            <div class="exo-title">Performance Overview</div>
+            <div class="exo-title-actions">
+              <button class="exo-pill-btn">
+                <span>ช่วงวันที่</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+                </svg>
+              </button>
+              <button class="exo-icon-btn" title="แชร์">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 6 KPI Strip -->
+          <div class="exo-kpi-strip" id="exoKpiStrip"></div>
+
+          <!-- AI Insights & Actions -->
+          <div class="exo-ai-card">
+            <div class="exo-ai-head">
+              <div class="exo-ai-head-left">
+                <div class="exo-ai-spark">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/>
+                  </svg>
+                </div>
+                <div class="exo-ai-head-text">
+                  <div class="exo-ai-head-title">AI Insights &amp; Actions</div>
+                  <div class="exo-ai-head-sub">Updated 5 min ago · Last 30 days</div>
+                </div>
+              </div>
+              <div class="exo-ai-head-actions">
+                <button class="exo-ai-ask-btn" onclick="toggleAiDrawer()">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+                  Ask AI
+                </button>
+                <button class="exo-icon-btn exo-icon-btn--ghost" title="รีเฟรช" onclick="renderExoAll()">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="exo-ai-list" id="exoAiList"></div>
+          </div>
+
+          <!-- Sales & Opportunity -->
+          <div class="exo-section">
+            <div class="exo-section-head">
+              <div class="exo-section-title-wrap">
+                <span class="exo-section-ico">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
+                </span>
+                <span class="exo-section-title">Sales &amp; Opportunity</span>
+              </div>
+              <div class="exo-section-actions">
+                <span class="exo-section-meta">เรียงตาม:</span>
+                <select class="ops-filter-select exo-mini-select" id="exoSoSort" onchange="renderExoSoTable(this.value)">
+                  <option value="sale-desc">Sales (สูง - ต่ำ)</option>
+                  <option value="sale-asc">Sales (ต่ำ - สูง)</option>
+                  <option value="margin-desc">Margin (สูง - ต่ำ)</option>
+                  <option value="margin-asc">Margin (ต่ำ - สูง)</option>
+                </select>
+              </div>
+            </div>
+            <div class="exo-so-row">
+              <div class="exo-so-chart-wrap">
+                <div class="exo-so-legend">
+                  <span class="exo-legend-item"><span class="exo-legend-dot" style="background:#f97316"></span>ยอดขาย (ตัน)</span>
+                  <span class="exo-legend-item"><span class="exo-legend-dot exo-legend-dot--ghost"></span>โอกาส = การใช้ปุ๋ยในพื้นที่ – ยอดขาย (ตัน)</span>
+                  <span class="exo-legend-item"><span class="exo-legend-dash" style="background:#eab308"></span>margin %</span>
+                </div>
+                <div class="exo-so-chart" id="exoSoChart"></div>
+              </div>
+              <div class="exo-so-table-wrap">
+                <table class="exo-table">
+                  <thead id="exoSoTableHead"></thead>
+                  <tbody id="exoSoTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sales & Activity Score -->
+          <div class="exo-section">
+            <div class="exo-section-head">
+              <div class="exo-section-title-wrap">
+                <span class="exo-section-ico">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>
+                  </svg>
+                </span>
+                <span class="exo-section-title">Sales &amp; Activity Score</span>
+              </div>
+              <div class="exo-section-actions">
+                <select class="ops-filter-select exo-mini-select">
+                  <option>รวมทุกเขต</option>
+                </select>
+                <div class="exo-mini-tabs">
+                  <button class="exo-mini-tab exo-mini-tab--active">Sale</button>
+                  <button class="exo-mini-tab">Segment</button>
+                  <button class="exo-mini-tab">Portfolio</button>
+                  <button class="exo-mini-tab">พื้นที่ปลูก</button>
+                </div>
+              </div>
+            </div>
+            <div class="exo-sas-row">
+              <!-- Left: Sale Uplift vs Budget Burn -->
+              <div class="exo-sas-col">
+                <div class="exo-sub-title">Sale Uplift vs Budget Burn</div>
+                <div class="exo-sas-mini-cards">
+                  <div class="exo-mini-card">
+                    <div class="exo-mini-card-label">Sales Variance</div>
+                    <div class="exo-mini-card-val exo-mini-card-val--down">-฿180 M</div>
+                    <div class="exo-mini-card-sub">Below Target 12%</div>
+                  </div>
+                  <div class="exo-mini-card">
+                    <div class="exo-mini-card-label">Budget</div>
+                    <div class="exo-mini-card-val">฿20M</div>
+                    <div class="exo-mini-card-sub exo-d--up">↑ 12.5% YoY</div>
+                  </div>
+                </div>
+                <div class="exo-sas-line-chart" id="exoSalesActualChart"></div>
+              </div>
+
+              <!-- Middle: Avg. LI Score แต่ละด้าน -->
+              <div class="exo-sas-col">
+                <div class="exo-sub-title">Avg. LI Score แต่ละด้าน</div>
+                <div class="exo-li-kpi-row">
+                  <div class="exo-li-kpi">
+                    <div class="exo-li-kpi-label">LI Score</div>
+                    <div class="exo-li-kpi-val exo-li-kpi-val--accent">65 (B)</div>
+                    <div class="exo-li-kpi-delta exo-d--up">↑ 10%</div>
+                  </div>
+                  <div class="exo-li-kpi">
+                    <div class="exo-li-kpi-label">เยี่ยม</div>
+                    <div class="exo-li-kpi-val">120</div>
+                    <div class="exo-li-kpi-delta exo-d--up">↑ 10%</div>
+                  </div>
+                  <div class="exo-li-kpi">
+                    <div class="exo-li-kpi-label">SR ปิดขาย</div>
+                    <div class="exo-li-kpi-val">46%</div>
+                    <div class="exo-li-kpi-delta exo-d--up">↑ 10%</div>
+                  </div>
+                </div>
+                <div class="exo-li-list" id="exoLiList"></div>
+              </div>
+
+              <!-- Right: LI Score แต่ละเขต -->
+              <div class="exo-sas-col">
+                <div class="exo-sub-title">LI Score แต่ละเขต</div>
+                <div class="exo-tier-bar" id="exoTierBar"></div>
+                <div class="exo-tier-legend" id="exoTierLegend"></div>
+                <div class="exo-zone-table-wrap">
+                  <table class="exo-table">
+                    <thead id="exoZoneLiHead"></thead>
+                    <tbody id="exoZoneLiBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Competitive Price -->
+          <div class="exo-section">
+            <div class="exo-section-head">
+              <div class="exo-section-title-wrap">
+                <span class="exo-section-ico">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                  </svg>
+                </span>
+                <span class="exo-section-title">Competitive Price</span>
+              </div>
+            </div>
+            <div class="exo-cp-kpis" id="exoCpKpis"></div>
+            <div class="exo-cp-row">
+              <div class="exo-cp-crop-col">
+                <div class="exo-sub-title">Crop Price</div>
+                <div class="exo-crop-head">
+                  <span>Crop</span>
+                  <span class="exo-crop-num">SKU</span>
+                  <span class="exo-crop-num">Brand</span>
+                  <span class="exo-crop-num">Avg. Price</span>
+                </div>
+                <div class="exo-crop-list" id="exoCropList"></div>
+              </div>
+              <div class="exo-cp-brand-col">
+                <div class="exo-cp-brand-head">
+                  <div class="exo-sub-title">Brand Competitive Price</div>
+                  <div class="exo-mini-tabs">
+                    <button class="exo-mini-tab exo-mini-tab--active">Brand</button>
+                    <button class="exo-mini-tab">SKUs</button>
+                  </div>
+                </div>
+                <div class="exo-cp-table-wrap">
+                  <table class="exo-table">
+                    <thead id="exoCpBrandHead"></thead>
+                    <tbody id="exoCpBrandBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- #exec-overview-view -->
 
       </div>
 
