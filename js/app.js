@@ -5520,34 +5520,40 @@ function renderExoKpis() {
   }).join('');
 }
 
-/** Clean lightbulb icon used on the Key Insight card. */
-const EXO_AI_BULB_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.4 1 1.1 1 1.8V18h6v-1.5c0-.7.4-1.4 1-1.8A7 7 0 0 0 12 2Z"/></svg>';
+/** SVG icons rendered inside the severity badge per AI insight kind. */
+const EXO_AI_ICONS = {
+  key:         '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/></svg>',
+  urgent:      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+  high:        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  opportunity: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
+};
 
 function renderExoAiList() {
   const el = document.getElementById('exoAiList');
   if (!el) return;
 
   const cardsHtml = EXO_AI_CARDS.map((c, i) => {
-    if (c.kind === 'key') {
-      return `<div class="exo-ai-item exo-ai-item--key" onclick="askAiAboutInsight(${i})">
-        <div class="exo-ai-item-head">
-          <span class="exo-ai-item-bulb">${EXO_AI_BULB_SVG}</span>
-          <span class="exo-ai-item-level">${c.level}</span>
-          <span class="exo-ai-card-arrow">→</span>
-        </div>
-        <div class="exo-ai-item-body">${c.body}</div>
-      </div>`;
-    }
+    const isKey = c.kind === 'key';
+    const icon  = EXO_AI_ICONS[c.kind] || '';
+    const conf  = 82 + ((i * 7) % 16);
     const actionsHtml = (c.actions || []).map((a) =>
       `<div class="exo-ai-action"><span class="exo-ai-action-arrow">→</span><span>${a}</span></div>`).join('');
     return `<div class="exo-ai-item exo-ai-item--${c.kind}" onclick="askAiAboutInsight(${i})">
+      <div class="exo-ai-item-accent"></div>
       <div class="exo-ai-item-head">
-        <span class="exo-ai-item-dot"></span>
+        <span class="exo-ai-item-num">${icon}</span>
         <span class="exo-ai-item-level">${c.level}</span>
+        ${c.kind === 'urgent' ? '<span class="exo-ai-pulse-dot"></span>' : ''}
         <span class="exo-ai-card-arrow">→</span>
       </div>
       ${c.title ? `<div class="exo-ai-item-title">${c.title}</div>` : ''}
+      ${c.body ? `<div class="exo-ai-item-body">${c.body}</div>` : ''}
       ${actionsHtml ? `<div class="exo-ai-actions">${actionsHtml}</div>` : ''}
+      <div class="exo-ai-confidence">
+        <span class="exo-ai-conf-label">AI confidence</span>
+        <span class="exo-ai-conf-bar"><span class="exo-ai-conf-fill" style="width:${conf}%"></span></span>
+        <span class="exo-ai-conf-val">${conf}%</span>
+      </div>
     </div>`;
   }).join('');
 
