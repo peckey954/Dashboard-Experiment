@@ -5369,19 +5369,40 @@ function renderExoKpis() {
   }).join('');
 }
 
+/** SVG icons rendered inside the severity badge per AI insight kind. */
+const EXO_AI_ICONS = {
+  key:         '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/></svg>',
+  urgent:      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+  high:        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  opportunity: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
+};
+
 function renderExoAiList() {
   const el = document.getElementById('exoAiList');
   if (!el) return;
-  el.innerHTML = EXO_AI_CARDS.map((c) => {
+  el.innerHTML = EXO_AI_CARDS.map((c, i) => {
     const isKey = c.kind === 'key';
-    return `<div class="exo-ai-item exo-ai-item--${c.kind}">
+    const icon  = EXO_AI_ICONS[c.kind] || '';
+    const conf  = 82 + ((i * 7) % 16);
+    return `<div class="exo-ai-item exo-ai-item--${c.kind}" style="--ai-delay:${(i * 0.06).toFixed(2)}s">
+      <div class="exo-ai-item-accent"></div>
       <div class="exo-ai-item-head">
-        ${c.num ? `<span class="exo-ai-item-num">${c.num}</span>` : ''}
+        <span class="exo-ai-item-num">${icon}</span>
         <span class="exo-ai-item-level">${c.level}</span>
-        ${!isKey ? `<button class="exo-ai-item-ask" onclick="toggleAiDrawer()">Ask AI</button>` : ''}
+        ${c.kind === 'urgent' ? '<span class="exo-ai-pulse-dot"></span>' : ''}
+        ${!isKey ? `<button class="exo-ai-item-ask" onclick="toggleAiDrawer()">
+          Ask AI
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>` : ''}
       </div>
       ${c.title ? `<div class="exo-ai-item-title">${c.title}</div>` : ''}
       <div class="exo-ai-item-body">${c.body}</div>
+      ${!isKey ? `
+        <div class="exo-ai-confidence">
+          <span class="exo-ai-conf-label">AI confidence</span>
+          <span class="exo-ai-conf-bar"><span class="exo-ai-conf-fill" style="width:${conf}%"></span></span>
+          <span class="exo-ai-conf-val">${conf}%</span>
+        </div>` : '<div class="exo-ai-key-spark"></div>'}
     </div>`;
   }).join('');
 }

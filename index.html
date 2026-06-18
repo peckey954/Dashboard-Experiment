@@ -983,6 +983,7 @@
 
           <!-- AI Insights & Actions -->
           <div class="exo-ai-card">
+            <div class="exo-ai-card-glow"></div>
             <div class="exo-ai-head">
               <div class="exo-ai-head-left">
                 <div class="exo-ai-spark">
@@ -991,13 +992,20 @@
                   </svg>
                 </div>
                 <div class="exo-ai-head-text">
-                  <div class="exo-ai-head-title">AI Insights &amp; Actions</div>
-                  <div class="exo-ai-head-sub">Updated 5 min ago · Last 30 days</div>
+                  <div class="exo-ai-head-title">
+                    AI Insights &amp; Actions
+                    <span class="exo-ai-live-chip">
+                      <span class="exo-ai-live-dot"></span>
+                      LIVE
+                    </span>
+                  </div>
+                  <div class="exo-ai-head-sub">Updated 5 min ago · Last 30 days · powered by Parich AI</div>
                 </div>
               </div>
               <div class="exo-ai-head-actions">
                 <button class="exo-ai-ask-btn" onclick="toggleAiDrawer()">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+                  <span class="exo-ai-ask-glow"></span>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/></svg>
                   Ask AI
                 </button>
                 <button class="exo-icon-btn exo-icon-btn--ghost" title="รีเฟรช" onclick="renderExoAll()">

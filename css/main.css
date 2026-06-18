@@ -6056,138 +6056,373 @@ body {
 .exo-kpi-delta span { color: var(--muted-foreground); font-weight: 400; }
 
 /* AI Insights card */
+/* ── AI Insights & Actions: futuristic redesign ── */
 .exo-ai-card {
   background:
-    linear-gradient(135deg, rgba(249, 115, 22, 0.05), transparent),
+    radial-gradient(ellipse 600px 240px at 0% 0%, rgba(249, 115, 22, 0.10), transparent 70%),
+    radial-gradient(ellipse 500px 220px at 100% 0%, rgba(234, 179, 8, 0.07), transparent 70%),
     var(--card);
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  border-radius: 12px;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.05) inset;
+  border: 1px solid transparent;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 14px 14px;
+  gap: 14px;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 14px 16px 16px;
+  position: relative;
 }
+/* Animated gradient border via mask */
+.exo-ai-card::before {
+  background: conic-gradient(from 0deg,
+    rgba(249, 115, 22, 0.7),
+    rgba(234, 179, 8, 0.45),
+    rgba(249, 115, 22, 0.7),
+    rgba(234, 179, 8, 0.45),
+    rgba(249, 115, 22, 0.7));
+  border-radius: inherit;
+  content: '';
+  inset: 0;
+  padding: 1px;
+  pointer-events: none;
+  position: absolute;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: exo-ai-border-spin 14s linear infinite;
+  z-index: 2;
+}
+@keyframes exo-ai-border-spin {
+  to { transform: rotate(360deg); }
+}
+.exo-ai-card-glow {
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.18), transparent 65%);
+  filter: blur(40px);
+  height: 200px;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  top: -80px;
+  transform: translateX(-50%);
+  width: 60%;
+  z-index: 0;
+}
+
 .exo-ai-head {
   align-items: center;
   display: flex;
   justify-content: space-between;
+  position: relative;
+  z-index: 3;
 }
-.exo-ai-head-left { align-items: center; display: flex; gap: 8px; }
+.exo-ai-head-left {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
 .exo-ai-spark {
   align-items: center;
-  background: linear-gradient(135deg, #fb923c, #ea580c);
-  border-radius: 6px;
+  background: linear-gradient(135deg, #fde68a, #fb923c 45%, #ea580c);
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px rgba(249, 115, 22, 0.4) inset,
+    0 4px 14px -2px rgba(249, 115, 22, 0.5);
   color: #fff;
   display: flex;
-  height: 26px;
+  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.4));
+  height: 30px;
   justify-content: center;
-  width: 26px;
+  width: 30px;
+  animation: exo-ai-spark-twinkle 2.4s ease-in-out infinite;
 }
+@keyframes exo-ai-spark-twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50%      { transform: scale(1.08) rotate(20deg); }
+}
+
 .exo-ai-head-title {
+  align-items: center;
   color: var(--foreground);
-  font-size: 13px;
+  display: flex;
+  font-size: 14px;
   font-weight: 700;
+  gap: 8px;
+  letter-spacing: 0.01em;
 }
+.exo-ai-live-chip {
+  align-items: center;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 999px;
+  color: #16a34a;
+  display: inline-flex;
+  font-size: 9px;
+  font-weight: 700;
+  gap: 4px;
+  letter-spacing: 0.08em;
+  padding: 1px 8px;
+}
+[data-theme="dark"] .exo-ai-live-chip { color: #4ade80; }
+.exo-ai-live-dot {
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+  height: 6px;
+  width: 6px;
+  animation: exo-ai-live-pulse 1.8s ease-in-out infinite;
+}
+@keyframes exo-ai-live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+  50%      { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
 .exo-ai-head-sub {
   color: var(--muted-foreground);
   font-size: 11px;
+  margin-top: 2px;
 }
 .exo-ai-head-actions {
   align-items: center;
   display: flex;
   gap: 6px;
 }
+
+/* Ask AI button with shine sweep + glow */
 .exo-ai-ask-btn {
   align-items: center;
-  background: linear-gradient(135deg, #fb923c, #ea580c);
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 45%, #ea580c 100%);
   border: none;
   border-radius: 8px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 4px 14px -2px rgba(249, 115, 22, 0.55);
   color: #fff;
   cursor: pointer;
   display: flex;
   font-family: inherit;
   font-size: 11px;
   font-weight: 600;
-  gap: 4px;
-  height: 28px;
-  padding: 0 10px;
+  gap: 5px;
+  height: 30px;
+  overflow: hidden;
+  padding: 0 12px;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.exo-ai-ask-btn:hover { transform: translateY(-1px); }
+.exo-ai-ask-btn:hover {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.45) inset,
+    0 8px 20px -3px rgba(249, 115, 22, 0.7);
+  transform: translateY(-1px);
+}
+.exo-ai-ask-glow {
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%);
+  inset: 0;
+  position: absolute;
+  transform: translateX(-100%);
+}
+.exo-ai-ask-btn:hover .exo-ai-ask-glow { animation: exo-ai-shine 1.2s ease-out; }
+@keyframes exo-ai-shine { to { transform: translateX(110%); } }
 
+/* ── Insight cards row ── */
 .exo-ai-list {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   grid-template-columns: 2fr repeat(5, 1fr);
   overflow-x: auto;
   padding-bottom: 4px;
+  position: relative;
+  z-index: 3;
 }
+.exo-ai-list::-webkit-scrollbar { height: 6px; }
+.exo-ai-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Per-kind accent color variables */
 .exo-ai-item {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ai-color) 8%, transparent), transparent 60%),
+    var(--card);
+  border: 1px solid color-mix(in srgb, var(--ai-color) 22%, var(--border));
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-height: 130px;
-  padding: 10px 12px;
+  gap: 8px;
+  min-height: 158px;
+  opacity: 0;
+  overflow: hidden;
+  padding: 12px 14px 14px;
+  position: relative;
+  transform: translateY(8px);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  animation: exo-ai-item-in 0.45s ease-out forwards;
+  animation-delay: var(--ai-delay, 0s);
 }
-.exo-ai-item--key { border-color: #f97316; }
-.exo-ai-item--urgent { border-color: rgba(239, 68, 68, 0.5); }
-.exo-ai-item--high { border-color: rgba(234, 179, 8, 0.5); }
-.exo-ai-item--opportunity { border-color: rgba(34, 197, 94, 0.5); }
+@keyframes exo-ai-item-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+.exo-ai-item:hover {
+  border-color: color-mix(in srgb, var(--ai-color) 55%, var(--border));
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--ai-color) 50%, transparent);
+  transform: translateY(-2px);
+}
+.exo-ai-item-accent {
+  background: linear-gradient(90deg, transparent, var(--ai-color), transparent);
+  filter: blur(0.4px);
+  height: 1.5px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
 
+/* Kind-specific accent colors */
+.exo-ai-item--key         { --ai-color: #f97316; }
+.exo-ai-item--urgent      { --ai-color: #ef4444; }
+.exo-ai-item--high        { --ai-color: #eab308; }
+.exo-ai-item--opportunity { --ai-color: #22c55e; }
+
+/* Header row inside each card */
 .exo-ai-item-head {
   align-items: center;
   display: flex;
   gap: 6px;
-  justify-content: space-between;
 }
 .exo-ai-item-num {
-  background: var(--secondary);
-  border-radius: 50%;
-  color: var(--foreground);
-  font-size: 10px;
-  font-weight: 700;
-  height: 18px;
-  line-height: 18px;
-  text-align: center;
-  width: 18px;
+  align-items: center;
+  background: var(--ai-color);
+  border-radius: 7px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ai-color) 30%, transparent),
+    0 0 12px -2px var(--ai-color);
+  color: #fff;
+  display: flex;
+  flex-shrink: 0;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
 }
-.exo-ai-item--urgent .exo-ai-item-num { background: #ef4444; color: #fff; }
-.exo-ai-item--high .exo-ai-item-num { background: #eab308; color: #fff; }
-.exo-ai-item--opportunity .exo-ai-item-num { background: #22c55e; color: #fff; }
-
 .exo-ai-item-level {
-  color: var(--foreground);
+  color: var(--ai-color);
   flex: 1;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
-.exo-ai-item--urgent .exo-ai-item-level { color: #ef4444; }
-.exo-ai-item--high .exo-ai-item-level { color: #eab308; }
-.exo-ai-item--opportunity .exo-ai-item-level { color: #22c55e; }
-.exo-ai-item--key .exo-ai-item-level { color: #f97316; }
+
+.exo-ai-pulse-dot {
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  height: 7px;
+  width: 7px;
+  animation: exo-ai-pulse-strong 1.4s ease-in-out infinite;
+}
+@keyframes exo-ai-pulse-strong {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);   transform: scale(1.15); }
+}
 
 .exo-ai-item-ask {
+  align-items: center;
   background: transparent;
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--ai-color) 30%, var(--border));
+  border-radius: 6px;
   color: var(--muted-foreground);
   cursor: pointer;
+  display: flex;
   font-family: inherit;
   font-size: 10px;
-  text-decoration: underline;
+  font-weight: 600;
+  gap: 3px;
+  height: 22px;
+  padding: 0 8px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.exo-ai-item-ask:hover { color: #f97316; }
+.exo-ai-item-ask:hover {
+  background: var(--ai-color);
+  border-color: var(--ai-color);
+  color: #fff;
+}
+
 .exo-ai-item-title {
   color: var(--foreground);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 .exo-ai-item-body {
   color: var(--muted-foreground);
+  flex: 1;
   font-size: 11px;
-  line-height: 1.5;
+  line-height: 1.55;
+}
+
+/* AI confidence bar in card footer */
+.exo-ai-confidence {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.exo-ai-conf-label {
+  color: var(--muted-foreground);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.exo-ai-conf-bar {
+  background: var(--secondary);
+  border-radius: 999px;
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+}
+.exo-ai-conf-fill {
+  background: linear-gradient(90deg, var(--ai-color), color-mix(in srgb, var(--ai-color) 70%, #fff));
+  border-radius: 999px;
+  display: block;
+  height: 100%;
+  transition: width 0.6s ease-out;
+}
+.exo-ai-conf-val {
+  color: var(--foreground);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* Decorative sparkle on the Key Insight card */
+.exo-ai-key-spark {
+  background:
+    radial-gradient(circle 1px at 8px 10px,  rgba(249, 115, 22, 0.6) 100%, transparent),
+    radial-gradient(circle 1.5px at 30px 4px, rgba(234, 179, 8, 0.55) 100%, transparent),
+    radial-gradient(circle 1px at 50px 14px,  rgba(249, 115, 22, 0.5) 100%, transparent),
+    radial-gradient(circle 1px at 14px 22px,  rgba(234, 179, 8, 0.4)  100%, transparent);
+  filter: drop-shadow(0 0 3px rgba(249, 115, 22, 0.4));
+  height: 28px;
+  margin-top: auto;
+  opacity: 0.7;
+}
+
+/* Light + dark refinements */
+[data-theme="dark"] .exo-ai-item {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ai-color) 14%, transparent), transparent 70%),
+    var(--card);
+}
+[data-theme="dark"] .exo-ai-card {
+  background:
+    radial-gradient(ellipse 600px 240px at 0% 0%, rgba(249, 115, 22, 0.14), transparent 70%),
+    radial-gradient(ellipse 500px 220px at 100% 0%, rgba(234, 179, 8, 0.10), transparent 70%),
+    var(--card);
 }
 
 /* Section wrapper */
