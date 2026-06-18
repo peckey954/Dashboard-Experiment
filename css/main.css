@@ -6067,9 +6067,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  /* Horizontal padding lives on the CARD (not the inner list) so the
-     list can use sticky `left: 0` and naturally clip overflow at its
-     own edge. */
   overflow: hidden;
   padding: 14px 18px 14px 18px;
   position: relative;
@@ -6195,13 +6192,11 @@ body {
 .exo-ai-list {
   align-items: stretch;
   display: flex;
+  flex: 1 0 auto;
   gap: 24px;
-  min-height: 200px;
+  height: 200px;                /* hard height so it can't collapse */
   overflow-x: auto;
   overflow-y: hidden;
-  /* No horizontal padding — keep sticky `left: X` aligned with the
-     element edge so scrolled cards bleeding past Key Insight land
-     exactly in the masked transparent zone. */
   padding: 4px 0 14px 0;
   position: relative;
   scroll-padding-left: 384px;
