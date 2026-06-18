@@ -6058,33 +6058,22 @@ body {
 /* AI Insights card */
 /* ── AI Insights & Actions: futuristic look + breathing-room scroll ── */
 .exo-ai-card {
-  background:
-    radial-gradient(ellipse 600px 240px at 0% 0%, rgba(249, 115, 22, 0.10), transparent 70%),
-    radial-gradient(ellipse 500px 220px at 100% 0%, rgba(234, 179, 8, 0.07), transparent 70%),
-    var(--card);
+  background: var(--card);
   border: 1px solid rgba(249, 115, 22, 0.35);
   border-radius: 14px;
   box-shadow:
     0 0 0 3px rgba(249, 115, 22, 0.04) inset,
-    0 4px 18px -8px rgba(249, 115, 22, 0.25);
+    0 4px 18px -10px rgba(249, 115, 22, 0.18);
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 14px 0 14px;
   position: relative;
 }
-.exo-ai-card-glow {
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.18), transparent 65%);
-  filter: blur(40px);
-  height: 200px;
-  left: 50%;
-  pointer-events: none;
-  position: absolute;
-  top: -80px;
-  transform: translateX(-50%);
-  width: 60%;
-  z-index: 0;
+[data-theme="dark"] .exo-ai-card {
+  background: var(--card);
 }
+.exo-ai-card-glow { display: none; }
 
 /* Header */
 .exo-ai-head {
@@ -6202,13 +6191,13 @@ body {
 .exo-ai-list {
   align-items: stretch;
   display: flex;
-  gap: 18px;
-  min-height: 200px;            /* safety: never collapse */
+  gap: 16px;
+  min-height: 200px;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 4px 20px 14px;
   position: relative;
-  scroll-padding-left: 332px;
+  scroll-padding-left: 372px;   /* sticky width + offset + buffer */
   z-index: 3;
 }
 .exo-ai-list::-webkit-scrollbar { height: 8px; }
@@ -6287,22 +6276,25 @@ body {
   top: 0;
 }
 
-/* Sticky Key Insight: bigger right-shadow + extra right padding gives
-   passing cards a clear "behind" feel without crowding. */
+/* Sticky Key Insight — sits in its own "stage":
+   - A wider basis (340px) holds the visible content (~280px) plus a
+     ~60px opaque white buffer on the right.
+   - margin-right pushes the next card extra distance away so cards
+     scrolling past never visually crowd the Key card.
+   - Solid card background ensures cards passing behind are fully
+     hidden in the buffer zone, never bleeding through. */
 .exo-ai-item--key {
-  flex: 0 0 312px;
+  background: var(--card);
+  flex: 0 0 340px;
   left: 20px;
+  margin-right: 12px;
+  padding-right: 70px;
   position: sticky;
   z-index: 4;
-  padding-right: 20px;
-  box-shadow:
-    20px 0 22px -16px rgba(0, 0, 0, 0.10),
-    36px 0 40px -28px rgba(249, 115, 22, 0.35);
+  box-shadow: 14px 0 18px -16px rgba(0, 0, 0, 0.08);
 }
 [data-theme="dark"] .exo-ai-item--key {
-  box-shadow:
-    20px 0 22px -16px rgba(0, 0, 0, 0.55),
-    36px 0 40px -28px rgba(249, 115, 22, 0.45);
+  box-shadow: 14px 0 18px -16px rgba(0, 0, 0, 0.5);
 }
 /* Pin badge in the corner so user knows the card is locked */
 .exo-ai-item--key::after {
@@ -6446,13 +6438,6 @@ body {
   font-weight: 700;
 }
 
-/* Dark mode container glow boost */
-[data-theme="dark"] .exo-ai-card {
-  background:
-    radial-gradient(ellipse 600px 240px at 0% 0%, rgba(249, 115, 22, 0.14), transparent 70%),
-    radial-gradient(ellipse 500px 220px at 100% 0%, rgba(234, 179, 8, 0.10), transparent 70%),
-    var(--card);
-}
 
 /* Section wrapper */
 .exo-section {
