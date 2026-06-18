@@ -6203,17 +6203,24 @@ body {
 @keyframes exo-ai-shine { to { transform: translateX(110%); } }
 
 /* ── Insight cards row ── */
+/* Flex row so each card keeps its natural width; first card is sticky-left. */
 .exo-ai-list {
-  display: grid;
+  display: flex;
   gap: 12px;
-  grid-template-columns: 2fr repeat(5, 1fr);
   overflow-x: auto;
-  padding-bottom: 4px;
+  overflow-y: hidden;
+  padding: 4px 4px 8px;
   position: relative;
+  scroll-padding-left: 320px; /* don't scroll under the sticky key card */
   z-index: 3;
 }
 .exo-ai-list::-webkit-scrollbar { height: 6px; }
-.exo-ai-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.exo-ai-list::-webkit-scrollbar-track { background: transparent; }
+.exo-ai-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+.exo-ai-list::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
 
 /* Per-kind accent color variables */
 .exo-ai-item {
@@ -6223,6 +6230,7 @@ body {
   border: 1px solid var(--ai-border, var(--border));
   border-radius: 12px;
   display: flex;
+  flex: 0 0 240px;          /* fixed-width card — content drives row width */
   flex-direction: column;
   gap: 8px;
   min-height: 158px;
@@ -6230,6 +6238,39 @@ body {
   padding: 12px 14px 14px;
   position: relative;
   transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+}
+
+/* Sticky Key Insight: stays pinned at the left while the rest scroll */
+.exo-ai-item--key {
+  flex: 0 0 300px;
+  left: 0;
+  position: sticky;
+  z-index: 4;
+  /* Right-edge fade so cards passing behind look layered, not jammed */
+  box-shadow:
+    14px 0 18px -10px rgba(0, 0, 0, 0.06),
+    18px 0 24px -14px rgba(249, 115, 22, 0.18);
+}
+[data-theme="dark"] .exo-ai-item--key {
+  box-shadow:
+    14px 0 18px -10px rgba(0, 0, 0, 0.4),
+    18px 0 24px -14px rgba(249, 115, 22, 0.25);
+}
+/* Tiny pin icon in the corner so user knows the card is locked */
+.exo-ai-item--key::after {
+  background: var(--ai-color);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--ai-glow);
+  color: #fff;
+  content: '📌';
+  font-size: 10px;
+  height: 18px;
+  line-height: 18px;
+  position: absolute;
+  right: 10px;
+  text-align: center;
+  top: 10px;
+  width: 18px;
 }
 .exo-ai-item:hover {
   border-color: var(--ai-color);
@@ -6980,7 +7021,10 @@ body {
   .exo-sas-row { grid-template-columns: 1fr 1fr; }
   .exo-sas-col:nth-child(3) { grid-column: span 2; }
   .exo-kpi-strip { grid-template-columns: repeat(3, 1fr); }
-  .exo-ai-list { grid-template-columns: 2fr repeat(3, 1fr); }
+}
+@media (max-width: 700px) {
+  .exo-ai-item--key { flex-basis: 260px; }
+  .exo-ai-item       { flex-basis: 220px; }
 }
 @media (max-width: 900px) {
   .exo-kpi-strip { grid-template-columns: repeat(2, 1fr); }
