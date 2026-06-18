@@ -6056,21 +6056,16 @@ body {
 .exo-kpi-delta span { color: var(--muted-foreground); font-weight: 400; }
 
 /* AI Insights card */
-/* ── AI Insights & Actions: futuristic redesign ── */
+/* ── AI Insights & Actions: clean redesign ── */
 .exo-ai-card {
-  background:
-    radial-gradient(ellipse 600px 240px at 0% 0%, rgba(249, 115, 22, 0.10), transparent 70%),
-    radial-gradient(ellipse 500px 220px at 100% 0%, rgba(234, 179, 8, 0.07), transparent 70%),
-    var(--card);
-  border: 1px solid rgba(249, 115, 22, 0.35);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  box-shadow:
-    0 0 0 3px rgba(249, 115, 22, 0.04) inset,
-    0 4px 18px -8px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 2px 8px -4px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px 16px 16px;
+  gap: 6px;
+  padding: 14px 0 4px;
   position: relative;
 }
 .exo-ai-card-glow {
@@ -6090,364 +6085,213 @@ body {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  position: relative;
-  z-index: 3;
+  padding: 0 18px 4px;
 }
 .exo-ai-head-left {
   align-items: center;
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 .exo-ai-spark {
   align-items: center;
-  background: linear-gradient(135deg, #fde68a, #fb923c 45%, #ea580c);
-  border-radius: 8px;
-  box-shadow:
-    0 0 0 1px rgba(249, 115, 22, 0.4) inset,
-    0 4px 14px -2px rgba(249, 115, 22, 0.5);
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  border-radius: 6px;
   color: #fff;
   display: flex;
-  filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.4));
-  height: 30px;
+  height: 24px;
   justify-content: center;
-  width: 30px;
-  animation: exo-ai-spark-twinkle 2.4s ease-in-out infinite;
+  width: 24px;
 }
-@keyframes exo-ai-spark-twinkle {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50%      { transform: scale(1.08) rotate(20deg); }
-}
-
 .exo-ai-head-title {
-  align-items: center;
   color: var(--foreground);
-  display: flex;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  gap: 8px;
-  letter-spacing: 0.01em;
 }
-.exo-ai-live-chip {
-  align-items: center;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  border-radius: 999px;
-  color: #16a34a;
-  display: inline-flex;
-  font-size: 9px;
-  font-weight: 700;
-  gap: 4px;
-  letter-spacing: 0.08em;
-  padding: 1px 8px;
-}
-[data-theme="dark"] .exo-ai-live-chip { color: #4ade80; }
-.exo-ai-live-dot {
-  background: #22c55e;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
-  height: 6px;
-  width: 6px;
-  animation: exo-ai-live-pulse 1.8s ease-in-out infinite;
-}
-@keyframes exo-ai-live-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
-  50%      { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-}
-
 .exo-ai-head-sub {
   color: var(--muted-foreground);
   font-size: 11px;
-  margin-top: 2px;
-}
-.exo-ai-head-actions {
-  align-items: center;
-  display: flex;
-  gap: 6px;
+  margin-top: 1px;
 }
 
-/* Ask AI button with shine sweep + glow */
-.exo-ai-ask-btn {
-  align-items: center;
-  background: linear-gradient(135deg, #fb923c 0%, #f97316 45%, #ea580c 100%);
-  border: none;
-  border-radius: 8px;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.4) inset,
-    0 4px 14px -2px rgba(249, 115, 22, 0.55);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  gap: 5px;
-  height: 30px;
-  overflow: hidden;
-  padding: 0 12px;
-  position: relative;
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.exo-ai-ask-btn:hover {
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.45) inset,
-    0 8px 20px -3px rgba(249, 115, 22, 0.7);
-  transform: translateY(-1px);
-}
-.exo-ai-ask-glow {
-  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%);
-  inset: 0;
-  position: absolute;
-  transform: translateX(-100%);
-}
-.exo-ai-ask-btn:hover .exo-ai-ask-glow { animation: exo-ai-shine 1.2s ease-out; }
-@keyframes exo-ai-shine { to { transform: translateX(110%); } }
 
-/* ── Insight cards row ── */
-/* Flex row so each card keeps its natural width; first card is sticky-left. */
+/* ── Insight cards row ──
+   One continuous strip with thin vertical dividers between cards.
+   First card (Key Insight) stays pinned-left while the rest scroll. */
 .exo-ai-list {
+  align-items: stretch;
+  background: var(--card);
+  border-radius: 0 0 14px 14px;
   display: flex;
-  gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 4px 4px 8px;
+  padding: 0;
   position: relative;
-  scroll-padding-left: 320px; /* don't scroll under the sticky key card */
-  z-index: 3;
+  scroll-padding-left: 300px;
 }
 .exo-ai-list::-webkit-scrollbar { height: 6px; }
 .exo-ai-list::-webkit-scrollbar-track { background: transparent; }
-.exo-ai-list::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
+.exo-ai-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 .exo-ai-list::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
 
-/* Per-kind accent color variables */
+/* Per-kind dot colors (no individual borders / shadows / tints) */
 .exo-ai-item {
-  background:
-    linear-gradient(180deg, var(--ai-tint, rgba(249, 115, 22, 0.06)), transparent 65%),
-    var(--card);
-  border: 1px solid var(--ai-border, var(--border));
-  border-radius: 12px;
+  background: var(--card);
+  border: none;
+  border-left: 1px solid var(--border);
   display: flex;
-  flex: 0 0 240px;          /* fixed-width card — content drives row width */
+  flex: 0 0 260px;
   flex-direction: column;
   gap: 8px;
-  min-height: 158px;
-  overflow: hidden;
-  padding: 12px 14px 14px;
+  min-height: 130px;
+  padding: 14px 18px 16px;
   position: relative;
-  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
 }
+.exo-ai-item:first-child { border-left: none; }
 
-/* Sticky Key Insight: stays pinned at the left while the rest scroll */
+.exo-ai-item--key         { --ai-color: #f97316; }
+.exo-ai-item--urgent      { --ai-color: #ef4444; }
+.exo-ai-item--high        { --ai-color: #f59e0b; }
+.exo-ai-item--opportunity { --ai-color: #22c55e; }
+
+/* Sticky-left Key Insight */
 .exo-ai-item--key {
-  flex: 0 0 300px;
+  background: var(--card);
+  border-left: none;
+  box-shadow: 12px 0 18px -14px rgba(0, 0, 0, 0.08);
+  flex: 0 0 280px;
   left: 0;
   position: sticky;
-  z-index: 4;
-  /* Right-edge fade so cards passing behind look layered, not jammed */
-  box-shadow:
-    14px 0 18px -10px rgba(0, 0, 0, 0.06),
-    18px 0 24px -14px rgba(249, 115, 22, 0.18);
+  z-index: 2;
 }
 [data-theme="dark"] .exo-ai-item--key {
-  box-shadow:
-    14px 0 18px -10px rgba(0, 0, 0, 0.4),
-    18px 0 24px -14px rgba(249, 115, 22, 0.25);
-}
-/* Tiny pin icon in the corner so user knows the card is locked */
-.exo-ai-item--key::after {
-  background: var(--ai-color);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--ai-glow);
-  color: #fff;
-  content: '📌';
-  font-size: 10px;
-  height: 18px;
-  line-height: 18px;
-  position: absolute;
-  right: 10px;
-  text-align: center;
-  top: 10px;
-  width: 18px;
-}
-.exo-ai-item:hover {
-  border-color: var(--ai-color);
-  box-shadow: 0 8px 22px -10px var(--ai-glow, rgba(249, 115, 22, 0.4));
-  transform: translateY(-2px);
-}
-.exo-ai-item-accent {
-  background: linear-gradient(90deg, transparent, var(--ai-color), transparent);
-  filter: blur(0.4px);
-  height: 1.5px;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
+  box-shadow: 12px 0 18px -14px rgba(0, 0, 0, 0.45);
 }
 
-/* Kind-specific colors (rgba pre-mixed so no color-mix() dependency) */
-.exo-ai-item--key {
-  --ai-color: #f97316;
-  --ai-tint: rgba(249, 115, 22, 0.08);
-  --ai-border: rgba(249, 115, 22, 0.45);
-  --ai-glow: rgba(249, 115, 22, 0.45);
-}
-.exo-ai-item--urgent {
-  --ai-color: #ef4444;
-  --ai-tint: rgba(239, 68, 68, 0.07);
-  --ai-border: rgba(239, 68, 68, 0.35);
-  --ai-glow: rgba(239, 68, 68, 0.45);
-}
-.exo-ai-item--high {
-  --ai-color: #eab308;
-  --ai-tint: rgba(234, 179, 8, 0.07);
-  --ai-border: rgba(234, 179, 8, 0.35);
-  --ai-glow: rgba(234, 179, 8, 0.45);
-}
-.exo-ai-item--opportunity {
-  --ai-color: #22c55e;
-  --ai-tint: rgba(34, 197, 94, 0.07);
-  --ai-border: rgba(34, 197, 94, 0.35);
-  --ai-glow: rgba(34, 197, 94, 0.45);
-}
-[data-theme="dark"] .exo-ai-item--key { --ai-tint: rgba(249, 115, 22, 0.16); }
-[data-theme="dark"] .exo-ai-item--urgent { --ai-tint: rgba(239, 68, 68, 0.14); }
-[data-theme="dark"] .exo-ai-item--high { --ai-tint: rgba(234, 179, 8, 0.14); }
-[data-theme="dark"] .exo-ai-item--opportunity { --ai-tint: rgba(34, 197, 94, 0.14); }
-
-/* Header row inside each card */
+/* Card header: lightbulb (key) OR colored dot (others) + level label */
 .exo-ai-item-head {
   align-items: center;
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
-.exo-ai-item-num {
+.exo-ai-item-bulb {
   align-items: center;
-  background: var(--ai-color);
-  border-radius: 7px;
-  box-shadow: 0 0 12px -2px var(--ai-glow, rgba(249, 115, 22, 0.45));
-  color: #fff;
+  color: var(--ai-color);
   display: flex;
-  flex-shrink: 0;
-  height: 22px;
+  height: 16px;
   justify-content: center;
-  width: 22px;
+  width: 16px;
+}
+.exo-ai-item-dot {
+  background: var(--ai-color);
+  border-radius: 50%;
+  flex-shrink: 0;
+  height: 8px;
+  width: 8px;
 }
 .exo-ai-item-level {
   color: var(--ai-color);
-  flex: 1;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
-
-.exo-ai-pulse-dot {
-  background: #ef4444;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  height: 7px;
-  width: 7px;
-  animation: exo-ai-pulse-strong 1.4s ease-in-out infinite;
-}
-@keyframes exo-ai-pulse-strong {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
-  50%      { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);   transform: scale(1.15); }
-}
-
-.exo-ai-item-ask {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--ai-border, var(--border));
-  border-radius: 6px;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  display: flex;
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 600;
-  gap: 3px;
-  height: 22px;
-  padding: 0 8px;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.exo-ai-item-ask:hover {
-  background: var(--ai-color);
-  border-color: var(--ai-color);
-  color: #fff;
-}
+.exo-ai-item--key .exo-ai-item-level { letter-spacing: 0.1em; }
 
 .exo-ai-item-title {
   color: var(--foreground);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.4;
 }
 .exo-ai-item-body {
-  color: var(--muted-foreground);
-  flex: 1;
-  font-size: 11px;
-  line-height: 1.55;
-}
-
-/* AI confidence bar in card footer */
-.exo-ai-confidence {
-  align-items: center;
-  display: flex;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 6px;
-}
-.exo-ai-conf-label {
-  color: var(--muted-foreground);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.exo-ai-conf-bar {
-  background: var(--secondary);
-  border-radius: 999px;
-  flex: 1;
-  height: 3px;
-  overflow: hidden;
-}
-.exo-ai-conf-fill {
-  background: var(--ai-color);
-  border-radius: 999px;
-  display: block;
-  height: 100%;
-  transition: width 0.6s ease-out;
-}
-.exo-ai-conf-val {
   color: var(--foreground);
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.exo-ai-hi {
+  color: #f97316;
   font-weight: 700;
 }
 
-/* Decorative sparkle on the Key Insight card */
-.exo-ai-key-spark {
-  background:
-    radial-gradient(circle 1px at 8px 10px,  rgba(249, 115, 22, 0.6) 100%, transparent),
-    radial-gradient(circle 1.5px at 30px 4px, rgba(234, 179, 8, 0.55) 100%, transparent),
-    radial-gradient(circle 1px at 50px 14px,  rgba(249, 115, 22, 0.5) 100%, transparent),
-    radial-gradient(circle 1px at 14px 22px,  rgba(234, 179, 8, 0.4)  100%, transparent);
-  filter: drop-shadow(0 0 3px rgba(249, 115, 22, 0.4));
-  height: 28px;
-  margin-top: auto;
-  opacity: 0.7;
+/* Action items with orange → arrow */
+.exo-ai-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+.exo-ai-action {
+  align-items: flex-start;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  line-height: 1.5;
+}
+.exo-ai-action-arrow {
+  color: #f97316;
+  flex-shrink: 0;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
-/* Dark mode container glow boost */
-[data-theme="dark"] .exo-ai-card {
-  background:
-    radial-gradient(ellipse 600px 240px at 0% 0%, rgba(249, 115, 22, 0.14), transparent 70%),
-    radial-gradient(ellipse 500px 220px at 100% 0%, rgba(234, 179, 8, 0.10), transparent 70%),
-    var(--card);
+/* Right-end action column: big Ask AI + ดูทั้งหมด */
+.exo-ai-actions-col {
+  align-items: stretch;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex: 0 0 170px;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  margin-left: auto;
+  padding: 14px 16px 16px;
+  position: sticky;
+  right: 0;
+  z-index: 3;
 }
+.exo-ai-ask-big {
+  align-items: center;
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 45%, #ea580c 100%);
+  border: none;
+  border-radius: 10px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 6px 18px -4px rgba(249, 115, 22, 0.55);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 6px;
+  height: 44px;
+  justify-content: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.exo-ai-ask-big:hover {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.45) inset,
+    0 8px 22px -4px rgba(249, 115, 22, 0.7);
+  transform: translateY(-1px);
+}
+.exo-ai-all-btn {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+  height: 34px;
+  justify-content: center;
+}
+.exo-ai-all-btn:hover { background: var(--muted); }
+
 
 /* Section wrapper */
 .exo-section {

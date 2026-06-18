@@ -5196,18 +5196,18 @@ const EXO_ZONES = [
 
 /** 6 AI insight cards (matches the Figma sample). */
 const EXO_AI_CARDS = [
-  {kind:'key',         num:'',  level:'Key Insight', title:'',
-    body:'ยอดขายโต <strong>12.5%</strong> แต่ Market Share ลด <strong>10%</strong> — แสดงว่าตลาดโตเร็วกว่าเรา · คู่แข่งกินส่วนแบ่ง · โฟกัสที่ Active Farmer Portfolio (64%) ซึ่งต่ำสุดในกลุ่ม metrics'},
-  {kind:'urgent',      num:'1', level:'URGENT',        title:'โอกาสเติบโตสูงในเขต N2',
-    body:'แนะนำ: เพิ่ม Dealer Portfolio และ Push SKUs ตรงกับพืชหลัก'},
-  {kind:'high',        num:'2', level:'High',          title:'คู่แข่งลดราคาในพืชหลักกลุ่มข้าวโพด',
-    body:'แนะนำ: ติดตาม Price War เน้น Value selling'},
-  {kind:'high',        num:'2', level:'High',          title:'Dealer กลุ่มเสี่ยงมีจำนวนเพิ่มขึ้น 24%',
-    body:'แนะนำ: ทำ Recovery campaign และติดตามใกล้ชิด'},
-  {kind:'opportunity', num:'1', level:'Opportunity',   title:'กลุ่มพืชทุเรียน มีกำไรสูงถึง 40%',
-    body:'แนะนำขายโปรดัก Mix พื้นที่คุมี Demand สูง'},
-  {kind:'opportunity', num:'1', level:'Opportunity',   title:'กลุ่ม Active Dealer มี Conversion ดี',
-    body:'แนะนำ: ขยาย Loyalty program ในกลุ่มนี้'},
+  {kind:'key', level:'KEY INSIGHT', title:'',
+    body:'ยอดขายโต <span class="exo-ai-hi">12.5%</span> แต่ Market Share ลด <span class="exo-ai-hi">10%</span> — ตลาดโตเร็วกว่าเรา โฟกัสที่ <span class="exo-ai-hi">Active Farmer Coverage 64%</span> (ต่ำสุดในกลุ่ม)'},
+  {kind:'urgent',      level:'ด่วน',  title:'โอกาสเติบโตสูงในเขต N2',
+    actions:['เพิ่ม Dealer Coverage และ Push SKUs ตรงกับพืชหลัก']},
+  {kind:'high',        level:'สูง',   title:'คู่แข่งลดราคาในพืชหลักกลุ่มข้าวโพด',
+    actions:['ติดตาม Price War เน้น Value selling']},
+  {kind:'high',        level:'สูง',   title:'Dealer กลุ่มเสี่ยงมีจำนวนเพิ่มขึ้น 24%',
+    actions:['ทำ Recovery campaign และติดตามใกล้ชิด']},
+  {kind:'opportunity', level:'โอกาส', title:'กลุ่มพืชทุเรียน มีกำไรสูงถึง 40%',
+    actions:['ขายโปรดัก Mix พื้นที่ที่คุมี Demand สูง']},
+  {kind:'opportunity', level:'โอกาส', title:'กลุ่ม Active Dealer มี Conversion ดี',
+    actions:['ขยาย Loyalty program ในกลุ่มนี้']},
 ];
 
 /** LI score breakdown by area. */
@@ -5369,42 +5369,51 @@ function renderExoKpis() {
   }).join('');
 }
 
-/** SVG icons rendered inside the severity badge per AI insight kind. */
-const EXO_AI_ICONS = {
-  key:         '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/></svg>',
-  urgent:      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
-  high:        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
-  opportunity: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
-};
+/** Clean lightbulb icon used on the Key Insight card. */
+const EXO_AI_BULB_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.4 1 1.1 1 1.8V18h6v-1.5c0-.7.4-1.4 1-1.8A7 7 0 0 0 12 2Z"/></svg>';
 
 function renderExoAiList() {
   const el = document.getElementById('exoAiList');
   if (!el) return;
-  el.innerHTML = EXO_AI_CARDS.map((c, i) => {
-    const isKey = c.kind === 'key';
-    const icon  = EXO_AI_ICONS[c.kind] || '';
-    const conf  = 82 + ((i * 7) % 16);
-    return `<div class="exo-ai-item exo-ai-item--${c.kind}" style="--ai-delay:${(i * 0.06).toFixed(2)}s">
-      <div class="exo-ai-item-accent"></div>
+
+  const cardsHtml = EXO_AI_CARDS.map((c) => {
+    if (c.kind === 'key') {
+      return `<div class="exo-ai-item exo-ai-item--key">
+        <div class="exo-ai-item-head">
+          <span class="exo-ai-item-bulb">${EXO_AI_BULB_SVG}</span>
+          <span class="exo-ai-item-level">${c.level}</span>
+        </div>
+        <div class="exo-ai-item-body">${c.body}</div>
+      </div>`;
+    }
+    const actionsHtml = (c.actions || []).map((a) =>
+      `<div class="exo-ai-action"><span class="exo-ai-action-arrow">→</span><span>${a}</span></div>`).join('');
+    return `<div class="exo-ai-item exo-ai-item--${c.kind}">
       <div class="exo-ai-item-head">
-        <span class="exo-ai-item-num">${icon}</span>
+        <span class="exo-ai-item-dot"></span>
         <span class="exo-ai-item-level">${c.level}</span>
-        ${c.kind === 'urgent' ? '<span class="exo-ai-pulse-dot"></span>' : ''}
-        ${!isKey ? `<button class="exo-ai-item-ask" onclick="toggleAiDrawer()">
-          Ask AI
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>` : ''}
       </div>
       ${c.title ? `<div class="exo-ai-item-title">${c.title}</div>` : ''}
-      <div class="exo-ai-item-body">${c.body}</div>
-      ${!isKey ? `
-        <div class="exo-ai-confidence">
-          <span class="exo-ai-conf-label">AI confidence</span>
-          <span class="exo-ai-conf-bar"><span class="exo-ai-conf-fill" style="width:${conf}%"></span></span>
-          <span class="exo-ai-conf-val">${conf}%</span>
-        </div>` : '<div class="exo-ai-key-spark"></div>'}
+      ${actionsHtml ? `<div class="exo-ai-actions">${actionsHtml}</div>` : ''}
     </div>`;
   }).join('');
+
+  // Right-side action column: Ask AI + ดูทั้งหมด
+  const totalNonKey = EXO_AI_CARDS.filter((c) => c.kind !== 'key').length;
+  const actionsCol = `<div class="exo-ai-actions-col">
+    <button class="exo-ai-ask-big" onclick="toggleAiDrawer()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 1.5c.3 4.8 2.4 6.9 7.2 7.2-4.8.3-6.9 2.4-7.2 7.2-.3-4.8-2.4-6.9-7.2-7.2 4.8-.3 6.9-2.4 7.2-7.2Z"/>
+      </svg>
+      Ask AI
+    </button>
+    <button class="exo-ai-all-btn">
+      ดูทั้งหมด (${totalNonKey})
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+  </div>`;
+
+  el.innerHTML = cardsHtml + actionsCol;
 }
 
 function renderExoSoChart() {
